@@ -1,0 +1,117 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>java的字节流 | Mengjie's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/7.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">java的字节流</h1><a id="logo" href="/.">Mengjie's Blog</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">java的字节流</h1><div class="post-meta">Mar 2, 2017</div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#字节流-常用-的继承关系"><span class="toc-number">1.</span> <span class="toc-text">字节流(常用)的继承关系:</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-InputStream和OutputStream-抽象类-所以以下都是对它的子类"><span class="toc-number">1.1.</span> <span class="toc-text">1.InputStream和OutputStream  (抽象类,所以以下都是对它的子类)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-ByteArrayInputStream和ByteArrayOutputStream"><span class="toc-number">1.2.</span> <span class="toc-text">2.ByteArrayInputStream和ByteArrayOutputStream</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-FileInputStream和FileOutputStream"><span class="toc-number">1.3.</span> <span class="toc-text">2.FileInputStream和FileOutputStream</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-FilterInputStream和FilterOutputStream"><span class="toc-number">1.4.</span> <span class="toc-text">2.FilterInputStream和FilterOutputStream</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-ObjectInputStream和ObjectOutputStream"><span class="toc-number">1.5.</span> <span class="toc-text">2.ObjectInputStream和ObjectOutputStream</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-BufferedInputStream和BufferedOutputStream"><span class="toc-number">1.6.</span> <span class="toc-text">3.BufferedInputStream和BufferedOutputStream</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-DataInputStream和DataOutputStream"><span class="toc-number">1.7.</span> <span class="toc-text">3.DataInputStream和DataOutputStream</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在实际应用时可能会经常用到嵌套的方式创建一个流对象-举个例子"><span class="toc-number">2.</span> <span class="toc-text">在实际应用时可能会经常用到嵌套的方式创建一个流对象,举个例子:</span></a></li></ol></div></div><div class="post-content"><h3 id="字节流-常用-的继承关系"><a href="#字节流-常用-的继承关系" class="headerlink" title="字节流(常用)的继承关系:"></a>字节流(常用)的继承关系:</h3><p><img src="http://img.blog.csdn.net/20170302160328476?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvSW1wb3J0TWVuZ2ppZQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="字节流常用类继承关系"></p>
+<h4 id="1-InputStream和OutputStream-抽象类-所以以下都是对它的子类"><a href="#1-InputStream和OutputStream-抽象类-所以以下都是对它的子类" class="headerlink" title="1.InputStream和OutputStream  (抽象类,所以以下都是对它的子类)"></a>1.InputStream和OutputStream  (抽象类,所以以下都是对它的子类)</h4><ul>
+<li>Input和Output都是对于程序来说的,input是从其他地方的数据读取到程序中,output是把程序中的数据存储在其他地方.</li>
+<li>read和write方法都在执行时<strong>阻塞</strong></li>
+<li>read和write方法都可以读取一个或多个字节,但读取一个和读取多个字节不是调用了同一个native方法.(没有看源代码之前我以为读多个字节是用循环读入一个字节实现的)</li>
+<li><p>InputStream:</p>
+<ul>
+<li><p>int available()返回当前可读入的字节数量.可以避免阻塞的发生:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> bytesAvailable = in.avaliable();</span><br><span class="line"><span class="keyword">if</span>(bytesAvailable &gt; <span class="number">0</span>)&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] data = <span class="keyword">new</span> <span class="keyword">byte</span>[bytesAvailable];</span><br><span class="line">    in.read(data);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>OutputStream:</p>
+<ul>
+<li>close()和flush()方法都会冲刷输出流.有一些数据可能临时存储在缓冲区中等待以更大的包的形式传递,如果不冲刷输出流会出现数据丢失的现象!不关闭流是对系统资源的浪费!所以读取完数据一定要close.</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-ByteArrayInputStream和ByteArrayOutputStream"><a href="#2-ByteArrayInputStream和ByteArrayOutputStream" class="headerlink" title="2.ByteArrayInputStream和ByteArrayOutputStream"></a>2.ByteArrayInputStream和ByteArrayOutputStream</h4><ul>
+<li>这两个类都是以内存中的一块buffer作为读取的对象,并且<strong>close方法无效</strong>,调用close后此类中的方法可以被调用,不会抛出异常.</li>
+<li><p>ByteArrayInputStream(不常用):</p>
+<ul>
+<li><p>构造方法:</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ByteArrayInputStream(<span class="keyword">byte</span>[] buf); <span class="comment">//Creates a ByteArrayInputStream so that it uses buf as its buffer array.</span></span><br><span class="line">ByteArrayInputStream(<span class="keyword">byte</span>[] buf, <span class="keyword">int</span> offset, <span class="keyword">int</span> length);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>其他的方法和InputStream差不多.</p>
+</li>
+</ul>
+</li>
+<li><p>ByteArrayOutputStream(常用作为buffer使用):</p>
+<ul>
+<li><p>构造方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ByteArrayOutputStream(); <span class="comment">//buffer默认大小为32字节,并且buffer大小可以自动增长</span></span><br><span class="line">ByteArrayOutputStream(<span class="keyword">int</span> size);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>reset()可将内部buffer的”指针”指向第一个字节,这样可以再用一次.</p>
+</li>
+<li>byte[] toByteArray和String toString()用于获取数据,其中toString还可以指定解码的字符集.</li>
+<li>writeTo(OutputStream out)将buffer中的字节数组输出在out中,相当于调用 out.write(buf, 0, count).</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-FileInputStream和FileOutputStream"><a href="#2-FileInputStream和FileOutputStream" class="headerlink" title="2.FileInputStream和FileOutputStream"></a>2.FileInputStream和FileOutputStream</h4><ul>
+<li>用于文件的读写,读写方式与父类一样,经常用于传入其他IO类的构造方法.</li>
+<li><p>FileInputStream:</p>
+<ul>
+<li><p>构造方法(常用):</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">FileInputStream(File file);</span><br><span class="line">FileInputStream(String name);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>FileOutputStream:</p>
+<ul>
+<li><p>构造方法(常用):</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">FileOutputStream(File file);</span><br><span class="line">FileOutputStream(File file, <span class="keyword">boolean</span> append);</span><br><span class="line">FileOutputStream(String name);</span><br><span class="line">FileOutputStream(String name, <span class="keyword">boolean</span> append);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-FilterInputStream和FilterOutputStream"><a href="#2-FilterInputStream和FilterOutputStream" class="headerlink" title="2.FilterInputStream和FilterOutputStream"></a>2.FilterInputStream和FilterOutputStream</h4><ul>
+<li><p>这两个类及其子类都需要一个InputStream或OutputStream为参数来构造,这是一种名为装饰(<em>Decorator</em>)的设计模式,它本身只是用传入的参数对象来处理数据,没有做装饰,只是为约束它的子类而写的.具体什么是装饰模式请参考:</p>
+<blockquote>
+<p><a href="http://wenku.baidu.com/view/b883510dba1aa8114431d95d.html" target="_blank" rel="noopener">http://wenku.baidu.com/view/b883510dba1aa8114431d95d.html</a></p>
+</blockquote>
+</li>
+<li><p>装饰和代理模式的区别与联系请参考:</p>
+<blockquote>
+<p><a href="http://blog.csdn.net/smalljune/article/details/28631369" target="_blank" rel="noopener">http://blog.csdn.net/smalljune/article/details/28631369</a> </p>
+</blockquote>
+</li>
+</ul>
+<h4 id="2-ObjectInputStream和ObjectOutputStream"><a href="#2-ObjectInputStream和ObjectOutputStream" class="headerlink" title="2.ObjectInputStream和ObjectOutputStream"></a>2.ObjectInputStream和ObjectOutputStream</h4><ul>
+<li>这两个类都是用来对于对象的存取的,用于操作的对象要实现java.io.Serializable接口,此接口只用来标记没有方法需要实现.对于一个复杂的对象来说可能会有很多对象实例作为它的域,这时如果仅仅保存对象的引用是没用的,java中是用序列号(<em>serial number</em>)来标识对象,并将它保存至流中,如果对象之前被保存过,只需记录一下,因为序列号对于相同的对象是相等的,而不同的对象是不相等的(有相关的算法).这就是这种机制之所以称为对象序列化的原因.</li>
+<li><p>ObjectInputStream:</p>
+<ul>
+<li><p>构造方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span>	<span class="title">ObjectInputStream</span><span class="params">()</span></span>; <span class="comment">//提供给子类用的...</span></span><br><span class="line">ObjectInputStream(InputStream in);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可以读取的类型包括基本类型和类(实现了Serializable接口).</p>
+</li>
+<li>String readUTF(),需要注意的是此处读取的是以修订版的UTF-8编码与标准的UTF-8不同,并且在前两个字节还会保存实际写出的字符长度.所以只在写用于JVM的字符串才用这个方法,对于其他场合应该使用writeChars方法.</li>
+</ul>
+</li>
+<li><p>ObjectOutputStream:</p>
+<ul>
+<li><p>构造方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span>	<span class="title">ObjectOutputStream</span><span class="params">()</span></span>; <span class="comment">//提供给子类用的...</span></span><br><span class="line">ObjectOutputStream(OutputStream out);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-BufferedInputStream和BufferedOutputStream"><a href="#3-BufferedInputStream和BufferedOutputStream" class="headerlink" title="3.BufferedInputStream和BufferedOutputStream"></a>3.BufferedInputStream和BufferedOutputStream</h4><ul>
+<li>有一个buffer缓冲(普通的IO类也有buffer缓冲,虽然我不知道默认的大小,但应该这个类的缓冲区会很大吧),可以降低硬盘或其他的东西频繁工作.因为方法过少,通常只是流的一个”包装”.</li>
+<li><p>BufferedInputStream:</p>
+<ul>
+<li><p>构造方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">      BufferedInputStream(InputStream in);</span><br><span class="line">      BufferedInputStream(InputStream in, <span class="keyword">int</span> size); <span class="comment">//size指定缓冲区大小</span></span><br><span class="line">      ```  </span><br><span class="line">* BufferedOutputStream:</span><br><span class="line">    * 构造方法:</span><br><span class="line"></span><br><span class="line">	 ```java</span><br><span class="line">      BufferedOutputStream(OutputStream out);</span><br><span class="line">      BufferedOutputStream(OutputStream out, <span class="keyword">int</span> size); <span class="comment">//size指定缓冲区大小</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-DataInputStream和DataOutputStream"><a href="#3-DataInputStream和DataOutputStream" class="headerlink" title="3.DataInputStream和DataOutputStream"></a>3.DataInputStream和DataOutputStream</h4><ul>
+<li>这两个类一般作为文件读写流的最后一个”包装”.</li>
+<li><p>DataInputStream:</p>
+<ul>
+<li><p>构造方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">      DataOutputStream(OutputStream out);</span><br><span class="line">      ```  </span><br><span class="line">    * 可以读取基本类型,一行和String(UTF-<span class="number">8</span>修订版).</span><br><span class="line">* DataOutputStream:</span><br><span class="line">    * 构造方法:</span><br><span class="line">    </span><br><span class="line">     ```java</span><br><span class="line">      DataOutputStream(OutputStream out);</span><br><span class="line">      ```  </span><br><span class="line">    * 可以写出基本类型,chars和String(UTF-<span class="number">8</span>修订版).</span><br><span class="line">#### 3.PrintStream</span><br><span class="line">* PrintStream输出字符串时可以指定编码,默认编码为系统默认编码.(DataOutputStream则不可以 )</span><br><span class="line">* 不会抛出IO异常,用	checkError()检查是否发生错误.</span><br><span class="line">* 构造方法:</span><br><span class="line"></span><br><span class="line">  ```java</span><br><span class="line">  PrintStream(File file);</span><br><span class="line">  PrintStream(File file, String csn) <span class="comment">//csn==charsetname</span></span><br><span class="line">  PrintStream(OutputStream out)</span><br><span class="line">  PrintStream(OutputStream out, <span class="keyword">boolean</span> autoFlush)</span><br><span class="line">  PrintStream(OutputStream out, <span class="keyword">boolean</span> autoFlush, String encoding)</span><br><span class="line">  PrintStream(String fileName)</span><br><span class="line">  PrintStream(String fileName, String csn)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>System.out正是PrintStream类型,它的方法无需赘言.</p>
+</li>
+</ul>
+<h3 id="在实际应用时可能会经常用到嵌套的方式创建一个流对象-举个例子"><a href="#在实际应用时可能会经常用到嵌套的方式创建一个流对象-举个例子" class="headerlink" title="在实际应用时可能会经常用到嵌套的方式创建一个流对象,举个例子:"></a>在实际应用时可能会经常用到嵌套的方式创建一个流对象,举个例子:</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">DataInputStream dis=<span class="keyword">new</span> DataInputStream(</span><br><span class="line">						<span class="keyword">new</span> BufferedInputStream(</span><br><span class="line">							<span class="keyword">new</span> FileInputStream(<span class="string">"1.dat"</span>)));<span class="comment">//这样就可以用DataInputStream的很多方法,而且还有缓冲区.</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p> 《java核心技术》卷二.<br>  Java Platform Standard Edition 8 Documentation.</p>
+</blockquote>
+</div><div class="tags"><a href="/tags/java/">java</a></div><div class="post-nav"><a class="pre" href="/2018/02/27/Python学习笔记/">Python学习笔记</a><a class="next" href="/2017/02/27/hello-world/">Hello World</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form class="search-form" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank"><input type="text" name="q" maxlength="20" placeholder="Search"/><input type="hidden" name="sitesearch" value="http://yoursite.com"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/linux/" style="font-size: 15px;">linux</a> <a href="/tags/python/" style="font-size: 15px;">python</a> <a href="/tags/java/" style="font-size: 15px;">java</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/03/04/Deep-Learning学习笔记/">Deep Learning学习笔记</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/02/27/Linux学习笔记/">Linux学习笔记</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/02/27/Python学习笔记/">Python学习笔记</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/02/java的字节流/">java的字节流</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/02/27/hello-world/">Hello World</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.example1.com/" title="site-name1" target="_blank">site-name1</a><ul></ul><a href="http://www.example2.com/" title="site-name2" target="_blank">site-name2</a><ul></ul><a href="http://www.example3.com/" title="site-name3" target="_blank">site-name3</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Mengjie's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
