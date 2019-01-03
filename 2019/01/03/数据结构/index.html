@@ -154,13 +154,13 @@
 <p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/AVLtree_RR.png" alt="RR"></p>
 </li>
 <li><p>RL型</p>
+<p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/AVLtree_RL.png" alt="RL"></p>
 </li>
 </ol>
-<pre><code>![RL](https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/AVLtree_RL.png)
-</code></pre><h3 id="最优二叉树的构造原理和相关算法。"><a href="#最优二叉树的构造原理和相关算法。" class="headerlink" title="最优二叉树的构造原理和相关算法。"></a>最优二叉树的构造原理和相关算法。</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">treenode *<span class="title">huffmanTree</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;  <span class="comment">//n为叶子个数</span></span><br><span class="line">    <span class="keyword">int</span> index = <span class="number">0</span>;        </span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; ++i) &#123;  <span class="comment">//将每一个叶子节点建成一棵树，放入数组tree[]中</span></span><br><span class="line">        treenode *p = <span class="keyword">new</span> treenode;</span><br><span class="line">        p-&gt;data = arr[i];   <span class="comment">//arr[]中放着叶子节点的权值</span></span><br><span class="line">        p-&gt;lch = <span class="literal">NULL</span>;</span><br><span class="line">        p-&gt;rch = <span class="literal">NULL</span>;</span><br><span class="line">        tree[index++] = p;</span><br><span class="line">    &#125;</span><br><span class="line">    treenode *root = <span class="literal">NULL</span>;   <span class="comment">//定义最优二叉树的根</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n - <span class="number">1</span>; ++i) &#123; <span class="comment">//每次取arr[]中未使用的最小两个值</span></span><br><span class="line">        sort(arr + i, arr + n);</span><br><span class="line">        treenode *ch1 = <span class="literal">NULL</span>, *ch2 = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; index; ++j) &#123;<span class="comment">//在数组tree[]中找到这两个值，建立新的节点</span></span><br><span class="line">            <span class="keyword">if</span>(tree[j]-&gt;data == arr[i])</span><br><span class="line">                ch1 = tree[j];</span><br><span class="line">            <span class="keyword">if</span>(tree[j]-&gt;data == arr[i + <span class="number">1</span>])</span><br><span class="line">                ch2 = tree[j];</span><br><span class="line">            <span class="keyword">if</span>(ch1 &amp;&amp; ch2) <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        treenode *p = <span class="keyword">new</span> treenode;<span class="comment">//建立新的节点，存入数组tree[]中</span></span><br><span class="line">        p-&gt;data = ch1-&gt;data + ch2-&gt;data;</span><br><span class="line">        p-&gt;lch = ch1;</span><br><span class="line">        p-&gt;rch = ch2;</span><br><span class="line">        root = p;<span class="comment">//更新根，直到建立完成</span></span><br><span class="line">        tree[index++] = p;</span><br><span class="line">        arr[i + <span class="number">1</span>] = p-&gt;data;<span class="comment">//并将这个节点的权值传入数组arr[]中</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> root;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="最优二叉树的构造原理和相关算法。"><a href="#最优二叉树的构造原理和相关算法。" class="headerlink" title="最优二叉树的构造原理和相关算法。"></a>最优二叉树的构造原理和相关算法。</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">treenode *<span class="title">huffmanTree</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;  <span class="comment">//n为叶子个数</span></span><br><span class="line">    <span class="keyword">int</span> index = <span class="number">0</span>;        </span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; ++i) &#123;  <span class="comment">//将每一个叶子节点建成一棵树，放入数组tree[]中</span></span><br><span class="line">        treenode *p = <span class="keyword">new</span> treenode;</span><br><span class="line">        p-&gt;data = arr[i];   <span class="comment">//arr[]中放着叶子节点的权值</span></span><br><span class="line">        p-&gt;lch = <span class="literal">NULL</span>;</span><br><span class="line">        p-&gt;rch = <span class="literal">NULL</span>;</span><br><span class="line">        tree[index++] = p;</span><br><span class="line">    &#125;</span><br><span class="line">    treenode *root = <span class="literal">NULL</span>;   <span class="comment">//定义最优二叉树的根</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n - <span class="number">1</span>; ++i) &#123; <span class="comment">//每次取arr[]中未使用的最小两个值</span></span><br><span class="line">        sort(arr + i, arr + n);</span><br><span class="line">        treenode *ch1 = <span class="literal">NULL</span>, *ch2 = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; index; ++j) &#123;<span class="comment">//在数组tree[]中找到这两个值，建立新的节点</span></span><br><span class="line">            <span class="keyword">if</span>(tree[j]-&gt;data == arr[i])</span><br><span class="line">                ch1 = tree[j];</span><br><span class="line">            <span class="keyword">if</span>(tree[j]-&gt;data == arr[i + <span class="number">1</span>])</span><br><span class="line">                ch2 = tree[j];</span><br><span class="line">            <span class="keyword">if</span>(ch1 &amp;&amp; ch2) <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        treenode *p = <span class="keyword">new</span> treenode;<span class="comment">//建立新的节点，存入数组tree[]中</span></span><br><span class="line">        p-&gt;data = ch1-&gt;data + ch2-&gt;data;</span><br><span class="line">        p-&gt;lch = ch1;</span><br><span class="line">        p-&gt;rch = ch2;</span><br><span class="line">        root = p;<span class="comment">//更新根，直到建立完成</span></span><br><span class="line">        tree[index++] = p;</span><br><span class="line">        arr[i + <span class="number">1</span>] = p-&gt;data;<span class="comment">//并将这个节点的权值传入数组arr[]中</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> root;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="（六）图"><a href="#（六）图" class="headerlink" title="（六）图"></a>（六）图</h2><h3 id="图的各种基本概念和各种存储方式；"><a href="#图的各种基本概念和各种存储方式；" class="headerlink" title="图的各种基本概念和各种存储方式；"></a>图的各种基本概念和各种存储方式；</h3><h4 id="图的基本概念"><a href="#图的基本概念" class="headerlink" title="图的基本概念"></a>图的基本概念</h4><ol>
 <li><p>有向图</p>
-<p> <img src="/https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/有向图.png" alt="有向图"></p>
+<p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/有向图.png" alt="有向图"></p>
 <p> 表示法:</p>
 <p> V(G3)={0,1,2} </p>
 <p> E(G3)={&lt;0,1&gt;,&lt;1,0&gt;,&lt;1,2&gt;}</p>
@@ -169,7 +169,7 @@
 <p> 入度,出度: 入度和=出度和=边数</p>
 </li>
 <li><p>无向图</p>
-<p> <img src="/https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/无向图.png" alt="无向图"></p>
+<p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/无向图.png" alt="无向图"></p>
 <p> 表示法</p>
 <p> V(G1)={0,1,2,3}</p>
 <p> E(G1)={(0,1),(0,2),(0,3),(1,2),(1,3),(2,3)}</p>
@@ -362,7 +362,7 @@
 <td style="text-align:center">交换排序</td>
 <td style="text-align:center">不稳定</td>
 <td style="text-align:center">O(n*log<sub>2</sub>n)</td>
-<td style="text-align:center">o(1)</td>
+<td style="text-align:center">o(log<sub>2</sub>n)</td>
 <td style="text-align:center">O(n*log<sub>2</sub>n)</td>
 <td style="text-align:center">n(n-1)/2</td>
 <td style="text-align:center">O(n*log<sub>2</sub>n)</td>
@@ -492,32 +492,28 @@
 </ol>
 </li>
 <li><p>静态搜索树</p>
+<p> 查找表中各关键字被查找的概率是不同的</p>
+<p> 含有 9 个关键字的查找表及其相应权值如下表所示：</p>
+<p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/静态搜索树_step1.png" alt="step1"></p>
+<ol>
+<li><p>求出查找表中所有的 △P 的值，找出整棵查找表的根结点：</p>
+<p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/静态搜索树_step2.png" alt="step2"></p>
+<p> 例如，关键字 F 的 △P 的计算方式为：从 G 到 I 的权值和 - 从 A 到 E 的权值和 = 4+3+5-1-1-2-5-3 = 0。 </p>
+</li>
+<li><p>通过上图左侧表格得知，根结点为 F，以 F 为分界线，左侧子表为 F 结点的左子树，右侧子表为 F 结点的右子树（如上图右侧所示），继续查找左右子树的根结点:</p>
+<p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/静态搜索树_step3.png" alt="step3"></p>
+</li>
+<li><p>通过重新分别计算左右两查找子表的 △P 的值，得知左子树的根结点为 D，右子树的根结点为 H （如上图右侧所示），以两结点为分界线，继续判断两根结点的左右子树:</p>
+<p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/静态搜索树_step4.png" alt="step4"></p>
+<p>注意：在建立次优查找树的过程中，由于只根据的各关键字的 P 的值进行构建，没有考虑单个关键字的相应权值的大小，有时会出现根结点的权值比孩子结点的权值还小，此时就需要适当调整两者的位置。</p>
+<blockquote>
+<p><a href="http://www.cnblogs.com/ciyeer/p/9067098.html" target="_blank" rel="noopener">http://www.cnblogs.com/ciyeer/p/9067098.html</a></p>
+</blockquote>
 </li>
 </ol>
-<pre><code>查找表中各关键字被查找的概率是不同的
-
-含有 9 个关键字的查找表及其相应权值如下表所示：
-
-![step1](https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/静态搜索树_step1.png)
-
-1. 求出查找表中所有的 △P 的值，找出整棵查找表的根结点：
-
-    ![step2](https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/静态搜索树_step2.png)
-
-    例如，关键字 F 的 △P 的计算方式为：从 G 到 I 的权值和 - 从 A 到 E 的权值和 = 4+3+5-1-1-2-5-3 = 0。 
-
-2. 通过上图左侧表格得知，根结点为 F，以 F 为分界线，左侧子表为 F 结点的左子树，右侧子表为 F 结点的右子树（如上图右侧所示），继续查找左右子树的根结点:
-
-    ![step3](https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/静态搜索树_step3.png)
-
-3. 通过重新分别计算左右两查找子表的 △P 的值，得知左子树的根结点为 D，右子树的根结点为 H （如上图右侧所示），以两结点为分界线，继续判断两根结点的左右子树:
-
-    ![step4](https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/静态搜索树_step4.png)
-
-注意：在建立次优查找树的过程中，由于只根据的各关键字的 P 的值进行构建，没有考虑单个关键字的相应权值的大小，有时会出现根结点的权值比孩子结点的权值还小，此时就需要适当调整两者的位置。
-
-&gt; http://www.cnblogs.com/ciyeer/p/9067098.html
-</code></pre><h3 id="B树的结构"><a href="#B树的结构" class="headerlink" title="B树的结构"></a>B树的结构</h3><p>m阶: 1&lt;子节点数量&lt;=M ,M&gt;=2,空树除外（注：m阶代表一个树节点最多有多少个查找路径，m阶=m路,当m=2则是2叉树,m=3则是3叉）；</p>
+</li>
+</ol>
+<h3 id="B树的结构"><a href="#B树的结构" class="headerlink" title="B树的结构"></a>B树的结构</h3><p>m阶: 1&lt;子节点数量&lt;=M ,M&gt;=2,空树除外（注：m阶代表一个树节点最多有多少个查找路径，m阶=m路,当m=2则是2叉树,m=3则是3叉）；</p>
 <ol>
 <li><p>插入 (m=5, 每个节点含有[2,4]个value)</p>
 <p> <img src="https://raw.githubusercontent.com/ImportMengjie/KaoYan_807/master/images/BTree_insert1.png" alt="插入"></p>
