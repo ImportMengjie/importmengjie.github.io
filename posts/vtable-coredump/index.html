@@ -1,0 +1,367 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>记一次虚函数导致的诡异coredump - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="记一次虚函数导致的诡异coredump">
+<meta property="og:description" content="问题排查 问题表面 首先找到程序挂掉前打印出如下： terminate called after throwing an instance of 'std::system_error' what(): Resource deadlock avoided Aborted google了下，大概率是因为以下两个原因: 线程自己join自己 => 悖">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/vtable-coredump/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2023-09-21T14:11:24+08:00">
+<meta property="article:modified_time" content="2023-09-21T14:11:24+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="记一次虚函数导致的诡异coredump">
+<meta name=twitter:description content="问题排查 问题表面 首先找到程序挂掉前打印出如下： terminate called after throwing an instance of 'std::system_error' what(): Resource deadlock avoided Aborted google了下，大概率是因为以下两个原因: 线程自己join自己 => 悖">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/vtable-coredump/><link rel=prev href=https://importmengjie.github.io/posts/data-structure/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"记一次虚函数导致的诡异coredump","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, 虚函数","wordcount":3063,"url":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/","datePublished":"2023-09-21T14:11:24+08:00","dateModified":"2023-09-21T14:11:24+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">记一次虚函数导致的诡异coredump</h1><h2 class=single-subtitle>一次诡异的coredump</h2><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%B7%A5%E4%BD%9C%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/><i class="far fa-folder fa-fw" aria-hidden=true></i>工作遇到的问题</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-21>2023-09-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3063 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;7 minutes&nbsp;</div>
+</div><div class="details toc" id=toc-static data-kept=true>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#问题排查>问题排查</a>
+<ul>
+<li><a href=#问题表面>问题表面</a></li>
+<li><a href=#深入分析>深入分析</a></li>
+<li><a href=#问题根因>问题根因</a></li>
+</ul>
+</li>
+<li><a href=#问题复现>问题复现</a>
+<ul>
+<li><a href=#复现方法>复现方法</a></li>
+<li><a href=#虚表分析与运行情况>虚表分析与运行情况</a></li>
+</ul>
+</li>
+<li><a href=#总结>总结</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><h2 id=问题排查>问题排查</h2>
+<h3 id=问题表面>问题表面</h3>
+<p>首先找到程序挂掉前打印出如下：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>terminate called after throwing an instance of <span class=s1>&#39;std::system_error&#39;</span>
+  what<span class=o>()</span>:  Resource deadlock avoided
+Aborted
+</code></pre></div><p>google了下，大概率是因为以下两个原因:</p>
+<ol>
+<li>线程自己join自己 => 悖论：即线程join结束的前提是线程本身结束执行，而线程本身结束的前提是join结束</li>
+<li>两个线程互相join对方 => 悖论：即线程A结束的前提是join B线程结束，线程B结束的前提是join A线程结束</li>
+</ol>
+<p>结合coredump程序挂掉的堆栈来看，涉及到对象析构=>对象的成员变量<code>std::future</code>析构=>调用<code>std::thread::join</code>，而刚好执行析构的线程是被<code>std::async</code>创建保存在该对象的成员变量<code>std::future</code>，这就造成了在自己线程自己join自己</p>
+<p><code>std::future</code>通过<code>std::async</code>返回，类似下边的调用方式</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=n>std</span><span class=o>::</span><span class=n>future</span> <span class=n>future_</span> <span class=o>=</span> <span class=n>std</span><span class=o>::</span><span class=n>async</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>launch</span><span class=o>::</span><span class=n>async</span><span class=p>,</span> <span class=n>myfunc</span><span class=p>);</span>
+</code></pre></div><blockquote>
+<p>ps: <code>std::future</code>在离开作用域时如果之前没有调用过get会执行join等待函数执行完毕；</p>
+<p>之前看到过滑天下之大稽的写法，不把<code>std::async(std::launch::async, ...)</code>结果赋值出去，调用者会阻塞到目标函数结束，完全变成同步调用。</p>
+</blockquote>
+<hr>
+<h3 id=深入分析>深入分析</h3>
+<p>接下来就需要分析下，为何会调用到析构函数。</p>
+<p>先介绍下具体的业务，有个so库通过zeromq和其它进程通信，我们这边按照其提供的带有虚函数的class，继承实现其虚函数，再将该class传递给so提供的方法，在对应数据到来的时候会调用对应的虚函数，从而执行到我们业务的代码。</p>
+<p>将其抽象了下，即so的实现如下：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>class</span> <span class=nc>RunMe</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=n>fun1</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func1&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>fun2</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func2&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>fun3</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func3&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=o>~</span><span class=n>RunMe</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base ~RunMe()&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>};</span>
+<span class=kt>void</span> <span class=nf>call_run_me</span><span class=p>(</span><span class=n>RunMe</span> <span class=o>*</span><span class=n>r</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun1</span><span class=p>();</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun2</span><span class=p>();</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun3</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></div><p>其中<code>RunMe</code>就是业务代码需要继承的类，实现其虚函数，将函数指针传递给<code>class_run_me</code>，在具体数据到来就会调用具体的函数。这个是多态的典型用法，用户代码如下：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#include</span> <span class=cpf>&#34;mylib.h&#34;</span><span class=cp>
+</span><span class=cp></span><span class=k>class</span> <span class=nc>MyRunMe</span> <span class=o>:</span> <span class=k>public</span> <span class=n>RunMe</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+  <span class=kt>void</span> <span class=n>fun1</span><span class=p>()</span> <span class=k>override</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;my fun1&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=kt>void</span> <span class=nf>fun2</span><span class=p>()</span> <span class=k>override</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;my fun2&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=kt>void</span> <span class=nf>fun3</span><span class=p>()</span> <span class=k>override</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;my fun3&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=o>~</span><span class=n>MyRunMe</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;~MyRunMe()&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>};</span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=n>MyRunMe</span> <span class=n>r</span><span class=p>;</span>
+  <span class=n>call_run_me</span><span class=p>(</span><span class=o>&amp;</span><span class=n>r</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>实际的业务是使用智能指针<code>shared_ptr</code>来持有<code>MyRunMe r</code>，so提供的也拥有接收shared_ptr的类成员函数<code>call_run_me</code>的对象client，该client也由<code>shared_ptr</code>所管理，双方都会拥有对方的<code>shared_ptr</code>，这块我们这边写的非常不规范(不是我写的！)，出现了循环引用。但是这两个对象在整个程序的生命周期里都需要，虽然不优雅但是没有错误。如果用查内存泄漏的工具查下，这个肯定是definitely泄漏！</p>
+<div class=mermaid id=id-1></div>
+<p>这块对象之间的关系很乱，总之，看coredump堆栈调用链是：</p>
+<ol>
+<li>在call_run_me函数(单独线程执行)中RunMe r莫名调用析构函数</li>
+<li>在RunMe r析构时会析构shared_ptr Client client_</li>
+<li>client_的引用计数==0，触发client_的析构</li>
+<li>client_析构触发future_析构</li>
+<li>future_析构触发std::thread::join</li>
+<li>出现线程自己join自己被系统kill掉</li>
+</ol>
+<hr>
+<h3 id=问题根因>问题根因</h3>
+<p>现在的问题就在于RunMe r的析构函数为何被调用，通过将原so替换成debug版本的so，再打开core文件可以看到出错的行号，通过源代码看到程序在r->fun4()之后堆栈就就是析构函数了，而r->fun4()函数为新增虚函数</p>
+<p>突然想到在书中看到过析构函数是通过偏移量来决议</p>
+<blockquote>
+<p>《Linux多线程服务端编程：使用muduo C++网络库》p434</p>
+<p>先说修改动态库导致二进制不兼容的例子。比如原来动态库里定义了 non-virtual，函数 void foo(int)，新版的库把参数改成了 double。那么现有的可执行文件就无法启动，会发生 undefined symbol 错误，因为这两个函数的 mangled name 不同。但是对于 virtual 函数 foo(int)，修改其参数类型并不会导致加载错误，而是会发生诡异的运行时错误。因为虚函数的决议（resolution）是靠偏移量，并不是靠符号名。再举一些源代码兼容但是二进制代码不兼容的例子：</p>
+<ul>
+<li>
+<p>给函数增加默认参数，现有的可执行文件无法传这个额外的参数。</p>
+</li>
+<li>
+<p>增加虚函数，会造成 vtbl 里的排列变化。（不要考虑“只在末尾增加”这种取巧行为，因为你的 class 可能已被继承。）</p>
+</li>
+<li>
+<p>增加默认模板类型参数，比方说 Foo&lt;T> 改为 Foo&lt;T, Alloc=alloc&lt;T> >，这会改变 name mangling。</p>
+</li>
+<li>
+<p>改变 enum 的值，把 enum Color { Red = 3 }; 改为 Red = 4 。这会造成错位。当然，由于 enum 自动排列取值，添加 enum 项也是不安全的（在末尾添加除外）。</p>
+</li>
+</ul>
+</blockquote>
+<p>通过看当时版本和编译时/运行时so版本，可以确认编译时使用的旧的so未增加该虚函数，而运行时的so版本则为新版增加该虚函数，而该虚函数增加在析构函数之前，导致运行时so调用该虚函数实际调用的是老版本的继承类的析构函数，导致一系列的连锁反应。</p>
+<p>通过gdb中<code>info vtbl r指针</code>可以看到虚函数表，其中并不含有新增的虚函数。基本可以确认是该问题</p>
+<blockquote>
+<p><code>info vtbl</code>可以看到虚表中含有两个析构函数，经google查明编译器会给虚表生成两个析构函数指针，其中一个在析构函数的基础上增加了释放内存等操作，涉及到编译器的细节，不再深入研究。</p>
+</blockquote>
+<h2 id=问题复现>问题复现</h2>
+<h3 id=复现方法>复现方法</h3>
+<p>具体代码在<a href=https://github.com/ImportMengjie/recipes/tree/main/test/vptr target=_blank rel="noopener noreffer">虚表版本不匹配测试</a></p>
+<p>先声明定义两个版本的RunMe，新版本增加了fun_2_5()虚函数</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=c1>// v1 so
+</span><span class=c1></span><span class=k>class</span> <span class=nc>RunMe</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=n>fun1</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func1&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>fun2</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func2&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>fun3</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func3&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=o>~</span><span class=n>RunMe</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base ~RunMe()&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>};</span>
+<span class=kt>void</span> <span class=nf>call_run_me</span><span class=p>(</span><span class=n>RunMe</span> <span class=o>*</span><span class=n>r</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun1</span><span class=p>();</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun2</span><span class=p>();</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun3</span><span class=p>();</span>
+<span class=p>}</span>
+<span class=c1>// v2 so
+</span><span class=c1></span><span class=k>class</span> <span class=nc>RunMe</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=n>fun1</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func1&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>fun2</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func2&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>fun2_5</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func2.5&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span> <span class=c1>// 对应增加的虚函数
+</span><span class=c1></span>  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>fun3</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base func3&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>virtual</span> <span class=o>~</span><span class=n>RunMe</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;base ~RunMe()&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>};</span>
+<span class=kt>void</span> <span class=nf>call_run_me</span><span class=p>(</span><span class=n>RunMe</span> <span class=o>*</span><span class=n>r</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun1</span><span class=p>();</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun2</span><span class=p>();</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun2_5</span><span class=p>();</span>
+  <span class=n>r</span><span class=o>-&gt;</span><span class=n>fun3</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></div><p>分别在各自的目录执行<code>g++ mylib.cc -fPIC -shared -o libmylib.so -ggdb</code>编译成so</p>
+<p>用户实现的main.cc</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#include</span> <span class=cpf>&#34;mylib.h&#34;</span><span class=cp>
+</span><span class=cp></span><span class=k>class</span> <span class=nc>MyRunMe</span> <span class=o>:</span> <span class=k>public</span> <span class=n>RunMe</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+  <span class=kt>void</span> <span class=n>fun1</span><span class=p>()</span> <span class=k>override</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;my fun1&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=kt>void</span> <span class=nf>fun2</span><span class=p>()</span> <span class=k>override</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;my fun2&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=kt>void</span> <span class=nf>fun3</span><span class=p>()</span> <span class=k>override</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;my fun3&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+  <span class=o>~</span><span class=n>MyRunMe</span><span class=p>()</span> <span class=p>{</span> <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;~MyRunMe()&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>};</span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=n>MyRunMe</span> <span class=n>r</span><span class=p>;</span>
+  <span class=n>call_run_me</span><span class=p>(</span><span class=o>&amp;</span><span class=n>r</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>使用不同版本的so编译main.cc</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>g++ main.cc -L v1 -I v1 -lmylib -o main_use_v1 -ggdb <span class=c1># 使用v1下的so和头文件编译</span>
+g++ main.cc -L v2 -I v2 -lmylib -o main_use_v2 -ggdb <span class=c1># 使用v2下的so和头文件编译</span>
+</code></pre></div><h3 id=虚表分析与运行情况>虚表分析与运行情况</h3>
+<p>main中v1和v2中MyRunMe的虚表排序:</p>
+<table>
+<thead>
+<tr>
+<th style=text-align:center>index</th>
+<th style=text-align:center>main_v1中的虚表vptr</th>
+<th style=text-align:center>main_v2中的虚表vptr</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style=text-align:center>0</td>
+<td style=text-align:center>fun1()</td>
+<td style=text-align:center>fun1()</td>
+</tr>
+<tr>
+<td style=text-align:center>1</td>
+<td style=text-align:center>fun2()</td>
+<td style=text-align:center>fun2()</td>
+</tr>
+<tr>
+<td style=text-align:center>2</td>
+<td style=text-align:center>fun3()</td>
+<td style=text-align:center>fun2.5()</td>
+</tr>
+<tr>
+<td style=text-align:center>3</td>
+<td style=text-align:center>~MyRunMe()</td>
+<td style=text-align:center>fun3()</td>
+</tr>
+<tr>
+<td style=text-align:center>4</td>
+<td style=text-align:center></td>
+<td style=text-align:center>~MyRunMe()编译器增加</td>
+</tr>
+</tbody>
+</table>
+<p>而so中call_run_me调用虚表index的偏移量:</p>
+<table>
+<thead>
+<tr>
+<th style=text-align:center>v1 call_run_me调用虚表index</th>
+<th style=text-align:center>v2 call_run_me调用虚表index</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style=text-align:center>r->fun1()=>call vptr[0]()</td>
+<td style=text-align:center>r->fun1()=>call vptr[0]()</td>
+</tr>
+<tr>
+<td style=text-align:center>r->fun2()=>call vptr[1]()</td>
+<td style=text-align:center>r->fun2()=>call vptr[1]()</td>
+</tr>
+<tr>
+<td style=text-align:center>r->fun3()=>call vptr[2]()</td>
+<td style=text-align:center>r->fun2_5()=>call vptr[2]()</td>
+</tr>
+<tr>
+<td style=text-align:center>r->~RunMe()=>call vptr[3]()</td>
+<td style=text-align:center>r->fun3()=>call vptr[3]()</td>
+</tr>
+<tr>
+<td style=text-align:center></td>
+<td style=text-align:center>r->~RunMe()=>call vptr[4]()</td>
+</tr>
+</tbody>
+</table>
+<p>之后可以通过LD_LIBRARY_PATH设置不同的运行so即不同版本的call_run_me函数，调用不同的main程序从而设置不同版本的虚表。</p>
+<p>例如使用v1 main的虚表，v2 so的call_run_me调用虚表，就可以执行<code>LD_LIBRARY_PATH="v2/" ./main_use_v1</code>，得到结果：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>~/Documents/git/recipes/test/vptr <span class=o>(</span>main*<span class=o>)</span> » <span class=nv>LD_LIBRARY_PATH</span><span class=o>=</span><span class=s2>&#34;v2/&#34;</span> ./main_use_v1
+my fun1
+my fun2
+my fun3
+~MyRunMe<span class=o>()</span>
+base ~RunMe<span class=o>()</span>
+~MyRunMe<span class=o>()</span>
+base ~RunMe<span class=o>()</span>
+
+</code></pre></div><p>可以发现v2 call_run_me中调用fun2_5，调用的是虚表vptr[2]()而对应v1 MyRunMe则是func3()；而v2 call_run_me中调用fun3，调用的就是虚表vptr[3]()对应的就是v1 MyRunMe的析构函数，类似于此次coredump产生的原因。</p>
+<h2 id=总结>总结</h2>
+<ol>
+<li>虚函数调用是通过偏移来决定的跟函数名无关，如果三方库如果更新了虚函数，即使跟本模块无关，最好也要重新编译下，否则可能会发生诡异的问题</li>
+<li>虚函数的二进制兼容性并不好，如果用《Linux多线程服务端编程：使用muduo C++网络库》中所推荐的函数指针的方式来实现类似虚函数的功能则是极好的</li>
+</ol>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2023-09-21</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数导致的诡异coredump data-hashtags=c++,虚函数><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数导致的诡异coredump><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数导致的诡异coredump><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数导致的诡异coredump><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c++/>c++</a>,&nbsp;<a href=/tags/%E8%99%9A%E5%87%BD%E6%95%B0/>虚函数</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/data-structure/ class=prev rel=prev title=考研807数据结构复习笔记><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>考研807数据结构复习笔记</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/mermaid@9.1.3/dist/mermaid.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},data:{"id-1":"classDiagram\n    RunMe \u003c|-- MyRunMe\n    RunMe: +func1()\n    RunMe: +func2()\n    RunMe: +func3()\n    class MyRunMe{\n      +shared_ptr Client client_;\n      +func1();\n      +func2();\n      +func3();\n    }\n    class Client{\n      +shared_ptr RunMe r_;\n      +std::future future_;\n      +call_run_me(shared_ptr r);\n    }"},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>
