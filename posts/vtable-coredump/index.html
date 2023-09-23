@@ -3,7 +3,7 @@
 <meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <meta name=robots content="noodp">
-<title>记一次虚函数导致的诡异coredump - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="记一次虚函数导致的诡异coredump">
+<title>记一次虚函数二进制兼容问题导致的coredump - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="记一次虚函数二进制兼容问题导致的coredump">
 <meta property="og:description" content="问题排查 问题表面 首先找到程序挂掉前打印出如下： terminate called after throwing an instance of 'std::system_error' what(): Resource deadlock avoided Aborted google了下，大概率是因为以下两个原因: 线程自己join自己 => 悖">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://importmengjie.github.io/posts/vtable-coredump/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
@@ -11,14 +11,14 @@
 <meta property="article:modified_time" content="2023-09-21T14:11:24+08:00"><meta property="og:site_name" content="ImportMengjie">
 <meta name=twitter:card content="summary_large_image">
 <meta name=twitter:image content="https://importmengjie.github.io/logo.png">
-<meta name=twitter:title content="记一次虚函数导致的诡异coredump">
+<meta name=twitter:title content="记一次虚函数二进制兼容问题导致的coredump">
 <meta name=twitter:description content="问题排查 问题表面 首先找到程序挂掉前打印出如下： terminate called after throwing an instance of 'std::system_error' what(): Resource deadlock avoided Aborted google了下，大概率是因为以下两个原因: 线程自己join自己 => 悖">
 <meta name=application-name content="ImportMengjie's Blog">
 <meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/vtable-coredump/><link rel=prev href=https://importmengjie.github.io/posts/data-structure/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"记一次虚函数导致的诡异coredump","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, 虚函数","wordcount":3063,"url":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/","datePublished":"2023-09-21T14:11:24+08:00","dateModified":"2023-09-21T14:11:24+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"记一次虚函数二进制兼容问题导致的coredump","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, 虚函数","wordcount":3091,"url":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/","datePublished":"2023-09-21T14:11:24+08:00","dateModified":"2023-09-21T14:11:24+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -81,9 +81,9 @@ Cancel
 <div class=container><div class=toc id=toc-auto>
 <h2 class=toc-title>Contents</h2>
 <div class=toc-content id=toc-content-auto></div>
-</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">记一次虚函数导致的诡异coredump</h1><h2 class=single-subtitle>一次诡异的coredump</h2><div class=post-meta>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">记一次虚函数二进制兼容问题导致的coredump</h1><h2 class=single-subtitle>诡异coredump</h2><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%B7%A5%E4%BD%9C%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/><i class="far fa-folder fa-fw" aria-hidden=true></i>工作遇到的问题</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-21>2023-09-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3063 words&nbsp;
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-21>2023-09-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3091 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;7 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
@@ -120,9 +120,9 @@ Aborted
 </code></pre></div><p>google了下，大概率是因为以下两个原因:</p>
 <ol>
 <li>线程自己join自己 => 悖论：即线程join结束的前提是线程本身结束执行，而线程本身结束的前提是join结束</li>
-<li>两个线程互相join对方 => 悖论：即线程A结束的前提是join B线程结束，线程B结束的前提是join A线程结束</li>
+<li>两个线程互相join对方 => 悖论：即线程A结束的前提是B线程结束，线程B结束的前提是A线程结束</li>
 </ol>
-<p>结合coredump程序挂掉的堆栈来看，涉及到对象析构=>对象的成员变量<code>std::future</code>析构=>调用<code>std::thread::join</code>，而刚好执行析构的线程是被<code>std::async</code>创建保存在该对象的成员变量<code>std::future</code>，这就造成了在自己线程自己join自己</p>
+<p>结合coredump程序挂掉的堆栈来看，涉及到对象析构=>对象的成员变量<code>std::future</code>析构=>调用<code>std::thread::join</code>，而刚好执行析构的线程是被<code>std::async</code>创建，返回值保存在该对象的成员变量<code>std::future</code>，这就造成了在自己线程自己join自己</p>
 <p><code>std::future</code>通过<code>std::async</code>返回，类似下边的调用方式</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=n>std</span><span class=o>::</span><span class=n>future</span> <span class=n>future_</span> <span class=o>=</span> <span class=n>std</span><span class=o>::</span><span class=n>async</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>launch</span><span class=o>::</span><span class=n>async</span><span class=p>,</span> <span class=n>myfunc</span><span class=p>);</span>
 </code></pre></div><blockquote>
@@ -132,7 +132,7 @@ Aborted
 <hr>
 <h3 id=深入分析>深入分析</h3>
 <p>接下来就需要分析下，为何会调用到析构函数。</p>
-<p>先介绍下具体的业务，有个so库通过zeromq和其它进程通信，我们这边按照其提供的带有虚函数的class，继承实现其虚函数，再将该class传递给so提供的方法，在对应数据到来的时候会调用对应的虚函数，从而执行到我们业务的代码。</p>
+<p>先介绍下具体的业务，有个so库通过zeromq和其它进程通信，我们这边按照其提供的带有虚函数的class，继承实现其虚函数，再将该class传递给so提供的方法，在对应数据到来的时候so库会调用对应的虚函数，从而执行到我们业务的代码。</p>
 <p>将其抽象了下，即so的实现如下：</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>class</span> <span class=nc>RunMe</span> <span class=p>{</span>
 <span class=k>public</span><span class=o>:</span>
@@ -159,7 +159,7 @@ Aborted
   <span class=n>MyRunMe</span> <span class=n>r</span><span class=p>;</span>
   <span class=n>call_run_me</span><span class=p>(</span><span class=o>&amp;</span><span class=n>r</span><span class=p>);</span>
 <span class=p>}</span>
-</code></pre></div><p>实际的业务是使用智能指针<code>shared_ptr</code>来持有<code>MyRunMe r</code>，so提供的也拥有接收shared_ptr的类成员函数<code>call_run_me</code>的对象client，该client也由<code>shared_ptr</code>所管理，双方都会拥有对方的<code>shared_ptr</code>，这块我们这边写的非常不规范(不是我写的！)，出现了循环引用。但是这两个对象在整个程序的生命周期里都需要，虽然不优雅但是没有错误。如果用查内存泄漏的工具查下，这个肯定是definitely泄漏！</p>
+</code></pre></div><p>实际的业务是使用智能指针<code>shared_ptr</code>来持有<code>MyRunMe r</code>，so提供的也拥有接收shared_ptr的类成员函数<code>call_run_me</code>的对象client，该client也由<code>shared_ptr</code>所管理，双方都会拥有对方的<code>shared_ptr</code>，这块我们这边写的非常不规范(不是我写的！)，出现了循环引用，按理说这两个对象永远也不会被delete。但是这两个对象在整个程序的生命周期里都需要，虽然不优雅但是没有错误。不过如果用查内存泄漏的工具查下，这个肯定是definitely泄漏！</p>
 <div class=mermaid id=id-1></div>
 <p>这块对象之间的关系很乱，总之，看coredump堆栈调用链是：</p>
 <ol>
@@ -192,10 +192,10 @@ Aborted
 </li>
 </ul>
 </blockquote>
-<p>通过看当时版本和编译时/运行时so版本，可以确认编译时使用的旧的so未增加该虚函数，而运行时的so版本则为新版增加该虚函数，而该虚函数增加在析构函数之前，导致运行时so调用该虚函数实际调用的是老版本的继承类的析构函数，导致一系列的连锁反应。</p>
+<p>通过看当时版本和编译时/运行时so版本，可以确认编译时使用的旧的so未增加该虚函数，而运行时的so版本则为新版增加该虚函数，而该虚函数在类中的顺序增加在析构函数之前，导致运行时so调用该虚函数实际调用的是老版本的继承类的析构函数，导致一系列的连锁反应。</p>
 <p>通过gdb中<code>info vtbl r指针</code>可以看到虚函数表，其中并不含有新增的虚函数。基本可以确认是该问题</p>
 <blockquote>
-<p><code>info vtbl</code>可以看到虚表中含有两个析构函数，经google查明编译器会给虚表生成两个析构函数指针，其中一个在析构函数的基础上增加了释放内存等操作，涉及到编译器的细节，不再深入研究。</p>
+<p><code>info vtbl</code>可以看到虚表中含有两个析构函数，经google查明编译器会在虚表生成两个析构函数指针，其中一个在析构函数的基础上增加了释放内存等操作，涉及到编译器的细节，不再深入研究。</p>
 </blockquote>
 <h2 id=问题复现>问题复现</h2>
 <h3 id=复现方法>复现方法</h3>
@@ -341,7 +341,7 @@ base ~RunMe<span class=o>()</span>
 <div class=post-info-line>
 <div class=post-info-md></div>
 <div class=post-info-share>
-<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数导致的诡异coredump data-hashtags=c++,虚函数><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数导致的诡异coredump><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数导致的诡异coredump><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数导致的诡异coredump><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数二进制兼容问题导致的coredump data-hashtags=c++,虚函数><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数二进制兼容问题导致的coredump><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数二进制兼容问题导致的coredump><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/vtable-coredump/ data-title=记一次虚函数二进制兼容问题导致的coredump><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
 </div>
 </div>
 </div>
