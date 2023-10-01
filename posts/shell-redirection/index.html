@@ -1,0 +1,308 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>从文件描述符和打开文件之间的关系重新理解shell重定向 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="从文件描述符和打开文件之间的关系重新理解shell重定向">
+<meta property="og:description" content="问题缘起 在使用shell命令时，重定向是一种方便的将命令执行的结果输出到文件中或者将文件内容输入到命令中，其最常用的用法如下: # 输出 ls > output.txt #">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/shell-redirection/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2023-09-24T15:14:49+08:00">
+<meta property="article:modified_time" content="2023-09-25T19:38:49+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="从文件描述符和打开文件之间的关系重新理解shell重定向">
+<meta name=twitter:description content="问题缘起 在使用shell命令时，重定向是一种方便的将命令执行的结果输出到文件中或者将文件内容输入到命令中，其最常用的用法如下: # 输出 ls > output.txt #">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/shell-redirection/><link rel=prev href=https://importmengjie.github.io/posts/vtable-coredump/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从文件描述符和打开文件之间的关系重新理解shell重定向","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/shell-redirection\/"},"genre":"posts","wordcount":4906,"url":"https:\/\/importmengjie.github.io\/posts\/shell-redirection\/","datePublished":"2023-09-24T15:14:49+08:00","dateModified":"2023-09-25T19:38:49+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">从文件描述符和打开文件之间的关系重新理解shell重定向</h1><h2 class=single-subtitle>本文缘起遇到的shell重定向的先后顺序问题，下定决心搞懂linux下非常常用的重定向原理</h2><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-24>2023-09-24</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;4906 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;10 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept=true>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#问题缘起>问题缘起</a></li>
+<li><a href=#问题解答>问题解答</a>
+<ul>
+<li><a href=#文件描述符和打开文件之间的关系>文件描述符和打开文件之间的关系</a></li>
+<li><a href=#复制文件描述符和重定向>复制文件描述符和重定向</a></li>
+</ul>
+</li>
+<li><a href=#使用exec重定向对shell的执行打印同时保存在文件中>使用exec重定向对shell的执行打印同时保存在文件中</a>
+<ul>
+<li><a href=#目录devfd>目录/dev/fd</a></li>
+<li><a href=#进程替换process-substitution>进程替换(Process Substitution)</a></li>
+</ul>
+</li>
+</ul>
+</nav></div>
+</div><div class=content id=content><h2 id=问题缘起>问题缘起</h2>
+<p>在使用shell命令时，重定向是一种方便的将命令执行的结果输出到文件中或者将文件内容输入到命令中，其最常用的用法如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=c1># 输出</span>
+ls &gt; output.txt             <span class=c1># 1. 将ls命令标准输出重定向到output.txt文件，文件已存在会清空</span>
+ls &gt;&gt; output.txt            <span class=c1># 2. 将ls命令标准输出重定向到output.txt文件，文件已存在会append</span>
+ls 2&gt;<span class=p>&amp;</span><span class=m>1</span>                     <span class=c1># 3. 将ls命令输出中标准错误(文件描述符2)重定向到标准输出(文件描述符1)</span>
+ls <span class=p>&amp;</span>&gt; output.txt            <span class=c1># 4. 将ls命令标准输出和标准错误输出到output.txt文件</span>
+ls &gt; output.txt 2&gt;<span class=p>&amp;</span><span class=m>1</span>        <span class=c1># 5. 和4语义上相同</span>
+
+<span class=c1># 输入</span>
+grep search-word &lt;input.txt <span class=c1># 6. grep输入重定向到input.txt文件</span>
+</code></pre></div><p>我一直对重定向的理解都是很简单的，即:</p>
+<ol>
+<li><code>cmd 1> filename</code>就是将命令的标准输出(fd为1,命令中可省略)输出的目的地从终端屏幕到文件</li>
+<li><code>cmd 2>&1</code>就是将命令的标准错误2合并到标准输出1</li>
+</ol>
+<p>当设置重定向时，比方说将标准输出1重定向到一个文件中，程序中有一条<code>printf</code>语句，其内部最终会调用write(fd=1, &mldr;)而重定向将fd=1替换成文件，就会使该语句从打印到屏幕改为打印到文件。</p>
+<p>该简单的理解大部分情况已经够用了，但是难以理解下边重定向的顺序问题，在<code>man bash</code>文档中REDIRECTION小节对重定向的顺序问题的描述，即</p>
+<blockquote>
+<p>Note that the order of redirections is significant. For example, the command</p>
+<p><code>ls > dirlist 2>&1</code></p>
+<p>directs both standard output and standard error to the file dirlist, while the command</p>
+<p><code>ls 2>&1 > dirlist</code></p>
+<p>directs only the standard output to file dirlist, because the standard error was duplicated from the standard output before the standard output was redirected to dirlist.</p>
+</blockquote>
+<p>该语句想要实现的功能是将命令的标准输出和标准错误都输出到文件之中，想要实现该功能必须<strong>重定向标准输出到文件</strong>要在<strong>重定向标准错误到标准输出</strong>之前，即第一种写法才是正确的。当然更方便的写法是<code>ls &> dirlist</code>，可以理解其是对第一种写法的一种简写。</p>
+<p>其对第二种写法错误的地方解释为：其标准错误从标准输出复制时，标准输出还未重定向到文件之中。该写法实际效果就是命令的标准输出重定向到文件之中，而标准错误则和重定向前的标准输出一样输出到屏幕上。</p>
+<p>隐隐的感觉到需要了解文件描述符的复制才能真正理解重定向，从而对该问题有一个正确的解释。最近在《Linux/UNIX系统编程手册(上册)》中得到了答案，未防遗忘故记此文。文末对之前工作中遇到使用exec重定向shell脚本打印日志的方法进行记录。</p>
+<h2 id=问题解答>问题解答</h2>
+<p>下边是对《Linux/UNIX系统编程手册(上册)》第5章内容的总结归纳，从而解释上述问题。</p>
+<h3 id=文件描述符和打开文件之间的关系>文件描述符和打开文件之间的关系</h3>
+<p>众所周知，文件描述符fd是一个整数，其是内核维护的文件打开表中的index，通过该index在文件表中可以找到打开文件的相关信息，包含文件偏移量、对文件系统i-node引用等。这大概就是我之前所理解的fd，其益于理解，但是忽略了很多的细节，为了理解上述问题，需要填补这些细节。</p>
+<p>在内核中为了实现文件描述符和打开文件之间的关系，维护了3个数据结构：</p>
+<p><figure><a class=lightgallery href=/images/shell-redirection/fd_vs_inode.png title=引用《Linux/UNIX系统编程手册(上册)》P78 data-thumbnail=/images/shell-redirection/fd_vs_inode.png data-sub-html="<h2>fd与打开文件之间的关系</h2><p>引用《Linux/UNIX系统编程手册(上册)》P78</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/shell-redirection/fd_vs_inode.png data-srcset="/images/shell-redirection/fd_vs_inode.png, /images/shell-redirection/fd_vs_inode.png 1.5x, /images/shell-redirection/fd_vs_inode.png 2x" data-sizes=auto alt=/images/shell-redirection/fd_vs_inode.png>
+</a><figcaption class=image-caption>fd与打开文件之间的关系</figcaption>
+</figure></p>
+<ol>
+<li>
+<p>进程级的文件描述表</p>
+<p>针对每个进程，内核为其维护打开文件的描述符(open file descritor)表，其含有:</p>
+<ul>
+<li>进程对fd私有的设置flag(目前仅有close-on-exec标志)</li>
+<li>对系统级打开文件表中的打开文件句柄(open file handle)的引用</li>
+</ul>
+</li>
+<li>
+<p>系统级的打开文件表</p>
+<p>内核会对所有打开的文件维护系统级的描述符表，表中的各个元素的名称为打开文件句柄(open file handle)，其每一项含有:</p>
+<ul>
+<li>当前文件偏移量(调用read和write、lseek时更改)</li>
+<li>打开文件时所使用的状态标志</li>
+<li>文件访问模式(如open时所设置的只读模式、只写或读写模式)</li>
+<li>与信号驱动IO相关的设置</li>
+<li>对该文件i-node对象的引用</li>
+</ul>
+</li>
+<li>
+<p>文件系统的i-node表</p>
+<p>文件系统会对所有文件建立一个i-node表，每个文件对应一个i-node表项，其含有:</p>
+<ul>
+<li>文件类型(例如，常规文件、套接字或FIFO和访问权限)</li>
+<li>一个执政，直线该文件所持有的锁列表</li>
+<li>文件的各种属性，包含文件大小以及不同类型操作相关的时间戳(没有文件名，文件名存储在目录文件中，其中含有该目录下所有文件名和inode对应关系)</li>
+</ul>
+</li>
+</ol>
+<p>对图中进程A中fd=2和进程B中fd=2都指向同一个打开文件句柄73的情况可能在调用fork后出现（即进程A与进程B为父子关系），同时也需要注意到fork之后打开的文件会共享偏移量、状态标志等。或者当某进程通过UNIX域套接字至将一个打开的文件描述符传递给另一个进程时，也会发生。</p>
+<p>对图中进程A中fd=0和进程B中fd=3指向不同的打开文件句柄，但这两个句柄指向同一个inode项1976，这种情况就是两个进程open了同一个文件，其偏移量并不共享，所以两个进程都write时会相互覆盖。在用一个进程打开同一个文件两次也类似。</p>
+<blockquote>
+<p>ps: 所有的系统调用都是原子操作，两个进程同时往一个文件里write，不会出现交织一起的情况，但是涉及到偏移量的问题，可能会互相覆盖。</p>
+<p>通过打开文件时加上O_APPEND参数，内核会保证向文件末尾追加时，移动偏移量到文件末尾和写入两个操作是原子的。在多进程往同一个文件追加写日志的时候很有用。</p>
+</blockquote>
+<p>对图中进程A中fd=1和fd=20都指向同一个打开的文件句柄23，就可能是通过复制文件描述符dup()、dup2()、dup3()或fcntl()形成的，在下边一节中着重介绍。</p>
+<blockquote>
+<p>这里想到一个问题，假如对fd=20调用<code>close</code>会影响到fd=1吗？从<code>man close</code>会得到答案，即close只会关闭进程级的文件描述符表，在所有对打开文件句柄的引用文件描述符都关闭时，才会释放打开文件句柄。</p>
+<p>The close() call deletes a descriptor from the per-process object reference table. If this is the last reference to the underlying object, the object will be deactivated.</p>
+</blockquote>
+<p>上述的分层设计让我想到了那句名言</p>
+<blockquote>
+<p>Any problem in computer science can be solved by another layer of indirection.</p>
+<p>计算机科学领域的任何问题都可以通过增加一个间接的中间层来解决。</p>
+</blockquote>
+<h3 id=复制文件描述符和重定向>复制文件描述符和重定向</h3>
+<p>复制文件描述的系统调用可以实现复制一个fd生成一个副本，而<strong>副本的fd值可以由调用者设置</strong>。共有dup()、dup2()、dup3()和fcntl()系统调用实现该功能，简单来说：</p>
+<ol>
+<li><code>int dup(int oldfd)</code>仅仅是复制oldfd返回副本fd，如果需要设定副本fd值，需要利用系统保证新描述符一定是编号最低的未用文件描述符来设置，并不是十分可靠的。</li>
+<li><code>newfd = fcntl(oldfd, F_DUPFD, startfd)</code>复制oldfd并且选择大于等于startfd的最小未用值作为newfd的值，通过先close(startfd)基本可以保证设置newfd的值为startfd。</li>
+<li><code>int dup2(int oldfd, int newfd)</code>复制oldfd并且设置副本fd值为newfd，如果newfd参数所指的文件描述符之前已打开，那么<code>dup2</code>会将其先关闭<code>close</code>，并且忽略关闭期间的任何错误。故，更好的做法是在调用<code>dup2</code>之前若newfd已经打开，先手动<code>close</code>处理可能发生错误。</li>
+<li><code>int dup3(int oldfd, int newfd, int flags)</code>和<code>dup2</code>的区别便是增加了附加参数flags，目前仅支持O_CLOEXEC为复制的newfd设置close_on_exec标志。为linux 2.6.27之后的版本所特有。</li>
+</ol>
+<p>所以对于重定向</p>
+<ol>
+<li>
+<p><code>cmd 1> filename</code></p>
+<p>可以理解为bash(父进程)exec cmd命令之前打开filename文件得到fd设为N，然后调用<code>dup2(N, 1)</code>将fd=1原本指向的文件(终端屏幕)关闭，复制成N的副本。最后调用exec cmd执行命令，此时cmd命令的打印都会重定向到filename文件中。</p>
+<p><figure><a class=lightgallery href=/images/shell-redirection/cmd_to_file.svg title="1. 重定向cmd &amp;gt; ./filename" data-thumbnail=/images/shell-redirection/cmd_to_file.svg data-sub-html="<h2>1. 重定向cmd > ./filename</h2><p>1. 重定向cmd &amp;gt; ./filename</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/shell-redirection/cmd_to_file.svg data-srcset="/images/shell-redirection/cmd_to_file.svg, /images/shell-redirection/cmd_to_file.svg 1.5x, /images/shell-redirection/cmd_to_file.svg 2x" data-sizes=auto alt=/images/shell-redirection/cmd_to_file.svg>
+</a><figcaption class=image-caption>1. 重定向cmd > ./filename</figcaption>
+</figure></p>
+</li>
+<li>
+<p><code>cmd 2>&1</code></p>
+<p>可以理解为bash(父进程)exec cmd命令之前执行<code>dup2(1, 2)</code>，关闭fd2，将fd2设置为fd的副本，此时fd1/fd2共享同一个打开文件表。</p>
+<p><figure><a class=lightgallery href=/images/shell-redirection/cmd_to_stderr.svg title="2. 重定向cmd &amp;gt; ./filename" data-thumbnail=/images/shell-redirection/cmd_to_stderr.svg data-sub-html="<h2>2. 重定向cmd > ./filename</h2><p>2. 重定向cmd &amp;gt; ./filename</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/shell-redirection/cmd_to_stderr.svg data-srcset="/images/shell-redirection/cmd_to_stderr.svg, /images/shell-redirection/cmd_to_stderr.svg 1.5x, /images/shell-redirection/cmd_to_stderr.svg 2x" data-sizes=auto alt=/images/shell-redirection/cmd_to_stderr.svg>
+</a><figcaption class=image-caption>2. 重定向cmd > ./filename</figcaption>
+</figure></p>
+</li>
+</ol>
+<p>综上所述，就可以回答<code>ls > dirlist 2>&1</code>和<code>ls 2>&1 > dirlist</code>的区别了。第一种先将stdout重定向到文件，再将stderr重定向到stdout，此时stdout和stderr再系统文件表中指向了文件。而第二种情况如图，stderr并没有重定向到文件，所以默认还会输出到屏幕上。</p>
+<p><figure><a class=lightgallery href=/images/shell-redirection/redirection_order.svg title="3. 重定向顺序区别" data-thumbnail=/images/shell-redirection/redirection_order.svg data-sub-html="<h2>3. 重定向顺序区别</h2><p>3. 重定向顺序区别</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/shell-redirection/redirection_order.svg data-srcset="/images/shell-redirection/redirection_order.svg, /images/shell-redirection/redirection_order.svg 1.5x, /images/shell-redirection/redirection_order.svg 2x" data-sizes=auto alt=/images/shell-redirection/redirection_order.svg>
+</a><figcaption class=image-caption>3. 重定向顺序区别</figcaption>
+</figure></p>
+<h2 id=使用exec重定向对shell的执行打印同时保存在文件中>使用exec重定向对shell的执行打印同时保存在文件中</h2>
+<p>在工作中曾经遇到过这样的一个需求：当时需要实现个车端应用层总的启动脚本，有不同的模式需要启动多个程序，启动程序是通过调用各个模块的启动脚本来实现。因为该脚本不光会人为手动调用还会在总的状态管理程序中调用，为了便于排查问题(甩锅)，将各模块启动时各模块的日志的输出不仅要打印在屏幕上，也需要保存在日志文件之中。实现该需求就用到了在脚本中使用exec重定向当前脚本的功能，一行代码优雅实现。</p>
+<blockquote>
+<p>在<code>man bash</code>中介绍exec的一节中提到在调用exec没有指定命令，此时进行重定向会应用到当前环境之中:</p>
+<p>If no command is specified, redirections may be used to affect the current shell environment. If there are no redirection errors, the return status is zero; otherwise the return status is non-zero.</p>
+</blockquote>
+<p>按照上边的需求，需要将stdout和stderr打印屏幕的同时输出到日志文件之中，在脚本开始前加上如下一行即可。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nb>exec</span> <span class=p>&amp;</span>&gt; &gt;<span class=o>(</span>tee -a <span class=s2>&#34;</span><span class=nv>$LOG_FILE</span><span class=s2>&#34;</span><span class=o>)</span>
+</code></pre></div><p>对于exec重定向很好理解，如果将当前脚本的stdout和stderr重定向到文件之中执行<code>exec &> $LOG_FILE</code>即可，而上边的代码为了同时输出到文件和屏幕使用了<code>>(tee -a "$LOG_FILE")</code>，该命令涉及到<strong>目录/dev/fd</strong>和<strong>进程替换(Process Substitution)</strong></p>
+<h3 id=目录devfd>目录/dev/fd</h3>
+<p>在《linux/Unix系统编程手册(上册)》5.11节对该目录的用途进行了阐释，对每个进程，内核都会提供一个虚拟目录/dev/fd，链接到linux专有的/proc/self/fd目录。该目录中包含"/dev/fd/n"形式的文件名，n是与进程中打开的文件描述符对应的编号。</p>
+<p>而打开open该文件就相当于复制了相应的文件描述符，下列两行代码是等价的:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nv>fd</span> <span class=o>=</span> open<span class=o>(</span><span class=s2>&#34;/dev/fd/1&#34;</span>, O_WRONLY<span class=o>)</span><span class=p>;</span>
+<span class=nv>fd</span> <span class=o>=</span> dup<span class=o>(</span>1<span class=o>)</span><span class=p>;</span>
+</code></pre></div><p>显而易见open调用设置的flag访问模式需要和原文件描述符一致。程序中当然用不太到该目录下文件，直接调用dup即可，其主要用途在shell中，有一些命令只支持从文件中读取内容，而不支持从标准输入中读取内容，此时想使用管道将上个命令的输出作为输入就有点困难了。使用/dev/fd目录就可以解决该问题，通过</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>ls <span class=p>|</span> cmd_only_read_file /dev/fd/0
+</code></pre></div><p>管道会将上个命令ls的标准输出重定向到下个命令的标准输入中，所以对与<code>cmd_only_read_file</code>读取/dev/fd/0就相当于读取ls的输出。</p>
+<p>为了方便起见，系统还提供了3个符号链接: /dev/stdin、/dev/stdout和/dev/stderr，分别链接了/dev/fd/{0,1,2}。</p>
+<h3 id=进程替换process-substitution>进程替换(Process Substitution)</h3>
+<p>在<code>man bash</code>中对进程替换有如下阐述:</p>
+<blockquote>
+<p>man bash</p>
+<p>Process substitution is supported on systems that support named pipes (FIFOs) or the /dev/fd method of naming open files. It takes the form of &lt;(list) or >(list). The process list is run with its input or output connected to a FIFO or some file in /dev/fd. The name of this file is passed as an argument to the current command as the result of the expansion. If the >(list) form is used, writing to the file will provide input for list. If the &lt;(list) form is used, the file passed as an argument should be read to obtain the output of list.</p>
+<p>When available, process substitution is performed simultaneously with parameter and variable expansion, command substitution, and arithmetic expansion.</p>
+</blockquote>
+<p>我理解为在shell命令中有进程替换shell会首先根据不同类型进行如下操作:</p>
+<ol>
+<li>
+<blockquote>
+<p>(cmd list)类似管道会将(cmd list)的stdin替换成fd=n的文件描述符。根据上边的介绍/dev/fd目录，此时对文件/dev/fd/n进行写入时，会如同输入到(cmd list)的stdin中。</p>
+</blockquote>
+</li>
+<li>&lt;(cmd list)类似管道会将(cmd list)的stdout替换成fd=n的文件描述符。同样的，此时对文件/dev/fd/n进行读取时，就相当于读取(cmd list)的stdout。</li>
+</ol>
+<p>之后，文本替换命令中的>(cmd list)、&lt;(cmd list)为/dev/fd/n，此时/dev/fd/n作为一个文件，同时也作为(cmd list)的标准输入/标准输出。这也就解释了<code>>(tee -a "$LOG_FILE")</code>的用法，将<code>tee -a "$LOG_FILE"</code>命令看成一个可以输入的文件，对该文件输入时会同时输出到屏幕和LOG_FILE中。</p>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2023-09-25</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/shell-redirection/><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/vtable-coredump/ class=prev rel=prev title=记一次虚函数二进制兼容问题导致的coredump><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>记一次虚函数二进制兼容问题导致的coredump</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://visionon.cn/dv17.3.0/js/viewer-static.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>

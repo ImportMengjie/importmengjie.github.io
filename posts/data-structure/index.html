@@ -236,8 +236,8 @@ Cancel
 </li>
 </ol>
 <h4 id=二叉树的特点>二叉树的特点</h4>
-<p>N0表示叶子节点数,N2表示度为2的节点则N0=N2+1</p>
-<p>故在有N个节点的二叉树中,有N+1个空指针;空指针数 = 2*N0+N1=N0+N1+N2+1</p>
+<p>N<sub>0</sub>表示叶子节点数,N<sub>2</sub>表示度为2的节点则N<sub>0</sub>=N<sub>2</sub>+1</p>
+<p>故在有N个节点的二叉树中,有N+1个空指针;空指针数 = 2*N<sub>0</sub>+N<sub>1</sub>=N<sub>0</sub>+N<sub>1</sub>+N<sub>2</sub>+1</p>
 <h4 id=二叉树的数组表示方法>二叉树的数组表示方法</h4>
 <p>If a complete binary tree with n nodes is represented sequentially, then for any node with index i, $1 \leq i \leq n$, we have</p>
 <ol>
@@ -673,7 +673,7 @@ Cancel
 <ol>
 <li>
 <p>AOV-Network (Activity on Vertex)</p>
-<p>顶点表示活动,边&lt;v1,v2>表示活动v1先于活动v2,必须是有向无环图.(依赖关系)</p>
+<p>顶点表示活动,边&lt;v<sub>1</sub>,v<sub>2</sub>>表示活动v1先于活动v2,必须是有向无环图.(依赖关系)</p>
 <p>拓扑排序:</p>
 <pre><code> 1. 从图中选择一个没有前驱的节点并输出
  2. 从图中删除该节点和以它为起点的有向边
@@ -955,7 +955,7 @@ Cancel
 <td style=text-align:center>插入排序</td>
 <td style=text-align:center>插入排序</td>
 <td style=text-align:center>稳定</td>
-<td style=text-align:center>O(n2)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
 <td style=text-align:center>O(1)</td>
 <td style=text-align:center>n-1</td>
 <td style=text-align:center>(n+2)(n-1)/2</td>
@@ -966,7 +966,7 @@ Cancel
 <td style=text-align:center>希尔排序</td>
 <td style=text-align:center>插入排序</td>
 <td style=text-align:center>不稳定</td>
-<td style=text-align:center>O(n1.5)</td>
+<td style=text-align:center>O(n<sup>1.5</sup>)</td>
 <td style=text-align:center>o(1)</td>
 <td style=text-align:center>/</td>
 <td style=text-align:center>/</td>
@@ -977,7 +977,7 @@ Cancel
 <td style=text-align:center>冒泡排序</td>
 <td style=text-align:center>交换排序</td>
 <td style=text-align:center>稳定</td>
-<td style=text-align:center>O(n2)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
 <td style=text-align:center>o(1)</td>
 <td style=text-align:center>n-1</td>
 <td style=text-align:center>n(n-1)/2</td>
@@ -988,18 +988,18 @@ Cancel
 <td style=text-align:center>快速排序</td>
 <td style=text-align:center>交换排序</td>
 <td style=text-align:center>不稳定</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>o(log2n)</td>
-<td style=text-align:center>O(n*log2n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>o(log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
 <td style=text-align:center>n(n-1)/2</td>
-<td style=text-align:center>O(n*log2n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
 <td style=text-align:center>/</td>
 </tr>
 <tr>
 <td style=text-align:center>选择排序</td>
 <td style=text-align:center>选择排序</td>
 <td style=text-align:center><strong>不稳定</strong></td>
-<td style=text-align:center>O(n2)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
 <td style=text-align:center>O(1)</td>
 <td style=text-align:center>n-1</td>
 <td style=text-align:center>n(n-1)/2</td>
@@ -1010,10 +1010,10 @@ Cancel
 <td style=text-align:center>堆排序</td>
 <td style=text-align:center>选择排序</td>
 <td style=text-align:center>不稳定</td>
-<td style=text-align:center>O(n*log2n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
 <td style=text-align:center>O(1)</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>O(n*log2n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
 <td style=text-align:center>/</td>
 <td style=text-align:center>/</td>
 </tr>
@@ -1021,10 +1021,10 @@ Cancel
 <td style=text-align:center>归并排序</td>
 <td style=text-align:center>归并排序</td>
 <td style=text-align:center>稳定</td>
-<td style=text-align:center>O(n*log2n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
 <td style=text-align:center>O(n)</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>O(n*log2n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
 <td style=text-align:center>/</td>
 <td style=text-align:center>/</td>
 </tr>
@@ -1053,45 +1053,45 @@ Cancel
 <tbody>
 <tr>
 <td style=text-align:center>直接插入排序</td>
-<td style=text-align:center>O(n2)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
 <td style=text-align:center>O(n)</td>
-<td style=text-align:center>o(n2)</td>
+<td style=text-align:center>o(n<sup>2</sup>)</td>
 </tr>
 <tr>
 <td style=text-align:center>希尔排序</td>
-<td style=text-align:center>O(n1.5)</td>
+<td style=text-align:center>O(n<sup>1.5</sup>)</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
 <td style=text-align:center>冒泡排序</td>
-<td style=text-align:center>O(n2)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
 <td style=text-align:center>O(n)</td>
-<td style=text-align:center>O(n2)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
 </tr>
 <tr>
 <td style=text-align:center>快速排序</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>O(n2)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
 </tr>
 <tr>
 <td style=text-align:center>简单选择排序</td>
-<td style=text-align:center>O(n2)</td>
-<td style=text-align:center>O(n2)</td>
-<td style=text-align:center>O(n2)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
+<td style=text-align:center>O(n<sup>2</sup>)</td>
 </tr>
 <tr>
 <td style=text-align:center>堆排序</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>O(n*log2n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
 </tr>
 <tr>
 <td style=text-align:center>归并排序</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>O(n*log2n)</td>
-<td style=text-align:center>O(n*log2n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
+<td style=text-align:center>O(n*log<sub>2</sub>n)</td>
 </tr>
 <tr>
 <td style=text-align:center>基数排序</td>
@@ -1212,8 +1212,8 @@ Cancel
 <ol>
 <li>
 <p>开放地址法</p>
-<p>递推式: Hi=(H(key) + di) % m</p>
-<p>di是增量</p>
+<p>递推式: H<sub>i</sub>=(H(key) + d<sub>i</sub>) % m</p>
+<p>d<sub>i</sub>是增量</p>
 <p>删除时不能随便物理删除表中已有的元素,若删除将会截断其他具有相同的散列地址的元素的查找地址,所以要进行逻辑删除,打一个标记,定期维护,将删除标记的元素物理删除.</p>
 <ol>
 <li>
@@ -1222,16 +1222,16 @@ Cancel
 </li>
 <li>
 <p>平方探索法</p>
-<p>当di = 1^2,-1^2,2^2,-2^2,&mldr;,k^2,-k^2,其中$k \leq m/2$, m必须为可以表示成4k+3的质数</p>
+<p>当d<sub>i</sub> = 1^2,-1^2,2^2,-2^2,&mldr;,k^2,-k^2,其中$k \leq m/2$, m必须为可以表示成4k+3的质数</p>
 <p>可以避免出现堆积的问题,但是不能探测到所有单元</p>
 </li>
 <li>
 <p>再散列法</p>
-<p>di=Hash2(key)</p>
+<p>d<sub>i</sub>=Hash<sub>2</sub>(key)</p>
 </li>
 <li>
 <p>伪随机法</p>
-<p>di=伪随机序列</p>
+<p>d<sub>i</sub>=伪随机序列</p>
 </li>
 </ol>
 </li>
