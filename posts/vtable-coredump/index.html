@@ -16,9 +16,9 @@
 <meta name=application-name content="ImportMengjie's Blog">
 <meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
-<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/vtable-coredump/><link rel=prev href=https://importmengjie.github.io/posts/data-structure/><link rel=next href=https://importmengjie.github.io/posts/shell-redirection/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/vtable-coredump/><link rel=prev href=https://importmengjie.github.io/posts/operating-system/><link rel=next href=https://importmengjie.github.io/posts/shell-redirection/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"记一次虚函数二进制兼容问题导致的coredump","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, 虚函数","wordcount":3123,"url":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/","datePublished":"2023-09-21T14:11:24+08:00","dateModified":"2023-09-21T14:11:24+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"记一次虚函数二进制兼容问题导致的coredump","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, 虚函数","wordcount":3177,"url":"https:\/\/importmengjie.github.io\/posts\/vtable-coredump\/","datePublished":"2023-09-21T14:11:24+08:00","dateModified":"2023-09-21T14:11:24+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -82,13 +82,13 @@ Cancel
 <h2 class=toc-title>Contents</h2>
 <div class=toc-content id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">记一次虚函数二进制兼容问题导致的coredump</h1><h2 class=single-subtitle>诡异coredump</h2><div class=post-meta>
-<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%B7%A5%E4%BD%9C%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/><i class="far fa-folder fa-fw" aria-hidden=true></i>工作遇到的问题</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-21>2023-09-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3123 words&nbsp;
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98/><i class="far fa-folder fa-fw" aria-hidden=true></i>工作问题</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-21>2023-09-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3177 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;7 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
 </div>
-</div><div class="details toc" id=toc-static data-kept=true>
+</div><div class="details toc" id=toc-static data-kept>
 <div class="details-summary toc-title">
 <span>Contents</span>
 <span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
@@ -109,6 +109,7 @@ Cancel
 </ul>
 </li>
 <li><a href=#总结>总结</a></li>
+<li><a href=#参考>参考</a></li>
 </ul>
 </nav></div>
 </div><div class=content id=content><h2 id=问题排查>问题排查</h2>
@@ -175,7 +176,7 @@ Aborted
 <p>现在的问题就在于RunMe r的析构函数为何被调用，通过将原so替换成debug版本的so，再打开core文件可以看到出错的行号，通过源代码看到程序在r->fun4()之后堆栈就就是析构函数了，而r->fun4()函数为新增虚函数</p>
 <p>突然想到在书中看到过析构函数是通过偏移量来决议</p>
 <blockquote>
-<p>《Linux多线程服务端编程：使用muduo C++网络库》p434</p>
+<p>《Linux多线程服务端编程：使用muduo C++网络库》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>p434</p>
 <p>先说修改动态库导致二进制不兼容的例子。比如原来动态库里定义了 non-virtual，函数 void foo(int)，新版的库把参数改成了 double。那么现有的可执行文件就无法启动，会发生 undefined symbol 错误，因为这两个函数的 mangled name 不同。但是对于 virtual 函数 foo(int)，修改其参数类型并不会导致加载错误，而是会发生诡异的运行时错误。因为虚函数的决议（resolution）是靠偏移量，并不是靠符号名。再举一些源代码兼容但是二进制代码不兼容的例子：</p>
 <ul>
 <li>
@@ -337,6 +338,15 @@ base ~RunMe<span class=o>()</span>
 <li>虚函数调用是通过偏移来决定的跟函数名无关，如果三方库如果更新了虚函数，即使跟本模块无关，最好也要重新编译下，否则可能会发生诡异的问题</li>
 <li>虚函数的二进制兼容性并不好，如果用《Linux多线程服务端编程：使用muduo C++网络库》中所推荐的函数指针的方式来实现类似虚函数的功能则是极好的</li>
 </ol>
+<h2 id=参考>参考</h2>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/20471211/ target=_blank rel="noopener noreffer">《Linux多线程服务端编程：使用muduo C++网络库》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
 </div><div class=post-footer id=post-footer>
 <div class=post-info>
 <div class=post-info-line>
@@ -356,7 +366,7 @@ base ~RunMe<span class=o>()</span>
 <span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
 </section>
 </div>
-<div class=post-nav><a href=/posts/data-structure/ class=prev rel=prev title=考研807数据结构复习笔记><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>考研807数据结构复习笔记</a>
+<div class=post-nav><a href=/posts/operating-system/ class=prev rel=prev title=考研807操作系统复习笔记><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>考研807操作系统复习笔记</a>
 <a href=/posts/shell-redirection/ class=next rel=next title=从文件描述符和打开文件之间的关系重新理解shell重定向>从文件描述符和打开文件之间的关系重新理解shell重定向<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div>
 </div>
 <div id=comments><div id=giscus class=comment></div><noscript>

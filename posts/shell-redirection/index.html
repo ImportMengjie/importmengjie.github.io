@@ -8,7 +8,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://importmengjie.github.io/posts/shell-redirection/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
 <meta property="article:published_time" content="2023-09-24T15:14:49+08:00">
-<meta property="article:modified_time" content="2023-09-25T19:38:49+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta property="article:modified_time" content="2023-10-01T23:32:42+08:00"><meta property="og:site_name" content="ImportMengjie">
 <meta name=twitter:card content="summary_large_image">
 <meta name=twitter:image content="https://importmengjie.github.io/logo.png">
 <meta name=twitter:title content="从文件描述符和打开文件之间的关系重新理解shell重定向">
@@ -18,7 +18,7 @@
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/shell-redirection/><link rel=prev href=https://importmengjie.github.io/posts/vtable-coredump/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从文件描述符和打开文件之间的关系重新理解shell重定向","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/shell-redirection\/"},"genre":"posts","wordcount":4906,"url":"https:\/\/importmengjie.github.io\/posts\/shell-redirection\/","datePublished":"2023-09-24T15:14:49+08:00","dateModified":"2023-09-25T19:38:49+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从文件描述符和打开文件之间的关系重新理解shell重定向","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/shell-redirection\/"},"genre":"posts","keywords":"shell, 重定向","wordcount":4953,"url":"https:\/\/importmengjie.github.io\/posts\/shell-redirection\/","datePublished":"2023-09-24T15:14:49+08:00","dateModified":"2023-10-01T23:32:42+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -82,13 +82,13 @@ Cancel
 <h2 class=toc-title>Contents</h2>
 <div class=toc-content id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">从文件描述符和打开文件之间的关系重新理解shell重定向</h1><h2 class=single-subtitle>本文缘起遇到的shell重定向的先后顺序问题，下定决心搞懂linux下非常常用的重定向原理</h2><div class=post-meta>
-<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-24>2023-09-24</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;4906 words&nbsp;
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/><i class="far fa-folder fa-fw" aria-hidden=true></i>系统编程</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-24>2023-09-24</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;4953 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;10 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
 </div>
-</div><div class="details toc" id=toc-static data-kept=true>
+</div><div class="details toc" id=toc-static data-kept>
 <div class="details-summary toc-title">
 <span>Contents</span>
 <span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
@@ -108,6 +108,7 @@ Cancel
 <li><a href=#进程替换process-substitution>进程替换(Process Substitution)</a></li>
 </ul>
 </li>
+<li><a href=#参考>参考</a></li>
 </ul>
 </nav></div>
 </div><div class=content id=content><h2 id=问题缘起>问题缘起</h2>
@@ -139,7 +140,7 @@ grep search-word &lt;input.txt <span class=c1># 6. grep输入重定向到input.t
 <p>其对第二种写法错误的地方解释为：其标准错误从标准输出复制时，标准输出还未重定向到文件之中。该写法实际效果就是命令的标准输出重定向到文件之中，而标准错误则和重定向前的标准输出一样输出到屏幕上。</p>
 <p>隐隐的感觉到需要了解文件描述符的复制才能真正理解重定向，从而对该问题有一个正确的解释。最近在《Linux/UNIX系统编程手册(上册)》中得到了答案，未防遗忘故记此文。文末对之前工作中遇到使用exec重定向shell脚本打印日志的方法进行记录。</p>
 <h2 id=问题解答>问题解答</h2>
-<p>下边是对《Linux/UNIX系统编程手册(上册)》第5章内容的总结归纳，从而解释上述问题。</p>
+<p>下边是对《Linux/UNIX系统编程手册(上册)》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>第5章内容的总结归纳，从而解释上述问题。</p>
 <h3 id=文件描述符和打开文件之间的关系>文件描述符和打开文件之间的关系</h3>
 <p>众所周知，文件描述符fd是一个整数，其是内核维护的文件打开表中的index，通过该index在文件表中可以找到打开文件的相关信息，包含文件偏移量、对文件系统i-node引用等。这大概就是我之前所理解的fd，其益于理解，但是忽略了很多的细节，为了理解上述问题，需要填补这些细节。</p>
 <p>在内核中为了实现文件描述符和打开文件之间的关系，维护了3个数据结构：</p>
@@ -235,7 +236,7 @@ grep search-word &lt;input.txt <span class=c1># 6. grep输入重定向到input.t
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nb>exec</span> <span class=p>&amp;</span>&gt; &gt;<span class=o>(</span>tee -a <span class=s2>&#34;</span><span class=nv>$LOG_FILE</span><span class=s2>&#34;</span><span class=o>)</span>
 </code></pre></div><p>对于exec重定向很好理解，如果将当前脚本的stdout和stderr重定向到文件之中执行<code>exec &> $LOG_FILE</code>即可，而上边的代码为了同时输出到文件和屏幕使用了<code>>(tee -a "$LOG_FILE")</code>，该命令涉及到<strong>目录/dev/fd</strong>和<strong>进程替换(Process Substitution)</strong></p>
 <h3 id=目录devfd>目录/dev/fd</h3>
-<p>在《linux/Unix系统编程手册(上册)》5.11节对该目录的用途进行了阐释，对每个进程，内核都会提供一个虚拟目录/dev/fd，链接到linux专有的/proc/self/fd目录。该目录中包含"/dev/fd/n"形式的文件名，n是与进程中打开的文件描述符对应的编号。</p>
+<p>在《Linux/Unix系统编程手册(上册)》5.11节对该目录的用途进行了阐释，对每个进程，内核都会提供一个虚拟目录/dev/fd，链接到linux专有的/proc/self/fd目录。该目录中包含"/dev/fd/n"形式的文件名，n是与进程中打开的文件描述符对应的编号。</p>
 <p>而打开open该文件就相当于复制了相应的文件描述符，下列两行代码是等价的:</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nv>fd</span> <span class=o>=</span> open<span class=o>(</span><span class=s2>&#34;/dev/fd/1&#34;</span>, O_WRONLY<span class=o>)</span><span class=p>;</span>
 <span class=nv>fd</span> <span class=o>=</span> dup<span class=o>(</span>1<span class=o>)</span><span class=p>;</span>
@@ -260,21 +261,30 @@ grep search-word &lt;input.txt <span class=c1># 6. grep输入重定向到input.t
 <li>&lt;(cmd list)类似管道会将(cmd list)的stdout替换成fd=n的文件描述符。同样的，此时对文件/dev/fd/n进行读取时，就相当于读取(cmd list)的stdout。</li>
 </ol>
 <p>之后，文本替换命令中的>(cmd list)、&lt;(cmd list)为/dev/fd/n，此时/dev/fd/n作为一个文件，同时也作为(cmd list)的标准输入/标准输出。这也就解释了<code>>(tee -a "$LOG_FILE")</code>的用法，将<code>tee -a "$LOG_FILE"</code>命令看成一个可以输入的文件，对该文件输入时会同时输出到屏幕和LOG_FILE中。</p>
+<h2 id=参考>参考</h2>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/25809330/ target=_blank rel="noopener noreffer">《Linux/Unix系统编程手册(上册)》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
 </div><div class=post-footer id=post-footer>
 <div class=post-info>
 <div class=post-info-line>
 <div class=post-info-mod>
-<span>Updated on 2023-09-25</span>
+<span>Updated on 2023-10-01</span>
 </div></div>
 <div class=post-info-line>
 <div class=post-info-md></div>
 <div class=post-info-share>
-<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/shell-redirection/><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向 data-hashtags=shell,重定向><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/shell-redirection/ data-hashtag=shell><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/shell-redirection/ data-title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
 </div>
 </div>
 </div>
 <div class=post-info-more>
-<section class=post-tags></section>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/shell/>shell</a>,&nbsp;<a href=/tags/%E9%87%8D%E5%AE%9A%E5%90%91/>重定向</a></section>
 <section>
 <span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
 </section>
