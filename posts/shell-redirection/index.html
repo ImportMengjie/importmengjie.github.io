@@ -226,7 +226,7 @@ grep search-word &lt;input.txt <span class=c1># 6. grep输入重定向到input.t
 </a><figcaption class=image-caption>3. 重定向顺序区别</figcaption>
 </figure></p>
 <h2 id=使用exec重定向对shell的执行打印同时保存在文件中>使用exec重定向对shell的执行打印同时保存在文件中</h2>
-<p>在工作中曾经遇到过这样的一个需求：当时需要实现个车端应用层总的启动脚本，有不同的模式需要启动多个程序，启动程序是通过调用各个模块的启动脚本来实现。因为该脚本不光会人为手动调用还会在总的状态管理程序中调用，为了便于排查问题(甩锅)，将各模块启动时各模块的日志的输出不仅要打印在屏幕上，也需要保存在日志文件之中。实现该需求就用到了在脚本中使用exec重定向当前脚本的功能，一行代码优雅实现。</p>
+<p>在工作中曾经遇到过这样的一个需求：当时需要实现个车端应用层总的启动脚本，有不同的模块需要启动多个程序，启动程序是通过调用各个模块的启动脚本来实现。因为该脚本不光会人为手动调用还会在总的状态管理程序中调用，为了便于排查问题(甩锅)，将各模块启动时各模块的日志的输出不仅要打印在屏幕上，也需要保存在日志文件之中。实现该需求就用到了在脚本中使用exec重定向当前脚本的功能，一行代码优雅实现。</p>
 <blockquote>
 <p>在<code>man bash</code>中介绍exec的一节中提到在调用exec没有指定命令，此时进行重定向会应用到当前环境之中:</p>
 <p>If no command is specified, redirections may be used to affect the current shell environment. If there are no redirection errors, the return status is zero; otherwise the return status is non-zero.</p>
