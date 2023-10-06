@@ -1,0 +1,356 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>从git对象存储模型理解git常用命令 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="从git对象存储模型理解git常用命令">
+<meta property="og:description" content="本文是从git对象存储模型出发搞懂git常用命令的原理，主要参考了《Git权威指南》1和网上的一些文章234。 基础知识 .git下对象存储模型">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/git_in_detail/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2023-10-02T22:06:55+08:00">
+<meta property="article:modified_time" content="2023-10-02T22:06:55+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="从git对象存储模型理解git常用命令">
+<meta name=twitter:description content="本文是从git对象存储模型出发搞懂git常用命令的原理，主要参考了《Git权威指南》1和网上的一些文章234。 基础知识 .git下对象存储模型">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/git_in_detail/><link rel=prev href=https://importmengjie.github.io/posts/shell-redirection/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从git对象存储模型理解git常用命令","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/git_in_detail\/"},"genre":"posts","keywords":"git, git对象模型, rebase","wordcount":4888,"url":"https:\/\/importmengjie.github.io\/posts\/git_in_detail\/","datePublished":"2023-10-02T22:06:55+08:00","dateModified":"2023-10-02T22:06:55+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">从git对象存储模型理解git常用命令</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%B7%A5%E5%85%B7%E8%AF%A6%E8%A7%A3/><i class="far fa-folder fa-fw" aria-hidden=true></i>工具详解</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-10-02>2023-10-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;4888 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;10 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#基础知识>基础知识</a>
+<ul>
+<li><a href=#git下对象存储模型>.git下对象存储模型</a></li>
+<li><a href=#工作区暂存区head中的目录树tree>工作区、暂存区、HEAD中的目录树(tree)</a></li>
+</ul>
+</li>
+<li><a href=#git-diff>git diff</a></li>
+<li><a href=#git-checkout>git checkout</a></li>
+<li><a href=#git-reset>git reset</a></li>
+<li><a href=#git-cherry-pick>git cherry-pick</a></li>
+<li><a href=#git-rebase>git rebase</a>
+<ul>
+<li><a href=#rebase小例子>rebase小例子🌰</a></li>
+</ul>
+</li>
+<li><a href=#参考>参考</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><p>本文是从git对象存储模型出发搞懂git常用命令的原理，主要参考了《Git权威指南》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>和网上的一些文章<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup><sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup><sup id=fnref:4><a href=#fn:4 class=footnote-ref role=doc-noteref>4</a></sup>。</p>
+<h2 id=基础知识>基础知识</h2>
+<h3 id=git下对象存储模型>.git下对象存储模型</h3>
+<p>众所周知，一个使用git管理的代码库，其存储提交列表等信息是存储在隐藏目录.git下面，如果要了解git常用命令的原理从这个文件夹的结构和内容讲起比较合适。</p>
+<p><figure><a class=lightgallery href=/images/git_reset_rebase/git_files.svg title="git files" data-thumbnail=/images/git_reset_rebase/git_files.svg data-sub-html="<h2>1. git对象存储模型</h2><p>git files</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/git_reset_rebase/git_files.svg data-srcset="/images/git_reset_rebase/git_files.svg, /images/git_reset_rebase/git_files.svg 1.5x, /images/git_reset_rebase/git_files.svg 2x" data-sizes=auto alt=/images/git_reset_rebase/git_files.svg>
+</a><figcaption class=image-caption>1. git对象存储模型</figcaption>
+</figure></p>
+<p>上图1中展示了commit提交是如何保存在.git目录下(图中对实际中40个十六进制commit id、tree id、blob id简化成type_id_n的形式):</p>
+<ul>
+<li>
+<p>git对象库</p>
+<p>存储在.git/objects目录下(id的前两位作为目录名，后38位作为文件名)存储，主要是有commit、tree、blob类型组成，其对应的内容如下:</p>
+<ol>
+<li>blob(binary large object)类型: 文件，存储了使用gzip压缩后的文件内容和实际大小。在git管理的文件都以该类型保存，如何使用脚本解压后查看blob文件内容<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>。同时也说明git存储的是文件的快照而非diff<sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>。</li>
+<li>tree类型: 目录树，存储了*个blob类型的id及对应的文件名权限等，和*个tree类型的id及对应的文件夹名称权限等。其保存了文件目录将blob表示的文件串起来。blob和tree类型有些类似inode和目录文件，文件名等信息实际存储在tree中。</li>
+<li>commit: 提交，存储了tree id和一个或多个parent提交的id及一些commit msg等信息。对于merge消息就会产生多个parent提交id。</li>
+</ol>
+<p>以上对象库对象内容及其类型可通过如下命令查看:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nv>$git</span> cat-file -t 7c16725a3529a00feecfb81ecb6ecedaef2fa60c <span class=c1># 查看id类型</span>
+  commit
+<span class=nv>$git</span> cat-file -p 7c16725a3529a00feecfb81ecb6ecedaef2fa60c <span class=c1># 查看id内容</span>
+  tree 0e9755249e11e845e99ffd46f43056e869eb50e7
+  parent 6fd19369e33bb37bdf1fb06debe44d634b287dd1
+  parent ad7b317c479c01e593593b573752e4ac9b1509fd
+  author ImportMengjie &lt;mengjie@hotmail.com&gt; <span class=m>1696338677</span> +0800
+  committer ImportMengjie &lt;mengjie@hotmail.com&gt; <span class=m>1696338677</span> +0800
+
+  Merge branch <span class=s1>&#39;bB&#39;</span>
+</code></pre></div></li>
+<li>
+<p>HEAD和refs/heads/master</p>
+<p>实际都是存储在.git目录下的文本文件:</p>
+<ol>
+<li>refs/heads/master: 存储了master分支当前的commit id。</li>
+<li>HEAD: 存储了当前checkout的commit id或分支。</li>
+</ol>
+</li>
+</ul>
+<h4 id=git历史提交的表示和>git历史提交的表示~和^</h4>
+<p>git提交列表是一个多叉树结构，其每个commit节点保存有一个或多个父commit节点，对当前commit节点的多个父节点或祖宗节点git有很方便的表示方式，可以用在<code>git checkout</code>和<code>git reset</code>等命令中。</p>
+<ul>
+<li>commit_id~: 表示当前提交的父提交，如果有多个父提交选择第一个父提交；可以使用commit_id~~或commit_id~2方式表示父父提交等方式</li>
+<li>commit_id^: 同样表示当前提交的父提交，和~波浪号的区别在于当提交含有多个父提交时可以通过commit_id^2方式表示第二个父提交</li>
+</ul>
+<p>commit_id当然可以是分支名或者HEAD，因为其背后都引用某个commit_id，常用的一种是<code>git checkout HEAD^</code>checkout到当前提交的第一个父提交。</p>
+<h3 id=工作区暂存区head中的目录树tree>工作区、暂存区、HEAD中的目录树(tree)</h3>
+<p>git中有三个重要的目录树即: 工作区、暂存区和当前commit(HEAD)中的目录树。</p>
+<ol>
+<li>
+<p>工作区目录树</p>
+<p>即为当前文件系统的目录树，不包含未被git跟踪的文件(Untracked files)。</p>
+</li>
+<li>
+<p>暂存区目录树</p>
+<p>存储在.git/index文件内，使用<code>git commit</code>之前调用<code>git add</code>就是增加文件在暂存区目录树中。需要调用<code>git write-tree</code>可以将暂存区目录树写入并且返回其tree id。可以理解<code>git commit</code>会先调用<code>git write-tree</code>写入目录树并将其id保存在commit的tree id。</p>
+</li>
+<li>
+<p>当前commit(HEAD)中的目录树</p>
+<p>即当前HEAD文件中保存的commit id或者引用的分支指向的commit id中保存的tree id指向的目录树。</p>
+</li>
+</ol>
+<h2 id=git-diff>git diff</h2>
+<p><code>git diff</code>命令可以对两个目录树内的文件对比差异，实际工作中我们一般对比工作区、暂存区、HEAD中的目录树两两之间比较差异。</p>
+<p><figure><a class=lightgallery href=/images/git_reset_rebase/git_diff.svg title="git diff" data-thumbnail=/images/git_reset_rebase/git_diff.svg data-sub-html="<h2>2. git diff命令</h2><p>git diff</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/git_reset_rebase/git_diff.svg data-srcset="/images/git_reset_rebase/git_diff.svg, /images/git_reset_rebase/git_diff.svg 1.5x, /images/git_reset_rebase/git_diff.svg 2x" data-sizes=auto alt=/images/git_reset_rebase/git_diff.svg>
+</a><figcaption class=image-caption>2. git diff命令</figcaption>
+</figure></p>
+<p>上图2中展示<code>git diff</code>常用参数:</p>
+<ol>
+<li><code>git diff id_2 id_3</code>是对id_2和id_3指向的目录树对比</li>
+<li><code>git diff</code>是对暂存区和工作区目录树对比</li>
+<li><code>git diff --cache</code>是对HEAD和暂存区目录树对比</li>
+<li><code>git diff HEAD</code>是对HEAD和工作区目录树对比</li>
+</ol>
+<h2 id=git-checkout>git checkout</h2>
+<p><code>git checkout</code>命令会对工作区和暂存区目录树进行检出，即会对工作区和暂存区替换。主要有如下三种用法:</p>
+<ol>
+<li>
+<p><code>git checkout &lt;commit_id></code></p>
+<p><figure><a class=lightgallery href=/images/git_reset_rebase/git_checkout_commit_id.svg title="git diff" data-thumbnail=/images/git_reset_rebase/git_checkout_commit_id.svg data-sub-html="<h2>3. git checkout commit_id命令</h2><p>git diff</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/git_reset_rebase/git_checkout_commit_id.svg data-srcset="/images/git_reset_rebase/git_checkout_commit_id.svg, /images/git_reset_rebase/git_checkout_commit_id.svg 1.5x, /images/git_reset_rebase/git_checkout_commit_id.svg 2x" data-sizes=auto alt=/images/git_reset_rebase/git_checkout_commit_id.svg>
+</a><figcaption class=image-caption>3. git checkout commit_id命令</figcaption>
+</figure></p>
+<p>checkout最常用的命令就是切换分支(commit_id)，如上图3中所示，checkout命令会将暂存区和工作区替换成commit_id所指向的目录树。同时设置HEAD为commit_id。</p>
+<p><code>git checkout -</code>可以很方便的切回之前的commit(分支)，类似于<code>cd -</code>。</p>
+</li>
+<li>
+<p><code>git checkout [&lt;commit_id>] [--] &lt;path></code></p>
+<p>该命令主要是用于将指定commit的目录树中的某些文件覆盖工作区和暂存区的文件，其<strong>不会改变HEAD的值</strong>，如果省略commit_id则设置为暂存区的目录树。路径前加上&ndash;主要是防止路径和引用或者commit id同名造成歧义，如果不冲突则可省略。</p>
+<p>该用法最常用的是<code>git checkout .</code>将当前工作区替换暂存区的目录树，此时未add进暂存区的修改都会消失！</p>
+</li>
+<li>
+<p><code>git checkout -b &lt;new_branch> [&lt;commit_id>]</code></p>
+<p>该命令主要用于新建分支(new_branch)即在/refs/heads/下面增加以新分支命名的文件内容保存着commit_id，然后将HEAD指向新分支。</p>
+<p>值得注意<strong>该命令不会对工作区和暂存区进行替换</strong>。如果后边省略commit_id则设置为HEAD。</p>
+</li>
+</ol>
+<h2 id=git-reset>git reset</h2>
+<p><code>git reset</code>命令可以将当前分支指向另一个指定提交，并且有选择的替换暂存区和工作区，类似checkout可以对单独文件进行操作。主要有以下两种用法:</p>
+<ol>
+<li>
+<p><code>git reset [--soft|--mixed|--hard] [&lt;commit_id>]</code></p>
+<p>当HEAD中保存的是分支的引用时此用法会替换分支引用保存的commit_id为用户的设置，这就是该命令和checkout的最大区别同样commit_id如果省略则为HEAD，如下图4所示，有三种参数soft/mixed/hard会设置是否替换暂存区和工作区。</p>
+<p><figure><a class=lightgallery href=/images/git_reset_rebase/git_reset.svg title="git reset" data-thumbnail=/images/git_reset_rebase/git_reset.svg data-sub-html="<h2>4. git reset [--soft|--mixed|--hard] commit_id命令</h2><p>git reset</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/git_reset_rebase/git_reset.svg data-srcset="/images/git_reset_rebase/git_reset.svg, /images/git_reset_rebase/git_reset.svg 1.5x, /images/git_reset_rebase/git_reset.svg 2x" data-sizes=auto alt=/images/git_reset_rebase/git_reset.svg>
+</a><figcaption class=image-caption>4. git reset [--soft|--mixed|--hard] commit_id命令</figcaption>
+</figure></p>
+<ul>
+<li>
+<p><code>git reset --soft id_2</code>只进行master分支指向commit替换而不修改暂存区和工作区，即只执行了图中的①。</p>
+<p>对于最新提交的进行修改并且将add进暂存区的修改一并重新提交的命令<code>git commit --amend</code>就是如下两个命令的的组合</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=c1># 将当前分支指向的提交替换为父提交，不替换暂存区和工作区，所以之前add进暂存区的修改还在</span>
+<span class=nv>$git</span> reset --soft HEAD^ 
+<span class=c1># .git/COMMIT_EDITMSG保存当前提交的commit_msg，此时之前add进暂存区的修改也在提交中</span>
+<span class=nv>$git</span> commit -e -F .git/COMMIT_EDITMSG
+</code></pre></div><p>还有常用的一个用法，即将多个提交修改合并成一个提交，可以执行如下命令将当前提交和其父提交压缩成一个提交:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nv>$git</span> reset --soft HEAD~2
+<span class=nv>$git</span> commit -m <span class=s2>&#34;compression commit&#34;</span>
+</code></pre></div></li>
+<li>
+<p><code>git reset [--mixed] id_2</code>在&ndash;soft的基础上还对暂存区进行替换，即图中①和②。默认行为，&ndash;mixed可以省略。最常用的命令是将add进暂存区的修改都重置，即<code>git reset</code>，替换暂存区为HEAD指向的目录树，之前add进暂存区的修改都会被重置，而分支的引用替换到HEAD相当于没有替换分支引用。</p>
+</li>
+<li>
+<p><code>git reset --hard id_2</code>在&ndash;mixed基础上还进行工作区的替换，即图中①、②和③。由于会将工作区进行替换是个比较危险的用法。可以执行类似<code>git reset --hard HEAD^</code>撤销当前commit。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>git reset [&lt;commit_id>] [--] &lt;path></code></p>
+</li>
+</ol>
+<p>该命令<strong>不会替换分支引用和工作区的目录树</strong>，而是用指定提交下的文件&lt;path>替换掉暂存区的文件。注意与<code>git checkout [&lt;commit_id>] [--] &lt;path></code>的区别，checkout命令还会覆盖工作区的文件。该命令最常用的用法是<code>git reset filename</code>将filename文件的改动撤出暂存区，相当于<code>git add filename</code>的反向操作。</p>
+<h2 id=git-cherry-pick>git cherry-pick</h2>
+<p>该命令特别好理解，就是将一些commit在当前分支提交一次一样的commit。</p>
+<p><figure><a class=lightgallery href=/images/git_reset_rebase/git_cherry-pick.svg title="git cherry-pick" data-thumbnail=/images/git_reset_rebase/git_cherry-pick.svg data-sub-html="<h2>4. git cherry-pick</h2><p>git cherry-pick</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/git_reset_rebase/git_cherry-pick.svg data-srcset="/images/git_reset_rebase/git_cherry-pick.svg, /images/git_reset_rebase/git_cherry-pick.svg 1.5x, /images/git_reset_rebase/git_cherry-pick.svg 2x" data-sizes=auto alt=/images/git_reset_rebase/git_cherry-pick.svg>
+</a><figcaption class=image-caption>4. git cherry-pick</figcaption>
+</figure></p>
+<p>如上图4，当前在main分支，执行<code>git cherry-pick F</code>，F为commit_id，会在main分支提交一次一样的commit，但是commit id会不同。可以一次cherry-pick多个commit，以空格分割。当然<strong>cherry-pick会将暂存区和工作区替换成pick之后的提交</strong>。</p>
+<p>如果遇到冲突需要用户解决冲突后执行<code>git cherry-pick --continue</code>或者<code>git cherry-pick --abort</code>终止。</p>
+<h2 id=git-rebase>git rebase</h2>
+<p>该命令是主要用途就是<strong>批量的cherry-pick提交</strong>，全量的命令格式是<code>git rebase --onto base from to</code>，将from到to“范围”内的提交cherry-pick到base上。</p>
+<p><figure><a class=lightgallery href=/images/git_reset_rebase/git_rebase_main.svg title="git rebase" data-thumbnail=/images/git_reset_rebase/git_rebase_main.svg data-sub-html="<h2>5. git rebase main</h2><p>git rebase</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/git_reset_rebase/git_rebase_main.svg data-srcset="/images/git_reset_rebase/git_rebase_main.svg, /images/git_reset_rebase/git_rebase_main.svg 1.5x, /images/git_reset_rebase/git_rebase_main.svg 2x" data-sizes=auto alt=/images/git_reset_rebase/git_rebase_main.svg>
+</a><figcaption class=image-caption>5. git rebase main</figcaption>
+</figure></p>
+<p>上图5是很常用的rebase用法，可以取代merge命令将main分支的新增修改带入到dev分支中并且保持提交线性。<code>git rebase --onto dev main dev</code>命令在当前分支是dev时可以省略为<code>git rebase main</code>就和<code>git merge main</code>类似了。即<code>git rebase from</code>会被展开为<code>git rebase --onto from from HEAD</code>。</p>
+<p>结合上图5的命令<code>git rebase --onto main main dev</code>，rebase操作的过程如下:</p>
+<ol>
+<li>首先会执行<code>git checkout to</code>切换到to分支，需要注意的是<strong>rebase之后HEAD引用的分支是to分支上</strong>，如果to不是分支，则会出现detached HEAD状态。在上图5中，会checkout到dev分支上，最终rebase作用到的分支也是dev分支。</li>
+<li>将<strong>在to分支所有历史提交中但是不在from分支所有历史提交范围的提交列表</strong>保存在临时文件中，在加上-i交互模式参数时可以看到提交的列表。在<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>中对范围的阐释是:包括to的所有历史提交排出from及from的历史提交。在上图5中，这个范围就是在dev分支，但是不在main分支的提交列表: E、F提交。</li>
+<li>将当前分支强制重置到base上，相当于执行<code>git reset --hard base</code>。在上图5中，就是<code>git reset --hard main</code>将dev分支指向的提交强制改为main分支指向的提交，即dev分支增加了C、D提交但是少了E、F提交。</li>
+<li>从保存在临时文件中的提交列表逐一cherry-pick到重置之后的分支上。如果提交已经在分支中包含则跳过该提交。在上图5中，就是将缺少的E、F提交cherry-pick到dev分支上，此时dev上的修改就基于最新的main分支。</li>
+<li>如果cherry-pick过程中遇到冲突，则rebase暂停，用户解决冲突后执行<code>git rebase --continue</code>继续rebase或者<code>git rebase --skip</code>跳过此提交或者<code>git rebase --abort</code>终止rebase，所有改动回滚。</li>
+</ol>
+<h3 id=rebase小例子>rebase小例子🌰</h3>
+<ul>
+<li>
+<p>基于不稳定分支上的提交rebase到稳定分支上，例子来源<sup id=fnref:4><a href=#fn:4 class=footnote-ref role=doc-noteref>4</a></sup></p>
+<p><figure><a class=lightgallery href=/images/git_reset_rebase/git_rebase_normal.svg title="git rebase" data-thumbnail=/images/git_reset_rebase/git_rebase_normal.svg data-sub-html="<h2>6. git rebase 一般化</h2><p>git rebase</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/git_reset_rebase/git_rebase_normal.svg data-srcset="/images/git_reset_rebase/git_rebase_normal.svg, /images/git_reset_rebase/git_rebase_normal.svg 1.5x, /images/git_reset_rebase/git_rebase_normal.svg 2x" data-sizes=auto alt=/images/git_reset_rebase/git_rebase_normal.svg>
+</a><figcaption class=image-caption>6. git rebase 一般化</figcaption>
+</figure></p>
+<p>如上图6中，想将基于next分支提交的topic分支，变基为基于main分支。例如在topic一些feature基于开发分支next测试完成，想将其基于更稳定的分支main上准入测试，就可以执行<code>git rebase --onto main next topic</code>。</p>
+</li>
+<li>
+<p>将本地修改提交到指定历史commit</p>
+<p>该例子是我在实际工作遇到: 在本地提交了多个commit，每个commit中包含不同功能。需要修改某个功能的提交，如果直接新建一个commit肯定比较难看，想优雅的直接修改历史commit。当然如果该提交是最近一次提交，可直接使用<code>git commit --amend</code>修改，如果不是的话就需要rebase命令了。</p>
+<ol>
+<li>首先将本地的修改<code>git stash</code>保存</li>
+<li>找到要修改的commit id，假设为f744c32。则可在当前分支执行<code>git rebase -i f744c32^</code>即<code>git rebase -i --onto f744c32^ f744c32^ HEAD</code>。在编辑器中找到需要修改的commit id，将前面的pick修改为edit。</li>
+<li>此时rebase就会在需要修改的commit上暂停，可以执行<code>git stash pop</code>将需要的修改pop出来，然后<code>git add</code>等命令将修改添加进暂存区，最后执行<code>git commit --amend</code>将修改保存到当前提交中，最终执行<code>git rebase --continue</code>继续rebase命令。</li>
+</ol>
+</li>
+</ul>
+<h2 id=参考>参考</h2>
+<p>画图有参考<a href=https://marklodato.github.io/visual-git-guide/index-zh-cn.html target=_blank rel="noopener noreffer">图解git</a></p>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://www.worldhello.net/gotgithub/ target=_blank rel="noopener noreffer">《Git权威指南》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:2 role=doc-endnote>
+<p><a href=https://zhuanlan.zhihu.com/p/96631135 target=_blank rel="noopener noreffer">这才是真正的Git——Git内部原理揭秘！</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:3 role=doc-endnote>
+<p><a href=https://www.progit.cn/#_git_%E5%9F%BA%E7%A1%80 target=_blank rel="noopener noreffer">progit git基础</a>&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:4 role=doc-endnote>
+<p><a href=https://git-scm.com/docs/git-rebase target=_blank rel="noopener noreffer">git-scm</a>&#160;<a href=#fnref:4 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2023-10-02</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/git_in_detail/ data-title=从git对象存储模型理解git常用命令 data-hashtags=git,git对象模型,rebase><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/git_in_detail/ data-hashtag=git><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/git_in_detail/ data-title=从git对象存储模型理解git常用命令><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/git_in_detail/ data-title=从git对象存储模型理解git常用命令><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/git_in_detail/ data-title=从git对象存储模型理解git常用命令><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/git/>git</a>,&nbsp;<a href=/tags/git%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B/>git对象模型</a>,&nbsp;<a href=/tags/rebase/>rebase</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/shell-redirection/ class=prev rel=prev title=从文件描述符和打开文件之间的关系重新理解shell重定向><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>从文件描述符和打开文件之间的关系重新理解shell重定向</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>
