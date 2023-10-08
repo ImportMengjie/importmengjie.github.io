@@ -18,7 +18,7 @@
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/git_in_detail/><link rel=prev href=https://importmengjie.github.io/posts/shell-redirection/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从git对象存储模型理解git常用命令","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/git_in_detail\/"},"genre":"posts","keywords":"git, git对象模型, rebase","wordcount":4888,"url":"https:\/\/importmengjie.github.io\/posts\/git_in_detail\/","datePublished":"2023-10-02T22:06:55+08:00","dateModified":"2023-10-02T22:06:55+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从git对象存储模型理解git常用命令","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/git_in_detail\/"},"genre":"posts","keywords":"git, git对象模型, rebase","wordcount":4890,"url":"https:\/\/importmengjie.github.io\/posts\/git_in_detail\/","datePublished":"2023-10-02T22:06:55+08:00","dateModified":"2023-10-02T22:06:55+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -83,7 +83,7 @@ Cancel
 <div class=toc-content id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">从git对象存储模型理解git常用命令</h1><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%B7%A5%E5%85%B7%E8%AF%A6%E8%A7%A3/><i class="far fa-folder fa-fw" aria-hidden=true></i>工具详解</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-10-02>2023-10-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;4888 words&nbsp;
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-10-02>2023-10-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;4890 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;10 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
@@ -116,7 +116,7 @@ Cancel
 </div><div class=content id=content><p>本文是从git对象存储模型出发搞懂git常用命令的原理，主要参考了《Git权威指南》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>和网上的一些文章<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup><sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup><sup id=fnref:4><a href=#fn:4 class=footnote-ref role=doc-noteref>4</a></sup>。</p>
 <h2 id=基础知识>基础知识</h2>
 <h3 id=git下对象存储模型>.git下对象存储模型</h3>
-<p>众所周知，一个使用git管理的代码库，其存储提交列表等信息是存储在隐藏目录.git下面，如果要了解git常用命令的原理从这个文件夹的结构和内容讲起比较合适。</p>
+<p>众所周知，一个使用git管理的代码库，其commit历史等信息是存储在隐藏目录.git下面，如果要了解git常用命令的原理从这个文件夹的结构和内容讲起比较合适。</p>
 <p><figure><a class=lightgallery href=/images/git_reset_rebase/git_files.svg title="git files" data-thumbnail=/images/git_reset_rebase/git_files.svg data-sub-html="<h2>1. git对象存储模型</h2><p>git files</p>">
 <img class=lazyload src=/svg/loading.min.svg data-src=/images/git_reset_rebase/git_files.svg data-srcset="/images/git_reset_rebase/git_files.svg, /images/git_reset_rebase/git_files.svg 1.5x, /images/git_reset_rebase/git_files.svg 2x" data-sizes=auto alt=/images/git_reset_rebase/git_files.svg>
 </a><figcaption class=image-caption>1. git对象存储模型</figcaption>

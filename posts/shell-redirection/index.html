@@ -253,11 +253,7 @@ grep search-word &lt;input.txt <span class=c1># 6. grep输入重定向到input.t
 </blockquote>
 <p>我理解为在shell命令中有进程替换shell会首先根据不同类型进行如下操作:</p>
 <ol>
-<li>
-<blockquote>
-<p>(cmd list)类似管道会将(cmd list)的stdin替换成fd=n的文件描述符。根据上边的介绍/dev/fd目录，此时对文件/dev/fd/n进行写入时，会如同输入到(cmd list)的stdin中。</p>
-</blockquote>
-</li>
+<li>>(cmd list)类似管道会将(cmd list)的stdin替换成fd=n的文件描述符。根据上边的介绍/dev/fd目录，此时对文件/dev/fd/n进行写入时，会如同输入到(cmd list)的stdin中。</li>
 <li>&lt;(cmd list)类似管道会将(cmd list)的stdout替换成fd=n的文件描述符。同样的，此时对文件/dev/fd/n进行读取时，就相当于读取(cmd list)的stdout。</li>
 </ol>
 <p>之后，文本替换命令中的>(cmd list)、&lt;(cmd list)为/dev/fd/n，此时/dev/fd/n作为一个文件，同时也作为(cmd list)的标准输入/标准输出。这也就解释了<code>>(tee -a "$LOG_FILE")</code>的用法，将<code>tee -a "$LOG_FILE"</code>命令看成一个可以输入的文件，对该文件输入时会同时输出到屏幕和LOG_FILE中。</p>
