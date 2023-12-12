@@ -1,0 +1,210 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>问题诊断小手册「持续更新」 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="问题诊断小手册「持续更新」">
+<meta property="og:description" content="popen产生僵尸进程 空间未满却新建不了文件 tar压缩中返回short read生成破损的压缩包 工作中我负责的模块会将车端上其它模块的日志打包">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/troubleshooting_guide/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2023-12-04T11:39:42+08:00">
+<meta property="article:modified_time" content="2023-12-04T11:39:42+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="问题诊断小手册「持续更新」">
+<meta name=twitter:description content="popen产生僵尸进程 空间未满却新建不了文件 tar压缩中返回short read生成破损的压缩包 工作中我负责的模块会将车端上其它模块的日志打包">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/troubleshooting_guide/><link rel=prev href=https://importmengjie.github.io/posts/git_in_detail/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"问题诊断小手册「持续更新」","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide\/"},"genre":"posts","wordcount":1447,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide\/","datePublished":"2023-12-04T11:39:42+08:00","dateModified":"2023-12-04T11:39:42+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">问题诊断小手册「持续更新」</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98/><i class="far fa-folder fa-fw" aria-hidden=true></i>工作问题</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-12-04>2023-12-04</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;1447 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;3 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#popen产生僵尸进程>popen产生僵尸进程</a></li>
+<li><a href=#空间未满却新建不了文件>空间未满却新建不了文件</a></li>
+<li><a href=#tar压缩中返回short-read生成破损的压缩包>tar压缩中返回short read生成破损的压缩包</a></li>
+<li><a href=#getifaddrs返回ifa_addr可能为空>getifaddrs返回ifa_addr可能为空</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><h2 id=popen产生僵尸进程>popen产生僵尸进程</h2>
+<h2 id=空间未满却新建不了文件>空间未满却新建不了文件</h2>
+<h2 id=tar压缩中返回short-read生成破损的压缩包>tar压缩中返回short read生成破损的压缩包</h2>
+<p>工作中我负责的模块会将车端上其它模块的日志打包上传到云端，使用的是popen执行<code>tar -zcf upload.tar.gz files</code>命令进行打包解压。注意该命令是分为两个步骤，首先是<strong>打包</strong>：将files文件打包成一个tar文件，最后是<strong>压缩</strong>：将打包好的tar文件进行gzip算法的压缩生成最终的压缩文件。</p>
+<p>本次遇到的问题就是在打包过程中返回<code>short read</code>错误从而终止打包，直接进入压缩步骤，从而导致在解压后将tar还原成各个文件时报错，当然在错误发生之前打包的文件还在。</p>
+<p>最后通过google和实验确定是在打包过程中，当前<strong>正在被打包的文件大小缩小</strong>，就会导致报该错误。通过用vim查看打包进tar文件的标头，发现报错的打包文件名，该文件可能会缩小文件size（有程序会执行覆盖重定向>该文件），所以可以确定该问题发生的原因。由于发生该错误的概率较小，所以解决办法就是遇到该报错时重试。</p>
+<p>该问题让我学习到了tar文件的结构，其结构非常简单，即又多个File entry组成表示不同文件，每个file entry由头部和实际文件数据组成。头部的数据结构如下：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cm>/* Source: https://www.gnu.org/software/tar/manual/html_node/Standard.html */</span>
+<span class=cm>/* tar Header Block, from POSIX 1003.1-1990.  */</span>
+
+<span class=cm>/* POSIX header.  */</span>
+
+<span class=k>struct</span> <span class=n>posix_header</span>
+<span class=p>{</span>                               <span class=cm>/* byte offset */</span>
+  <span class=kt>char</span> <span class=n>name</span><span class=p>[</span><span class=mi>100</span><span class=p>];</span>               <span class=cm>/*   0 */</span>
+  <span class=kt>char</span> <span class=n>mode</span><span class=p>[</span><span class=mi>8</span><span class=p>];</span>                 <span class=cm>/* 100 */</span>
+  <span class=kt>char</span> <span class=n>uid</span><span class=p>[</span><span class=mi>8</span><span class=p>];</span>                  <span class=cm>/* 108 */</span>
+  <span class=kt>char</span> <span class=n>gid</span><span class=p>[</span><span class=mi>8</span><span class=p>];</span>                  <span class=cm>/* 116 */</span>
+  <span class=kt>char</span> <span class=n>size</span><span class=p>[</span><span class=mi>12</span><span class=p>];</span>                <span class=cm>/* 124 */</span>
+  <span class=kt>char</span> <span class=n>mtime</span><span class=p>[</span><span class=mi>12</span><span class=p>];</span>               <span class=cm>/* 136 */</span>
+  <span class=kt>char</span> <span class=n>chksum</span><span class=p>[</span><span class=mi>8</span><span class=p>];</span>               <span class=cm>/* 148 */</span>
+  <span class=kt>char</span> <span class=n>typeflag</span><span class=p>;</span>                <span class=cm>/* 156 */</span>
+  <span class=kt>char</span> <span class=n>linkname</span><span class=p>[</span><span class=mi>100</span><span class=p>];</span>           <span class=cm>/* 157 */</span>
+  <span class=kt>char</span> <span class=n>magic</span><span class=p>[</span><span class=mi>6</span><span class=p>];</span>                <span class=cm>/* 257 */</span>
+  <span class=kt>char</span> <span class=n>version</span><span class=p>[</span><span class=mi>2</span><span class=p>];</span>              <span class=cm>/* 263 */</span>
+  <span class=kt>char</span> <span class=n>uname</span><span class=p>[</span><span class=mi>32</span><span class=p>];</span>               <span class=cm>/* 265 */</span>
+  <span class=kt>char</span> <span class=n>gname</span><span class=p>[</span><span class=mi>32</span><span class=p>];</span>               <span class=cm>/* 297 */</span>
+  <span class=kt>char</span> <span class=n>devmajor</span><span class=p>[</span><span class=mi>8</span><span class=p>];</span>             <span class=cm>/* 329 */</span>
+  <span class=kt>char</span> <span class=n>devminor</span><span class=p>[</span><span class=mi>8</span><span class=p>];</span>             <span class=cm>/* 337 */</span>
+  <span class=kt>char</span> <span class=n>prefix</span><span class=p>[</span><span class=mi>155</span><span class=p>];</span>             <span class=cm>/* 345 */</span>
+                                <span class=cm>/* 500 */</span>
+<span class=p>};</span>
+</code></pre></div><p>其比较重要的是size表示文件的数据的大小，特别的是存储为<strong>ASCII码的八进制</strong>表示。字段都是对齐512字节，用0 padding。该格式看起来是个很有历史的格式。</p>
+<p>该问题也衍生出一个思考，对于被打包的文件在打包过程中被删除或被移动会影响到打包压缩吗？答案是不会，首先文件一旦被打开，其即使被删除也会等到打开该文件的最后一个进程被关闭时才会真的删除磁盘文件，所以删除不会有影响。而文件一旦被打开，其就是用inode作为文件标识而不是文件名字，文件被移动是不会改变inode的值，而只是变动存储该inode的目录文件，所以移动也不会有影响。</p>
+<h2 id=getifaddrs返回ifa_addr可能为空>getifaddrs返回ifa_addr可能为空</h2>
+<p>在工作项目中使用<a href=https://man7.org/linux/man-pages/man3/getifaddrs.3.html target=_blank rel="noopener noreffer">getifaddrs</a>函数获取网卡信息，返回如下数据结构:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=k>struct</span> <span class=n>ifaddrs</span> <span class=p>{</span>
+    <span class=k>struct</span> <span class=n>ifaddrs</span>  <span class=o>*</span><span class=n>ifa_next</span><span class=p>;</span>    <span class=cm>/* Next item in list */</span>
+    <span class=kt>char</span>            <span class=o>*</span><span class=n>ifa_name</span><span class=p>;</span>    <span class=cm>/* Name of interface */</span>
+    <span class=kt>unsigned</span> <span class=kt>int</span>     <span class=n>ifa_flags</span><span class=p>;</span>   <span class=cm>/* Flags from SIOCGIFFLAGS */</span>
+    <span class=k>struct</span> <span class=n>sockaddr</span> <span class=o>*</span><span class=n>ifa_addr</span><span class=p>;</span>    <span class=cm>/* Address of interface */</span>
+    <span class=k>struct</span> <span class=n>sockaddr</span> <span class=o>*</span><span class=n>ifa_netmask</span><span class=p>;</span> <span class=cm>/* Netmask of interface */</span>
+    <span class=k>union</span> <span class=p>{</span>
+        <span class=k>struct</span> <span class=n>sockaddr</span> <span class=o>*</span><span class=n>ifu_broadaddr</span><span class=p>;</span>
+                        <span class=cm>/* Broadcast address of interface */</span>
+        <span class=k>struct</span> <span class=n>sockaddr</span> <span class=o>*</span><span class=n>ifu_dstaddr</span><span class=p>;</span>
+                        <span class=cm>/* Point-to-point destination address */</span>
+    <span class=p>}</span> <span class=n>ifa_ifu</span><span class=p>;</span>
+<span class=cp>#define              ifa_broadaddr ifa_ifu.ifu_broadaddr
+</span><span class=cp>#define              ifa_dstaddr   ifa_ifu.ifu_dstaddr
+</span><span class=cp></span>    <span class=kt>void</span>            <span class=o>*</span><span class=n>ifa_data</span><span class=p>;</span>    <span class=cm>/* Address-specific data */</span>
+<span class=p>};</span>
+</code></pre></div><p>可以看到返回的是一个链表,可以通过其<code>ifa_flags</code>，如下判断某个wifi网卡(通过ifa_name区分)其是否连接到路由器</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=p>(</span><span class=n>ifa</span><span class=o>-&gt;</span><span class=n>ifa_flags</span> <span class=o>&amp;</span> <span class=n>IFF_UP</span><span class=p>)</span> <span class=o>&amp;&amp;</span> <span class=p>(</span><span class=n>ifa</span><span class=o>-&gt;</span><span class=n>ifa_flags</span> <span class=o>&amp;</span> <span class=n>IFF_RUNNING</span><span class=p>)</span>
+</code></pre></div><p>但是当时测试时发现同一个网卡会分别返回两次，<code>ifa_addr->sa_family</code>分别是<code>AF_INET</code>和<code>AF_INET6</code>即ipv4和ipv6.。由于我的目的仅仅判断wifi是否连接路由器，所以我对<code>AF_INET6</code>进行过滤，防止出现同一个网卡判断两遍结果出现不一致的情况。</p>
+<p>需要特别注意其中<code>ifa_addr</code>和<code>ifa_netmask</code>可能为<code>NULL</code>，所以在调用<code>ifa_addr->sa_family</code>之前必须要判断<code>ifa_addr</code>是否为空指针，否则就会和我一样悲剧了。</p>
+<blockquote>
+<p>The <code>ifa_addr</code> field points to a structure containing the interface address. (The sa_family subfield should be consulted to determine the format of the address structure.) This field may contain a null pointer.</p>
+<p>The <code>ifa_netmask</code> field points to a structure containing the netmask associated with ifa_addr, if applicable for the address family. This field may contain a null pointer.</p>
+</blockquote>
+<p>而什么情况下ifa_addr会为空指针呢，通过网上搜索到的<a href=https://stackoverflow.com/questions/22767155/when-will-ifa-addr-be-null-on-calling-getifaddrs target=_blank rel="noopener noreffer">文章</a>大概了解到类似虚拟网卡(隧道)就可能返回空指针，具体的情况还有待深入的学习。</p>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2023-12-04</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/troubleshooting_guide/ data-title=问题诊断小手册「持续更新」><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/troubleshooting_guide/><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/troubleshooting_guide/ data-title=问题诊断小手册「持续更新」><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/troubleshooting_guide/ data-title=问题诊断小手册「持续更新」><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/troubleshooting_guide/ data-title=问题诊断小手册「持续更新」><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/git_in_detail/ class=prev rel=prev title=从git对象存储模型理解git常用命令><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>从git对象存储模型理解git常用命令</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>
