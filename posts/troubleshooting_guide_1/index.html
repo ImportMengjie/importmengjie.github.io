@@ -3,22 +3,22 @@
 <meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <meta name=robots content="noodp">
-<title>问题诊断小手册「持续更新」 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="问题诊断小手册「持续更新」">
-<meta property="og:description" content="popen产生僵尸进程 空间未满却新建不了文件 tar压缩中返回short read生成破损的压缩包 工作中我负责的模块会将车端上其它模块的日志打包">
+<title>问题诊断: 小手册系列「1」 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="问题诊断: 小手册系列「1」">
+<meta property="og:description" content="popen后台符号&导致僵尸进程 下面是popen执行shell命令获取命令输出打印到屏幕上的小例子 #include <limits.h>#include <ostream>#include <stdio.h>#include <stdlib.h>#include <iostream> using namespace std; int main(int argc, char *argv[]) { string files;">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://importmengjie.github.io/posts/troubleshooting_guide/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="og:url" content="https://importmengjie.github.io/posts/troubleshooting_guide_1/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
 <meta property="article:published_time" content="2023-12-04T11:39:42+08:00">
 <meta property="article:modified_time" content="2023-12-04T11:39:42+08:00"><meta property="og:site_name" content="ImportMengjie">
 <meta name=twitter:card content="summary_large_image">
 <meta name=twitter:image content="https://importmengjie.github.io/logo.png">
-<meta name=twitter:title content="问题诊断小手册「持续更新」">
-<meta name=twitter:description content="popen产生僵尸进程 空间未满却新建不了文件 tar压缩中返回short read生成破损的压缩包 工作中我负责的模块会将车端上其它模块的日志打包">
+<meta name=twitter:title content="问题诊断: 小手册系列「1」">
+<meta name=twitter:description content="popen后台符号&导致僵尸进程 下面是popen执行shell命令获取命令输出打印到屏幕上的小例子 #include <limits.h>#include <ostream>#include <stdio.h>#include <stdlib.h>#include <iostream> using namespace std; int main(int argc, char *argv[]) { string files;">
 <meta name=application-name content="ImportMengjie's Blog">
 <meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
-<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/troubleshooting_guide/><link rel=prev href=https://importmengjie.github.io/posts/git_in_detail/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/troubleshooting_guide_1/><link rel=prev href=https://importmengjie.github.io/posts/git_in_detail/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"问题诊断小手册「持续更新」","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide\/"},"genre":"posts","wordcount":1447,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide\/","datePublished":"2023-12-04T11:39:42+08:00","dateModified":"2023-12-04T11:39:42+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"问题诊断: 小手册系列「1」","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide_1\/"},"genre":"posts","keywords":"shell, 系統","wordcount":2705,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide_1\/","datePublished":"2023-12-04T11:39:42+08:00","dateModified":"2023-12-04T11:39:42+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -81,10 +81,10 @@ Cancel
 <div class=container><div class=toc id=toc-auto>
 <h2 class=toc-title>Contents</h2>
 <div class=toc-content id=toc-content-auto></div>
-</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">问题诊断小手册「持续更新」</h1><div class=post-meta>
-<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98/><i class="far fa-folder fa-fw" aria-hidden=true></i>工作问题</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-12-04>2023-12-04</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;1447 words&nbsp;
-<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;3 minutes&nbsp;
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">问题诊断: 小手册系列「1」</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/troubleshooting/><i class="far fa-folder fa-fw" aria-hidden=true></i>troubleshooting</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-12-04>2023-12-04</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2705 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;6 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
 </div>
@@ -95,14 +95,81 @@ Cancel
 </div>
 <div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
 <ul>
-<li><a href=#popen产生僵尸进程>popen产生僵尸进程</a></li>
+<li><a href=#popen后台符号导致僵尸进程>popen后台符号&导致僵尸进程</a></li>
 <li><a href=#空间未满却新建不了文件>空间未满却新建不了文件</a></li>
 <li><a href=#tar压缩中返回short-read生成破损的压缩包>tar压缩中返回short read生成破损的压缩包</a></li>
 <li><a href=#getifaddrs返回ifa_addr可能为空>getifaddrs返回ifa_addr可能为空</a></li>
 </ul>
 </nav></div>
-</div><div class=content id=content><h2 id=popen产生僵尸进程>popen产生僵尸进程</h2>
+</div><div class=content id=content><h2 id=popen后台符号导致僵尸进程>popen后台符号&导致僵尸进程</h2>
+<p>下面是popen执行shell命令获取命令输出打印到屏幕上的小例子</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#include</span> <span class=cpf>&lt;limits.h&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;ostream&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;stdio.h&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;stdlib.h&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;iostream&gt;</span><span class=cp>
+</span><span class=cp></span>
+<span class=k>using</span> <span class=k>namespace</span> <span class=n>std</span><span class=p>;</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=kt>char</span> <span class=o>*</span><span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
+  <span class=n>string</span> <span class=n>files</span><span class=p>;</span>
+  <span class=kt>char</span> <span class=n>buf</span><span class=p>[</span><span class=n>PIPE_BUF</span><span class=p>];</span>
+  <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>argc</span><span class=p>;</span> <span class=n>i</span><span class=o>++</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>files</span> <span class=o>+=</span> <span class=n>string</span><span class=p>(</span><span class=n>argv</span><span class=p>[</span><span class=n>i</span><span class=p>])</span> <span class=o>+</span> <span class=s>&#34; &#34;</span><span class=p>;</span>
+  <span class=p>}</span>
+  <span class=n>string</span> <span class=n>cmd</span> <span class=o>=</span> <span class=n>files</span><span class=p>;</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>cmd</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+  <span class=n>FILE</span> <span class=o>*</span><span class=n>fp</span> <span class=o>=</span> <span class=n>popen</span><span class=p>(</span><span class=n>cmd</span><span class=p>.</span><span class=n>c_str</span><span class=p>(),</span> <span class=s>&#34;r&#34;</span><span class=p>);</span>
+  <span class=k>if</span> <span class=p>(</span><span class=n>fp</span> <span class=o>==</span> <span class=nb>NULL</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>perror</span><span class=p>(</span><span class=s>&#34;popen&#34;</span><span class=p>);</span>
+    <span class=n>exit</span><span class=p>(</span><span class=mi>1</span><span class=p>);</span>
+  <span class=p>}</span>
+  <span class=k>while</span> <span class=p>(</span><span class=n>fgets</span><span class=p>(</span><span class=n>buf</span><span class=p>,</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>buf</span><span class=p>),</span> <span class=n>fp</span><span class=p>)</span> <span class=o>!=</span> <span class=nb>NULL</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>buf</span><span class=p>;</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>flush</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>cout</span><span class=p>);</span>
+  <span class=p>}</span>
+  <span class=n>pclose</span><span class=p>(</span><span class=n>fp</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>在车端发现了很多个僵尸进程zomble，排查发现是分别由两个原因导致出现僵尸进程：</p>
+<ol>
+<li>忘记调用<code>pclose</code>函数关闭<code>popen</code>打开的fd导致popen打开的进程未被父进程回收。</li>
+<li>在<code>popen</code>的命令结尾加<code>&</code>后台运行符号，即类似<code>popen("sleep 60s &", "r")</code>;</li>
+</ol>
+<p>第一种情况很好理解，第二种情况完全解释清楚需要很强的系统知识，目前我所不具备。</p>
+<p>大概来讲，<code>popen</code>会先<code>fork</code>新进程执行<code>/bin/sh -c 提供的命令</code>，而<code>/bin/sh</code>也会新建个进程执行用户指定的命令。当然其中也涉及到一些管道的操作用于拿到命令输出或者设置命令的输入。</p>
+<p>如果在命令后边加上<code>&</code>的符号则<code>/bin/sh</code>进程会不等执行的命令而直接结束，此时如果命令还未执行完毕，则<code>/bin/sh</code>进程不会被父进程调用<code>wait</code>函数拿到其退出返回值，从而导致<code>/bin/sh</code>成为僵尸进程。</p>
+<p>不过该僵尸进程在用户命令结束时也会跟着被回收，所以不会出现僵尸进程导致pid用尽的情况，不过在代码中最好要避免这种写法。</p>
 <h2 id=空间未满却新建不了文件>空间未满却新建不了文件</h2>
+<p>一般车端都需要日志滚删的功能，从而不至于让日志写满磁盘，该功能的实现，一般很自然想到当剩余空间小于某个阈值时，进行日志文件的删除动作，删除按照文件修改时间由小到大，直到空间满足要求。</p>
+<p>不过，这次遇到了问题是使用<code>df -h</code>查看磁盘空间未满，但是新建文件时又会报<code>No space left on device</code>类似的错误。</p>
+<p>搜索发现可能的原因是文件过多，inode用尽导致的。一般完整的命令行可以直接使用<code>df -i</code>查看文件系统inode的使用情况，如下所示</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>Filesystem       Inodes  IUsed    IFree IUse% Mounted on
+/dev/nvme0n1p4 <span class=m>25493504</span> <span class=m>965653</span> <span class=m>24527851</span>    4% /
+</code></pre></div><p>当<code>IUse%</code>达到100%时，此时新建文件则会报错。在我的笔记本上该值有2千万之多，不过在车端上只有30万左右，当出现一些异常情况下是有可能inode用尽。</p>
+<p>在车端板子上<code>df</code>命令为阉割版本，不支持-i参数，无法查看inode使用情况，需要写个小程序调用<code>statvfs</code>系统api获取。在<a href=https://man7.org/linux/man-pages/man3/statvfs.3.html target=_blank rel="noopener noreffer">文档</a>可以看到该函数的说明。写个如下小程序在车端运行就可以获取到inode使用情况。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#include</span> <span class=cpf>&lt;sys/statvfs.h&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;sys/statvfs.h&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;cstdio&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;iostream&gt;</span><span class=cp>
+</span><span class=cp></span>
+<span class=k>using</span> <span class=k>namespace</span> <span class=n>std</span><span class=p>;</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=kt>char</span> <span class=o>**</span><span class=n>argv</span><span class=p>)</span> <span class=p>{</span>
+    <span class=k>struct</span> <span class=nc>statvfs</span> <span class=n>fs</span><span class=p>;</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>statvfs</span><span class=p>(</span><span class=n>argv</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=o>&amp;</span><span class=n>fs</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;f_bsize: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_bsize</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, f_frsize: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_frsize</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, f_blocks: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_blocks</span>
+             <span class=o>&lt;&lt;</span> <span class=s>&#34;, f_bfree: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_bfree</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, f_bavail: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_bavail</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span>
+        <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;f_files: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_files</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, f_ffree: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_ffree</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, f_favail: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_favail</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span>
+        <span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;f_fsid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_fsid</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, f_flag&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_flag</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, f_namemax&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fs</span><span class=p>.</span><span class=n>f_namemax</span> <span class=o>&lt;&lt;</span> <span class=n>endl</span><span class=p>;</span>
+    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+        <span class=n>perror</span><span class=p>(</span><span class=s>&#34;statvfs&#34;</span><span class=p>);</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>主要看<code>f_files</code>和<code>f_ffree</code>两个字段即可。果不其然，确实是板子上的文件数量过多，超过inode的限制导致的该问题。</p>
+<p>接下来就是找到是那个模块文件数量过多，使用如下命令，可以统计当前路径下的目录含有的文件数量</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>find . -type f <span class=p>|</span> cut -d <span class=s2>&#34;/&#34;</span> -f <span class=m>2</span> <span class=p>|</span> sort <span class=p>|</span> uniq -c <span class=p>|</span> sort -nr
+</code></pre></div><p>通过该命令就可以找到那个模块文件数量过多，再去分析数量过多的原因。</p>
+<p>同时，也说明日志滚删的功能不光需要对文件大小作出限制，同时也应该对文件个数进行限制，防止文件过多inode用尽。</p>
 <h2 id=tar压缩中返回short-read生成破损的压缩包>tar压缩中返回short read生成破损的压缩包</h2>
 <p>工作中我负责的模块会将车端上其它模块的日志打包上传到云端，使用的是popen执行<code>tar -zcf upload.tar.gz files</code>命令进行打包解压。注意该命令是分为两个步骤，首先是<strong>打包</strong>：将files文件打包成一个tar文件，最后是<strong>压缩</strong>：将打包好的tar文件进行gzip算法的压缩生成最终的压缩文件。</p>
 <p>本次遇到的问题就是在打包过程中返回<code>short read</code>错误从而终止打包，直接进入压缩步骤，从而导致在解压后将tar还原成各个文件时报错，当然在错误发生之前打包的文件还在。</p>
@@ -134,7 +201,8 @@ Cancel
                                 <span class=cm>/* 500 */</span>
 <span class=p>};</span>
 </code></pre></div><p>其比较重要的是size表示文件的数据的大小，特别的是存储为<strong>ASCII码的八进制</strong>表示。字段都是对齐512字节，用0 padding。该格式看起来是个很有历史的格式。</p>
-<p>该问题也衍生出一个思考，对于被打包的文件在打包过程中被删除或被移动会影响到打包压缩吗？答案是不会，首先文件一旦被打开，其即使被删除也会等到打开该文件的最后一个进程被关闭时才会真的删除磁盘文件，所以删除不会有影响。而文件一旦被打开，其就是用inode作为文件标识而不是文件名字，文件被移动是不会改变inode的值，而只是变动存储该inode的目录文件，所以移动也不会有影响。</p>
+<p>该问题也衍生出一个思考，对于被打包的文件在打包过程中被删除或被移动会影响到打包压缩吗？</p>
+<p>答案是不会，首先文件一旦被打开，其即使被删除也会等到打开该文件的最后一个进程被关闭时才会真的删除磁盘文件，所以删除不会有影响。而文件一旦被打开，其就是用inode作为文件标识而不是文件名字，文件被移动是不会改变inode的值，而只是变动存储该inode的目录文件，所以移动也不会有影响。</p>
 <h2 id=getifaddrs返回ifa_addr可能为空>getifaddrs返回ifa_addr可能为空</h2>
 <p>在工作项目中使用<a href=https://man7.org/linux/man-pages/man3/getifaddrs.3.html target=_blank rel="noopener noreffer">getifaddrs</a>函数获取网卡信息，返回如下数据结构:</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=k>struct</span> <span class=n>ifaddrs</span> <span class=p>{</span>
@@ -171,12 +239,12 @@ Cancel
 <div class=post-info-line>
 <div class=post-info-md></div>
 <div class=post-info-share>
-<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/troubleshooting_guide/ data-title=问题诊断小手册「持续更新」><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/troubleshooting_guide/><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/troubleshooting_guide/ data-title=问题诊断小手册「持续更新」><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/troubleshooting_guide/ data-title=问题诊断小手册「持续更新」><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/troubleshooting_guide/ data-title=问题诊断小手册「持续更新」><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」" data-hashtags=shell,系統><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-hashtag=shell><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
 </div>
 </div>
 </div>
 <div class=post-info-more>
-<section class=post-tags></section>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/shell/>shell</a>,&nbsp;<a href=/tags/%E7%B3%BB%E7%B5%B1/>系統</a></section>
 <section>
 <span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
 </section>
