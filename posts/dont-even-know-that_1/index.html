@@ -1,0 +1,195 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>这我都不知道「1」 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="这我都不知道「1」">
+<meta property="og:description" content="i++和++i的左右值问题 i++和++i很常用，之前的理解仅限++i前置++会先自增后进行运算；而i++后置++则会在参与运算完后才会自增。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/dont-even-know-that_1/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2023-12-17T00:15:58+08:00">
+<meta property="article:modified_time" content="2023-12-17T00:15:58+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="这我都不知道「1」">
+<meta name=twitter:description content="i++和++i的左右值问题 i++和++i很常用，之前的理解仅限++i前置++会先自增后进行运算；而i++后置++则会在参与运算完后才会自增。">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/dont-even-know-that_1/><link rel=prev href=https://importmengjie.github.io/posts/troubleshooting_guide_1/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"这我都不知道「1」","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/dont-even-know-that_1\/"},"genre":"posts","keywords":"c\u002b\u002b, 系统","wordcount":953,"url":"https:\/\/importmengjie.github.io\/posts\/dont-even-know-that_1\/","datePublished":"2023-12-17T00:15:58+08:00","dateModified":"2023-12-17T00:15:58+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">这我都不知道「1」</h1><h2 class=single-subtitle>最近发现我竟然不知道或理解错误的基础知识</h2><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/><i class="far fa-folder fa-fw" aria-hidden=true></i>读书笔记</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-12-17>2023-12-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;953 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;2 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#i和i的左右值问题>i++和++i的左右值问题</a></li>
+<li><a href=#无符号和有符号比较>无符号和有符号比较</a></li>
+<li><a href=#linux系统时区设置>Linux系统时区设置</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><h2 id=i和i的左右值问题>i++和++i的左右值问题</h2>
+<p><code>i++</code>和<code>++i</code>很常用，之前的理解仅限<code>++i</code>前置++会先自增后进行运算；而<code>i++</code>后置++则会在参与运算完后才会自增。</p>
+<p>上述理解并不透彻，在《现代c++语言核心特征解析》一书右值引用一章中，解释到二者有左右值的区别，<code>i++</code>是右值，因为<strong>后置++操作中编译器会先生成一份i值的临时拷贝，然后对i自增，返回临时拷贝</strong>。<code>++i</code>则是左值，直接对i进行递增后返回自身。如果对它们进行取地址操作，可以发现<code>++i</code>的取地址编译通过，而<code>i++</code>不可以。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+<span class=kt>int</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=o>&amp;</span><span class=n>i</span><span class=o>++</span><span class=p>;</span> <span class=c1>// 编译失败
+</span><span class=c1></span><span class=kt>int</span> <span class=o>*</span><span class=n>q</span> <span class=o>=</span> <span class=o>&amp;++</span><span class=n>i</span><span class=p>;</span> <span class=c1>// 编译成功
+</span></code></pre></div><p>故<code>i++</code>在返回前就已经完成对i的自增并且返回的值是个自增前的临时拷贝。利用这一个特性可在STL中进行元素删除时防止关联容器迭代器失效。</p>
+<p>在《C++标准库》第7.8节中举例：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=n>std</span><span class=o>::</span><span class=n>map</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=p>,</span> <span class=kt>float</span><span class=o>&gt;</span> <span class=n>coll</span><span class=p>;</span>
+<span class=c1>// ...
+</span><span class=c1></span><span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=n>pos</span> <span class=o>=</span> <span class=n>coll</span><span class=p>.</span><span class=n>begin</span><span class=p>();</span> <span class=n>pos</span> <span class=o>!=</span> <span class=n>coll</span><span class=p>.</span><span class=n>end</span><span class=p>();)</span> <span class=p>{</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>pos</span><span class=o>-&gt;</span><span class=n>sencode</span> <span class=o>==</span> <span class=n>value</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>coll</span><span class=p>.</span><span class=n>erase</span><span class=p>(</span><span class=n>pos</span><span class=o>++</span><span class=p>);</span>
+    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+        <span class=o>++</span><span class=n>pos</span><span class=p>;</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>上述<code>coll.erase(pos++)</code>时<code>pos++</code>会将<code>pos</code>指向下一个元素，返回原值的拷贝，因此当<code>erase()</code>调用时，<code>pos</code>已经不再指向被即将移除的元素，所以就不存在迭代器失效的问题。当然在c++11之后，关联容器的<code>erase()</code>会返回迭代器指向其后续元素，上述方法有更简单的替代版本：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=n>pos</span> <span class=o>=</span> <span class=n>coll</span><span class=p>.</span><span class=n>begin</span><span class=p>();</span> <span class=n>pos</span> <span class=o>!=</span> <span class=n>coll</span><span class=p>.</span><span class=n>end</span><span class=p>();)</span> <span class=p>{</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>pos</span><span class=o>-&gt;</span><span class=n>sencode</span> <span class=o>==</span> <span class=n>value</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>pos</span> <span class=o>=</span> <span class=n>coll</span><span class=p>.</span><span class=n>erase</span><span class=p>(</span><span class=n>pos</span><span class=p>);</span>
+    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+        <span class=o>++</span><span class=n>pos</span><span class=p>;</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>对于像<code>vector</code>等容器其<code>erase()</code>方法在c++11之前也是返回下个元素的迭代器，因为移除元素可能会导致后续所有元素迭代器失效。</p>
+<h2 id=无符号和有符号比较>无符号和有符号比较</h2>
+<p>当有符号和无符号进行比较时，需要特别注意编译器会隐式转换有符号数为无符号数，当有符号数为负值时转换成无符号数则是一个非常大的无符号数。即</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+<span class=n>uint</span> <span class=n>ui</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+<span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>i</span> <span class=o>&lt;</span> <span class=n>ui</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span> <span class=c1>// 0
+</span></code></pre></div><p>上述代码中<code>i &lt; ui</code>是false。所以<strong>当遇到无符号和有符号比较时，需要特别注意先对有符号数进行负值的判断</strong>。</p>
+<h2 id=linux系统时区设置>Linux系统时区设置</h2>
+<p>设置Linux时区主要有两种方法，来源与<code>man 5 localtime</code></p>
+<ol>
+<li>
+<p>设置/etc/localtime文件链接到/usr/share/zoneinfo目录下对应时区文件</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>$ ll /etc/localtime
+lrwxrwxrwx <span class=m>1</span> root root /etc/localtime -&gt; /usr/share/zoneinfo/Asia/Shanghai
+</code></pre></div><p>此为系统级别的修改，其文件格式可通过<code>man 5 tzfile</code>查看。<code>timedatectl</code>命令就是对该文件进行修改从而达成修改时区的目的。</p>
+</li>
+<li>
+<p>设置环境变量<code>TZ</code></p>
+<p>设置环境变量<code>TZ</code>可对上述文件设置的时区进行覆盖，一般应用于临时设置，而不作为系统级别的设置。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nb>export</span> <span class=nv>TZ</span><span class=o>=</span><span class=s1>&#39;Asia/Shanghai&#39;</span>
+</code></pre></div></li>
+</ol>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2023-12-17</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这我都不知道「1」 data-hashtags=c++,系统><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这我都不知道「1」><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这我都不知道「1」><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这我都不知道「1」><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c++/>c++</a>,&nbsp;<a href=/tags/%E7%B3%BB%E7%BB%9F/>系统</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/troubleshooting_guide_1/ class=prev rel=prev title="问题诊断: 小手册系列「1」"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>问题诊断: 小手册系列「1」</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>
