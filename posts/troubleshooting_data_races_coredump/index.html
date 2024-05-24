@@ -1,0 +1,247 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>问题诊断: 记一次数据竞争导致内存损坏的coredump - ImportMengjie's Blog</title><meta name=Description content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"><meta property="og:title" content="问题诊断: 记一次数据竞争导致内存损坏的coredump">
+<meta property="og:description" content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2024-05-12T14:53:51+08:00">
+<meta property="article:modified_time" content="2024-05-12T14:53:51+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="问题诊断: 记一次数据竞争导致内存损坏的coredump">
+<meta name=twitter:description content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/><link rel=prev href=https://importmengjie.github.io/posts/dont-even-know-that_1/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"问题诊断: 记一次数据竞争导致内存损坏的coredump","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_data_races_coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, data races, memory corruption","wordcount":2873,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_data_races_coredump\/","datePublished":"2024-05-12T14:53:51+08:00","dateModified":"2024-05-12T14:53:51+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":"此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">问题诊断: 记一次数据竞争导致内存损坏的coredump</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/troubleshooting/><i class="far fa-folder fa-fw" aria-hidden=true></i>troubleshooting</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-05-12>2024-05-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2873 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;6 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#前置知识>前置知识</a>
+<ul>
+<li><a href=#内存管理器>内存管理器</a></li>
+<li><a href=#内存损坏memory-corruption>内存损坏(memory corruption)</a></li>
+<li><a href=#内存调试工具>内存调试工具</a></li>
+</ul>
+</li>
+<li><a href=#问题排查>问题排查</a>
+<ul>
+<li><a href=#coredump分析>coredump分析</a></li>
+<li><a href=#分析过程>分析过程</a></li>
+<li><a href=#问题原因>问题原因</a></li>
+</ul>
+</li>
+<li><a href=#自制内存检查工具>自制内存检查工具</a>
+<ul>
+<li><a href=#堆数据越界>堆数据越界</a></li>
+<li><a href=#堆数据释放后使用>堆数据释放后使用</a></li>
+</ul>
+</li>
+</ul>
+</nav></div>
+</div><div class=content id=content><h2 id=前置知识>前置知识</h2>
+<h3 id=内存管理器>内存管理器</h3>
+<h3 id=内存损坏memory-corruption>内存损坏(memory corruption)</h3>
+<p>内存损坏通常是对不是自己向内存管理器申请的内存块进行操作，而在大多数情况下对该内存操作对操作系统角度看却是合法的，因为访问的地址是内核分配给进程的空间，所以<strong>程序不会马上崩溃，数据被悄悄修改，最后可能会挂在不相关的地方</strong>。《高效c/c++调试》书中写道:</p>
+<blockquote>
+<p>调试内存损坏的真正挑战在于，程序错误时并不能揭示导致错误的有缺陷的代码。通常，程序在有bug的代码做出错误的内存访问时，不会显示任何症状，但是程序中的某个变量意外地被改变为不正确的值。在一些文献中，这被叫作传染。随着程序继续运行，该变量会感染其他变量。这种错误传播最终会发展为严重的失败：程序要么崩溃，要么生成错误的结果。由于导致错误的原因和结果之间的距离很长，崩溃时的变量和执行代码与实际错误往往没有关联，而且在时间和位置方面可能会表现出很多随机性。</p>
+</blockquote>
+<p>所以如果程序崩溃在错误代码运行时，那问题就很好debug。对于更“高级”的语言像java/python有越界检查和垃圾回收gc机制基本可以做到程序崩溃的地方就是错误代码运行的地方，而对于c/c++就不一定了，当然也不用为越界检查和gc付出“代价”。参考《高效c/c++调试》堆内存损坏的常见几种类型，如下:</p>
+<ol>
+<li>
+<p>内存溢出和下溢</p>
+<p>用户代码访问超出内存管理器分配的内存(溢出)或者访问可用内存之前的内存块(下溢)。可能会损坏堆元数据结构，导致下一个块被释放或者分配时产生未定义行为。而且也不一定会内存损坏，因为内存块有最小块大小和对齐的要求，可能实际分配给用户的内存大于用户请求大小，破坏的可能是填充的内存，就不会有影响。</p>
+</li>
+<li>
+<p>操作已经释放的内存</p>
+<p>另一种情况是操作已经释放的内存，当用户操作空悬指针或引用时会造成内存损坏，同样症状因许多因素而异，例如，访问的内存已经还给内核，则程序因非法地址访问直接崩溃；释放的内存可能再一次分配给用户，从而导致数据对象被意外破坏；如果内存被内存管理器缓存，修改其可能会破坏堆元数据。</p>
+</li>
+<li>
+<p>使用未初始化的值</p>
+<p>对于未初始化的变量具有随机不可确定的值，如果是恰巧是以前变量留下的野指针，一旦使用也会造成内存损坏。不过此类问题通过代码静态检查一般就可以发现，很好避免。</p>
+</li>
+</ol>
+<h3 id=内存调试工具>内存调试工具</h3>
+<p>根据《高效c/c++调试》书中所写，内存调试工具的大致可以分为3中类型:</p>
+<ol>
+<li>
+<p>填充字节方法</p>
+<p>在每个分配的内存块开头和结尾添加额外的填充字节，内存溢出和下溢的代码就会修改填充字节，调试工具可以在内存分配api的入口(malloc和free函数)检查这些填充字节，如果发生填充字节被修改，就表示发生了内存损坏，报告错误的堆栈等信息。</p>
+</li>
+<li>
+<p>系统保护页方法</p>
+<p>在可能内存块前后设置不可访问的系统保护页，程序试图非法访问受保护的内存时，马上就会停止执行程序，因此可以找到具体越界的代码。但是，频繁地设置系统保护页会调用系统调用(linux下mprotect函数)有一定的时间消耗，有可能会改变程序的行为，使问题无法复现。</p>
+</li>
+<li>
+<p>影子内存方法</p>
+<p>在内部使用影子内存来跟踪程序的内存使用情况，每次内存访问都会更新影子内存，发生错误时，可以立即发现，但是对程序的性能影响较大。Valgrind的memcheck工具和asan都属于这一类型，平均性能损耗分别是10～20和2倍左右。</p>
+</li>
+</ol>
+<p>如下图，目前主流的内存检测工具对比。图来自《高效c/c++调试》，其中AccuTrak是该书作者开发的工具也加入了对比。</p>
+<p><figure><a class=lightgallery href=/images/data_races_coredump/memcheck_tools.png title=内存检测工具对比 data-thumbnail=/images/data_races_coredump/memcheck_tools.png data-sub-html="<h2>内存检测工具对比</h2><p>内存检测工具对比</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/memcheck_tools.png data-srcset="/images/data_races_coredump/memcheck_tools.png, /images/data_races_coredump/memcheck_tools.png 1.5x, /images/data_races_coredump/memcheck_tools.png 2x" data-sizes=auto alt=/images/data_races_coredump/memcheck_tools.png>
+</a><figcaption class=image-caption>内存检测工具对比</figcaption>
+</figure></p>
+<h2 id=问题排查>问题排查</h2>
+<p>软件是运行在arm板子有操作系统的车端状态机模块。该问题有稳定复现的方法，虽然需要几个小时才能复现。</p>
+<h3 id=coredump分析>coredump分析</h3>
+<p>此版本coredump的堆栈不固定，一般最后都挂在malloc_consolidate函数中。从最后一条指令看出x19寄存器存储的指针高4字节被修改为0xffffffff，通过堆上前后数据特征，可以确定真正合法的地址是0x7f<strong>2c000c40</strong>被篡改为0xffffffff <strong>2c000c40</strong>。</p>
+<p><figure><a class=lightgallery href=/images/data_races_coredump/coredump_bt.png title="coredump bt" data-thumbnail=/images/data_races_coredump/coredump_bt.png data-sub-html="<h2>coredump bt</h2><p>coredump bt</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/coredump_bt.png data-srcset="/images/data_races_coredump/coredump_bt.png, /images/data_races_coredump/coredump_bt.png 1.5x, /images/data_races_coredump/coredump_bt.png 2x" data-sizes=auto alt=/images/data_races_coredump/coredump_bt.png>
+</a><figcaption class=image-caption>coredump bt</figcaption>
+</figure></p>
+<p>而在之前的版本中，coredump多是在另一个地方，堆上对象虚表指针的高4位被修改为0xffffffff。</p>
+<p><figure><a class=lightgallery href=/images/data_races_coredump/pre_coredump_bt.png title="pre_coredump bt" data-thumbnail=/images/data_races_coredump/pre_coredump_bt.png data-sub-html="<h2>pre_coredump bt</h2><p>pre_coredump bt</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/pre_coredump_bt.png data-srcset="/images/data_races_coredump/pre_coredump_bt.png, /images/data_races_coredump/pre_coredump_bt.png 1.5x, /images/data_races_coredump/pre_coredump_bt.png 2x" data-sizes=auto alt=/images/data_races_coredump/pre_coredump_bt.png>
+</a><figcaption class=image-caption>pre_coredump bt</figcaption>
+</figure></p>
+<p>debug之前的版本的coredump时，曾经在对象操作前后打印其虚表指针，明确看到其在执行完某个rpc操作后指针被篡改，当时一直怀疑的点是rpc操作中操作堆内存溢出，修改了虚表指针。在之前版本中着急发版没有找到根因，通过改写避开了coredump堆栈的代码。</p>
+<h3 id=分析过程>分析过程</h3>
+<p>最初通过coredump的分析主要猜测原因是内存溢出。分析多个coredump时，尽管对比了被篡改数据前后的内存值，并未发现多个coredump有明显一致性的值。使用了MALLOC_CHECK、Valgrind/Memcheck工具和自制的两个内存检测工具，但都未找到问题所在。由于在编译SDK不支持，未使用asan工具。为了进一步排查问题，采用了“笨”办法，一点点注释怀疑的代码并尝试复现。</p>
+<p>然而，最终通过自制的内存越界检测工具未能复现coredump的现象，因此认为不太可能是内存溢出修改导致的问题。经过一夜的思考，我想到了另一种可能性：多线程共享变量。如果一个线程在析构时，另一个线程还在使用这些变量，就可能导致coredump。最后，在注释了几个线程的启动后，通过代码review发现项目中存在这种竞态条件，导致操作已经释放的内存，并将其修改为-1（0xffffffff）。写了一个小demo模拟，可以复现这个问题。通过自制的堆数据释放后使用的内存检测工具也检测出了问题。</p>
+<p>通过修改此处的代码，经过两天的压测，问题未再复现。</p>
+<h3 id=问题原因>问题原因</h3>
+<p>原因简单讲就是对ros::Timer对象，在timer回调线程中调用其stop方法，另一个线程在某些条件下会销毁该对象。即</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=c1>// thread 1
+</span><span class=c1></span><span class=n>timer</span> <span class=o>=</span> <span class=n>n</span><span class=p>.</span><span class=n>createTimer</span><span class=p>(</span><span class=n>ros</span><span class=o>::</span><span class=n>Duration</span><span class=p>(</span><span class=mi>1</span><span class=p>),</span> <span class=n>std</span><span class=o>::</span><span class=n>bind</span><span class=p>(</span><span class=o>&amp;</span><span class=n>TimerTester</span><span class=o>::</span><span class=n>fun1</span><span class=p>,</span> <span class=k>this</span><span class=p>));</span>
+<span class=c1>// thread 2
+</span><span class=c1></span><span class=n>timer</span><span class=p>.</span><span class=n>stop</span><span class=p>();</span>
+</code></pre></div><p>在thread 1中对栈上timer重新赋值，会将之前的timer销毁。虽然timer是栈上变量，但其内部申请了堆内存。其stop函数实现如下，其中正好有赋值-1，并且也能看出stop函数并不是线程安全的。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>void</span> <span class=n>Timer</span><span class=o>::</span><span class=n>Impl</span><span class=o>::</span><span class=n>stop</span><span class=p>()</span>
+<span class=p>{</span>
+  <span class=k>if</span> <span class=p>(</span><span class=n>started_</span><span class=p>)</span>
+  <span class=p>{</span>
+    <span class=n>started_</span> <span class=o>=</span> <span class=nb>false</span><span class=p>;</span>
+    <span class=n>TimerManager</span><span class=o>&lt;</span><span class=n>Time</span><span class=p>,</span> <span class=n>Duration</span><span class=p>,</span> <span class=n>TimerEvent</span><span class=o>&gt;::</span><span class=n>global</span><span class=p>().</span><span class=n>remove</span><span class=p>(</span><span class=n>timer_handle_</span><span class=p>);</span> <span class=c1>// line6
+</span><span class=c1></span>    <span class=n>timer_handle_</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+  <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>同事提出一个问题，即在timer销毁时也会调用stop函数，从代码和实际测试中能发现，stop函数在回调线程外部调用时如果回调函数正在执行会阻塞在line6等回调函数执行完毕。而stop函数在回调线程内部调用则不会阻塞等待(否则会产生死锁，ros内部通过tls线程局部存储变量判断是否在回调线程调用stop函数)。问题就是thread 1申请的内存释放前会调用stop函数，如果stop函数需要等待回调函数执行完成，则会等待thread 2执行完stop函数并且退出回调函数后才会释放内存，也就不会出现内存释放后使用的问题。</p>
+<p>答案也很简单，由于stop不是线程安全的，所以完全可能thread 2执行stop把started设置为false，之后thread 1释放内存前调用stop由于started为false跳过阻塞等待直接执行完毕释放内存。</p>
+<h2 id=自制内存检查工具>自制内存检查工具</h2>
+<h3 id=堆数据越界>堆数据越界</h3>
+<h3 id=堆数据释放后使用>堆数据释放后使用</h3>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2024-05-12</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="问题诊断: 记一次数据竞争导致内存损坏的coredump" data-hashtags="c++,data races,memory corruption"><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="问题诊断: 记一次数据竞争导致内存损坏的coredump"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="问题诊断: 记一次数据竞争导致内存损坏的coredump"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="问题诊断: 记一次数据竞争导致内存损坏的coredump"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c++/>c++</a>,&nbsp;<a href=/tags/data-races/>data races</a>,&nbsp;<a href=/tags/memory-corruption/>memory corruption</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/dont-even-know-that_1/ class=prev rel=prev title=这我都不知道「1」><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>这我都不知道「1」</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>
