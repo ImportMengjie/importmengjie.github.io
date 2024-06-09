@@ -18,7 +18,7 @@
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/><link rel=prev href=https://importmengjie.github.io/posts/dont-even-know-that_1/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"问题诊断: 记一次数据竞争导致内存损坏的coredump","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_data_races_coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, data races, memory corruption","wordcount":2873,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_data_races_coredump\/","datePublished":"2024-05-12T14:53:51+08:00","dateModified":"2024-05-12T14:53:51+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":"此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"问题诊断: 记一次数据竞争导致内存损坏的coredump","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_data_races_coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, data races, memory corruption","wordcount":6188,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_data_races_coredump\/","datePublished":"2024-05-12T14:53:51+08:00","dateModified":"2024-05-12T14:53:51+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":"此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -83,8 +83,8 @@ Cancel
 <div class=toc-content id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">问题诊断: 记一次数据竞争导致内存损坏的coredump</h1><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/troubleshooting/><i class="far fa-folder fa-fw" aria-hidden=true></i>troubleshooting</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-05-12>2024-05-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2873 words&nbsp;
-<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;6 minutes&nbsp;
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-05-12>2024-05-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;6188 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;13 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
 </div>
@@ -111,16 +111,59 @@ Cancel
 </li>
 <li><a href=#自制内存检查工具>自制内存检查工具</a>
 <ul>
+<li><a href=#代码注入方法总结>代码注入方法总结</a></li>
 <li><a href=#堆数据越界>堆数据越界</a></li>
 <li><a href=#堆数据释放后使用>堆数据释放后使用</a></li>
 </ul>
 </li>
+<li><a href=#参考>参考</a></li>
 </ul>
 </nav></div>
 </div><div class=content id=content><h2 id=前置知识>前置知识</h2>
 <h3 id=内存管理器>内存管理器</h3>
+<p>如果想要对内存损坏有一个深刻意识需要对内存分配器有一个初步的认识，接下来对其做基本概念介绍。</p>
+<p>堆内存（Heap Memory）是由内存管理器进行管理的，用户通过<code>void *malloc( size_t size )</code>申请堆内存块，通过<code>void free(void *)</code>将申请的内存块还给内存分配器。一般我们使用的内存管理器是glibc中的ptmalloc。</p>
+<p>在linux中内存管理器通过brk和mmap系统调用向操作系统申请一大块内存进行管理，用户申请的内存优先在申请的大块内存中分配，从而减少系统调用的次数。通过brk控制下图<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>中<code>狭义的Heap Segment</code>区域扩大或缩小，其作为<strong>主线程</strong>的堆内存由内存管理器管理。对于其它线程则是通过mmap在<code>Memory Mapping Segment</code>区域申请内存块使用，从而减少多线程共享内存块。所以内存管理器的难点就是合理化利用从操作系统申请的一大块内存，在用户<code>malloc</code>申请内存时能及时找到满足用户申请大小的内存返回给用户；在用户<code>free</code>释放内存能合理的管理这些被释放的内存块，比方说合并相连的内存块减少内存碎片。</p>
+<p><figure><a class=lightgallery href=/images/data_races_coredump/memory_layout.jpg title=内存布局 data-thumbnail=/images/data_races_coredump/memory_layout.jpg data-sub-html="<h2>Linux内存布局</h2><p>内存布局</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/memory_layout.jpg data-srcset="/images/data_races_coredump/memory_layout.jpg, /images/data_races_coredump/memory_layout.jpg 1.5x, /images/data_races_coredump/memory_layout.jpg 2x" data-sizes=auto alt=/images/data_races_coredump/memory_layout.jpg>
+</a><figcaption class=image-caption>Linux内存布局</figcaption>
+</figure></p>
+<p>对于ptmalloc有如下一些数据结构：</p>
+<ol>
+<li>
+<p>Arena</p>
+<p>用于管理向操作系统申请的内存块，分为主线程的main arena和线程的thread arena。main arena是通过<code>brk</code>系统调用在空间用尽时可以拓展，而thread arena无拓展能力，所以可能会管理多个内存块。内存块在ptmalloc中用<code>struct heap_info</code>作为header保存元信息。arena使用<code>struct malloc_state</code>作为header保存元信息。</p>
+<p>另外对于一些用户线程数量高于cpu核数，每个线程分配一个arena开销过大，所以thread arena其实是受限于cpu核数，总之不是一个线程就对应一个arena。</p>
+</li>
+<li>
+<p>Chunk</p>
+<p>用于管理分配给用户的内存块，主要有Allocated chunk已经分配给用户的内存块和Free chunk用户释放的内存块。其header数据结构称为<code>malloc_chunk</code>。</p>
+<ul>
+<li>Allocated chunck已经分配给用户的内存块</li>
+</ul>
+<p><figure><a class=lightgallery href=/images/data_races_coredump/allocated_chunk.jpg title=allocated_chunk.jpg data-thumbnail=/images/data_races_coredump/allocated_chunk.jpg data-sub-html="<h2>Allocated chunk已经分配给用户的内存块</h2><p>allocated_chunk.jpg</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/allocated_chunk.jpg data-srcset="/images/data_races_coredump/allocated_chunk.jpg, /images/data_races_coredump/allocated_chunk.jpg 1.5x, /images/data_races_coredump/allocated_chunk.jpg 2x" data-sizes=auto alt=/images/data_races_coredump/allocated_chunk.jpg>
+</a><figcaption class=image-caption>Allocated chunk已经分配给用户的内存块</figcaption>
+</figure></p>
+<p>其中左方第一个箭头chunk表示起始地址，mem表示分配给用户的起始地址，next_chunk为下一个chunk的起始地址同时也是分配给用户的结束地址。This chunk size是分配的size大小，其有对齐的需求，所以后三位都为0,为了节省空间，将其利用放入三个标志位。N表示该chunk是否为thread chunk，M表示是否是mmap分配的chunk。P表示前一个chunk是否被分配。</p>
+<ul>
+<li>Free chunck</li>
+</ul>
+<p><figure><a class=lightgallery href=/images/data_races_coredump/free_chunk.jpg title=free_chunk.jpg data-thumbnail=/images/data_races_coredump/free_chunk.jpg data-sub-html="<h2>free chunk已经分配给用户的内存块</h2><p>free_chunk.jpg</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/free_chunk.jpg data-srcset="/images/data_races_coredump/free_chunk.jpg, /images/data_races_coredump/free_chunk.jpg 1.5x, /images/data_races_coredump/free_chunk.jpg 2x" data-sizes=auto alt=/images/data_races_coredump/free_chunk.jpg>
+</a><figcaption class=image-caption>free chunk已经分配给用户的内存块</figcaption>
+</figure></p>
+<p>比起Allocated chunck增加了两个指针，指向同一个bin中前后的free chunk。bin就是用来管理free chunk的数据结构。</p>
+<p>可以见得存储前一个chunk的是否分配和分配大小就是为了在释放时检查如果前后的chunk也是free chunk可以进行合并，减少内存碎片。</p>
+</li>
+<li>
+<p>Bin</p>
+<p>bin就是用来管理free chunk的数据结构，其包含Fast bin、Unsorted bin、Small bin、Large bin等，已经释放的chunk会根据一些规则放入不同的bin中，设置多个bin主要是满足用户的不同分配内存大小，加快找到合适的free chunk分配给用户。</p>
+</li>
+</ol>
+<p>根据上述的介绍可以了解到，假设用户拿到分配的内存，不小心修改了不是所申请范围的内存，就可能修改到内存分配器存储的一些元信息，在之后的内存管理器执行时造成错误。这也是我们见到程序挂在malloc相关函数中一个可能的原因。</p>
 <h3 id=内存损坏memory-corruption>内存损坏(memory corruption)</h3>
-<p>内存损坏通常是对不是自己向内存管理器申请的内存块进行操作，而在大多数情况下对该内存操作对操作系统角度看却是合法的，因为访问的地址是内核分配给进程的空间，所以<strong>程序不会马上崩溃，数据被悄悄修改，最后可能会挂在不相关的地方</strong>。《高效c/c++调试》书中写道:</p>
+<p>内存损坏通常是对不是自己向内存管理器申请的内存块进行操作，而在大多数情况下对该内存操作对操作系统角度看却是合法的，因为访问的地址是内核分配给进程的空间，所以<strong>程序不会马上崩溃，数据被悄悄修改，最后可能会挂在不相关的地方</strong>。《高效c/c++调试》<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>书中写道:</p>
 <blockquote>
 <p>调试内存损坏的真正挑战在于，程序错误时并不能揭示导致错误的有缺陷的代码。通常，程序在有bug的代码做出错误的内存访问时，不会显示任何症状，但是程序中的某个变量意外地被改变为不正确的值。在一些文献中，这被叫作传染。随着程序继续运行，该变量会感染其他变量。这种错误传播最终会发展为严重的失败：程序要么崩溃，要么生成错误的结果。由于导致错误的原因和结果之间的距离很长，崩溃时的变量和执行代码与实际错误往往没有关联，而且在时间和位置方面可能会表现出很多随机性。</p>
 </blockquote>
@@ -197,8 +240,113 @@ Cancel
 </code></pre></div><p>同事提出一个问题，即在timer销毁时也会调用stop函数，从代码和实际测试中能发现，stop函数在回调线程外部调用时如果回调函数正在执行会阻塞在line6等回调函数执行完毕。而stop函数在回调线程内部调用则不会阻塞等待(否则会产生死锁，ros内部通过tls线程局部存储变量判断是否在回调线程调用stop函数)。问题就是thread 1申请的内存释放前会调用stop函数，如果stop函数需要等待回调函数执行完成，则会等待thread 2执行完stop函数并且退出回调函数后才会释放内存，也就不会出现内存释放后使用的问题。</p>
 <p>答案也很简单，由于stop不是线程安全的，所以完全可能thread 2执行stop把started设置为false，之后thread 1释放内存前调用stop由于started为false跳过阻塞等待直接执行完毕释放内存。</p>
 <h2 id=自制内存检查工具>自制内存检查工具</h2>
+<p>本人在这次问题排查过程中，开发了两个内存检查工具，虽未用其查明根因，但在验证问题还是起到一定作用。两个内存检测工具都是通过<code>LD_PRELOAD</code>环境变量注入自己实现的malloc和free函数，在两个函数中进行一些检查，从而在用户使用有问题的地方能打印出堆栈提醒用户。并且工具实现较简单不会对程序有大幅影响，导致问题可能不复现。</p>
+<h3 id=代码注入方法总结>代码注入方法总结</h3>
+<p>对于代码注入在《高效c/c++调试》<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>介绍了如下几种方法：</p>
+<ol>
+<li>
+<p>链接时替换</p>
+<p>在生成可执行文件或共享库时，连接器发现如果存在多个实现与未定义的符号，会选择在搜索列表中最先找到的实现。所以可以将代理函数放在最前面，使链接器优先选择该函数。这种方式需要重新编译，对于未重新编译的第三方库来说注入就不会成功。</p>
+<p>例如将自己实现的malloc、free、realloc等函数编译到目标文件my_malloc.o中，然后链接时将其放入其他目标文件之前，执行类似如下的命令：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>g++ my_malloc.o other_object_files -o target
+</code></pre></div></li>
+<li>
+<p>预先加载函数</p>
+<p>在运行时，系统加载器将读取环境变量<code>LD_PRELOAD</code>预加载环境变量制定的动态链接库，但链接器尝试解析未定义的符号时，会优先使用库中的函数。该方法无需对程序重新编译。</p>
+</li>
+<li>
+<p>修改导入和导出表</p>
+<p>运行时需要动态链接的函数时通过程序链接表PLT进行路由的，会在第一次调用进行符号解析找到函数对应的GOT表项中的函数地址，设置PLT表项跳转指令为GOT表项中的函数地址。我们可以通过修改GOT表项为代理函数，从而注入检查代码。每个so模块都有自己的GOT表所以需要对每个模块都进行修补，也可以进行细粒度的控制选择某些模块修补。</p>
+</li>
+<li>
+<p>对目标函数进行手术改变</p>
+<p>还有一种更具有侵入性的方式，修改目标函数的代码，通常不是直接覆写原始代码(由于原始代码空间较短无足够的空间容纳新代码)，而是在函数开始时注入跳转指令，将其设置为代理函数的地址。该方法可以注入不是动态链接的函数。另外原始函数在.text段通常为可读的需要将内存保护模式从只读修改为科协，插入跳转指令后，再将函数的内存页面保护模式恢复成只读。</p>
+</li>
+</ol>
 <h3 id=堆数据越界>堆数据越界</h3>
+<ul>
+<li>
+<p>原理</p>
+<p><a href=https://github.com/ImportMengjie/memcheck/blob/main/memory_check_malloc_overflow.cc target=_blank rel="noopener noreffer">代码地址</a>: 通过自定义的malloc和free等函数，在申请内存时内存块上下多申请几个字节并且放入魔数，在free时对上下魔数进行校验，如果发现被修改，则说明该释放数据在使用时出现了溢出情况，同时打印释放时的堆栈，以便提醒用户检查释放数据在之前的使用时有溢出的发生。</p>
+</li>
+<li>
+<p>实例</p>
+<p>对如下错误代码可以有效检测出来。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#include</span> <span class=cpf>&lt;iostream&gt;</span><span class=cp>
+</span><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>std</span><span class=p>;</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>(){</span>
+    <span class=kt>int</span> <span class=o>*</span><span class=n>a</span> <span class=o>=</span> <span class=k>new</span><span class=p>(</span><span class=kt>int</span><span class=p>);</span>
+    <span class=n>a</span><span class=p>[</span><span class=mi>2</span><span class=p>]</span> <span class=o>=</span> <span class=mi>10</span><span class=p>;</span>
+    <span class=k>delete</span> <span class=n>a</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div></li>
+<li>
+<p>缺点</p>
+<ol>
+<li>由于只在释放时才会进行检查，所以对于一直运行的程序在其整个生命周期都存在的堆数据，只能使用ctrl+c提前结束程序才能触发检测。</li>
+<li>使用mmap真实分配内存。所以分配内存的性能不如原始的ptmalloc，这一点可以进行优化。</li>
+</ol>
+</li>
+</ul>
 <h3 id=堆数据释放后使用>堆数据释放后使用</h3>
+<ul>
+<li>
+<p>原理</p>
+<p><a href=https://github.com/ImportMengjie/memcheck/blob/main/memory_check_malloc_usefree.cc target=_blank rel="noopener noreffer">代码地址</a>: 通过对用户调用free释放的内存块进行魔数填充，在一段时间后在去检查该魔数是否被修改，再还给操作系统。以此来检测是否用户存在释放后的内存块还在修改其内容。实现细节如下：</p>
+<ol>
+<li>使用<code>__attribute__((constructor))</code>在该工具so被加载时执行一些准备工作</li>
+<li>使用<code>dlsym(RTLD_NEXT, "malloc")</code>找到原始的malloc函数，内存实际的分配其实是转发给原始的malloc函数。</li>
+<li>在用户调用malloc时保存其调用堆栈放入队列中，用户free时将内存块填充为魔数，并且检查队列是否满了，如果满了就取队头进行魔数校验，然后调用原始的free释放。如果魔数被修改则打印之前保存的申请时堆栈，调用terminate()生成coredump。</li>
+</ol>
+<p>工具在检测到魔数被修改时，会打印申请内存块时的堆栈。</p>
+</li>
+<li>
+<p>实例</p>
+<p>对如下错误代码可以有效检测出来。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#include</span> <span class=cpf>&lt;iostream&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;thread&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;chrono&gt;</span><span class=cp>
+</span><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>std</span><span class=p>;</span>
+
+<span class=kt>void</span> <span class=nf>func</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>uint</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+    <span class=k>while</span> <span class=p>(</span><span class=nb>true</span><span class=p>)</span> <span class=p>{</span>
+        <span class=kt>int</span> <span class=o>*</span><span class=n>a</span> <span class=o>=</span> <span class=k>new</span> <span class=p>(</span><span class=kt>int</span><span class=p>);</span>
+        <span class=n>a</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+        <span class=k>delete</span> <span class=n>a</span><span class=p>;</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>i</span> <span class=o>==</span> <span class=mi>10</span><span class=p>)</span> <span class=p>{</span>
+            <span class=n>a</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=n>i</span><span class=p>;</span>
+        <span class=p>}</span>
+        <span class=o>++</span><span class=n>i</span><span class=p>;</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=kr>thread</span> <span class=n>t1</span><span class=p>(</span><span class=n>func</span><span class=p>);</span>
+    <span class=n>t1</span><span class=p>.</span><span class=n>join</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></div></li>
+<li>
+<p>缺点</p>
+<ol>
+<li>由于<code>__attribute__((constructor))</code>会在so被加载时执行，如果用户程序含有popen、system等新建进程时也会在该进程中执行一遍，所以可能会打印多次初始化的日志。</li>
+<li>虽然对性能影响很小，但是也可能导致某些多线程原因导致释放后修改触发的概率减小。</li>
+</ol>
+</li>
+</ul>
+<h2 id=参考>参考</h2>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://blog.csdn.net/maokelong95/article/details/51989081 target=_blank rel="noopener noreffer">理解 glibc malloc：主流用户态内存分配器实现原理</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:2 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/36693242/ target=_blank rel="noopener noreffer">《高效c/c++调试》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
 </div><div class=post-footer id=post-footer>
 <div class=post-info>
 <div class=post-info-line>
