@@ -139,22 +139,24 @@ Cancel
 <p>Chunk</p>
 <p>用于管理分配给用户的内存块，主要有Allocated chunk已经分配给用户的内存块和Free chunk用户释放的内存块。其header数据结构称为<code>malloc_chunk</code>。</p>
 <ul>
-<li>Allocated chunck已经分配给用户的内存块</li>
-</ul>
+<li>
+<p>Allocated chunck已经分配给用户的内存块</p>
 <p><figure><a class=lightgallery href=/images/data_races_coredump/allocated_chunk.jpg title=allocated_chunk.jpg data-thumbnail=/images/data_races_coredump/allocated_chunk.jpg data-sub-html="<h2>Allocated chunk已经分配给用户的内存块</h2><p>allocated_chunk.jpg</p>">
 <img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/allocated_chunk.jpg data-srcset="/images/data_races_coredump/allocated_chunk.jpg, /images/data_races_coredump/allocated_chunk.jpg 1.5x, /images/data_races_coredump/allocated_chunk.jpg 2x" data-sizes=auto alt=/images/data_races_coredump/allocated_chunk.jpg>
 </a><figcaption class=image-caption>Allocated chunk已经分配给用户的内存块</figcaption>
 </figure></p>
 <p>其中左方第一个箭头chunk表示起始地址，mem表示分配给用户的起始地址，next_chunk为下一个chunk的起始地址同时也是分配给用户的结束地址。This chunk size是分配的size大小，其有对齐的需求，所以后三位都为0,为了节省空间，将其利用放入三个标志位。N表示该chunk是否为thread chunk，M表示是否是mmap分配的chunk。P表示前一个chunk是否被分配。</p>
-<ul>
-<li>Free chunck</li>
-</ul>
+</li>
+<li>
+<p>Free chunck</p>
 <p><figure><a class=lightgallery href=/images/data_races_coredump/free_chunk.jpg title=free_chunk.jpg data-thumbnail=/images/data_races_coredump/free_chunk.jpg data-sub-html="<h2>free chunk已经分配给用户的内存块</h2><p>free_chunk.jpg</p>">
 <img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/free_chunk.jpg data-srcset="/images/data_races_coredump/free_chunk.jpg, /images/data_races_coredump/free_chunk.jpg 1.5x, /images/data_races_coredump/free_chunk.jpg 2x" data-sizes=auto alt=/images/data_races_coredump/free_chunk.jpg>
 </a><figcaption class=image-caption>free chunk已经分配给用户的内存块</figcaption>
 </figure></p>
 <p>比起Allocated chunck增加了两个指针，指向同一个bin中前后的free chunk。bin就是用来管理free chunk的数据结构。</p>
 <p>可以见得存储前一个chunk的是否分配和分配大小就是为了在释放时检查如果前后的chunk也是free chunk可以进行合并，减少内存碎片。</p>
+</li>
+</ul>
 </li>
 <li>
 <p>Bin</p>
