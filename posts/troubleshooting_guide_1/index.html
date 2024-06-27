@@ -3,7 +3,7 @@
 <meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <meta name=robots content="noodp">
-<title>问题诊断: 小手册系列「1」 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="问题诊断: 小手册系列「1」">
+<title>问题诊断: 小手册系列「1」popen后台符号&导致僵尸进程、空间未满却新建文件失败等 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="问题诊断: 小手册系列「1」popen后台符号&导致僵尸进程、空间未满却新建文件失败等">
 <meta property="og:description" content="popen后台符号&导致僵尸进程 下面是popen执行shell命令获取命令输出打印到屏幕上的小例子 #include <limits.h>#include <ostream>#include <stdio.h>#include <stdlib.h>#include <iostream> using namespace std; int main(int argc, char *argv[]) { string files;">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://importmengjie.github.io/posts/troubleshooting_guide_1/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
@@ -11,14 +11,14 @@
 <meta property="article:modified_time" content="2023-12-04T11:39:42+08:00"><meta property="og:site_name" content="ImportMengjie">
 <meta name=twitter:card content="summary_large_image">
 <meta name=twitter:image content="https://importmengjie.github.io/logo.png">
-<meta name=twitter:title content="问题诊断: 小手册系列「1」">
+<meta name=twitter:title content="问题诊断: 小手册系列「1」popen后台符号&导致僵尸进程、空间未满却新建文件失败等">
 <meta name=twitter:description content="popen后台符号&导致僵尸进程 下面是popen执行shell命令获取命令输出打印到屏幕上的小例子 #include <limits.h>#include <ostream>#include <stdio.h>#include <stdlib.h>#include <iostream> using namespace std; int main(int argc, char *argv[]) { string files;">
 <meta name=application-name content="ImportMengjie's Blog">
 <meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/troubleshooting_guide_1/><link rel=prev href=https://importmengjie.github.io/posts/git_in_detail/><link rel=next href=https://importmengjie.github.io/posts/dont-even-know-that_1/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"问题诊断: 小手册系列「1」","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide_1\/"},"genre":"posts","keywords":"shell, 系統","wordcount":2705,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide_1\/","datePublished":"2023-12-04T11:39:42+08:00","dateModified":"2023-12-04T11:39:42+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"问题诊断: 小手册系列「1」popen后台符号\u0026导致僵尸进程、空间未满却新建文件失败等","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide_1\/"},"genre":"posts","keywords":"shell, 系統","wordcount":2827,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_guide_1\/","datePublished":"2023-12-04T11:39:42+08:00","dateModified":"2023-12-04T11:39:42+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -81,9 +81,9 @@ Cancel
 <div class=container><div class=toc id=toc-auto>
 <h2 class=toc-title>Contents</h2>
 <div class=toc-content id=toc-content-auto></div>
-</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">问题诊断: 小手册系列「1」</h1><div class=post-meta>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">问题诊断: 小手册系列「1」popen后台符号&导致僵尸进程、空间未满却新建文件失败等</h1><h2 class=single-subtitle>问题列表: popen后台符号&导致僵尸进程、空间未满却新建文件失败、tar压缩中返回short read生成破损的压缩包、getifaddrs返回ifa_addr可能为空</h2><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/troubleshooting/><i class="far fa-folder fa-fw" aria-hidden=true></i>troubleshooting</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-12-04>2023-12-04</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2705 words&nbsp;
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-12-04>2023-12-04</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2827 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;6 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
@@ -139,6 +139,9 @@ Cancel
 <p>大概来讲，<code>popen</code>会先<code>fork</code>新进程执行<code>/bin/sh -c 提供的命令</code>，而<code>/bin/sh</code>也会新建个进程执行用户指定的命令。当然其中也涉及到一些管道的操作用于拿到命令输出或者设置命令的输入。</p>
 <p>如果在命令后边加上<code>&</code>的符号则<code>/bin/sh</code>进程会不等执行的命令而直接结束，此时如果命令还未执行完毕，则<code>/bin/sh</code>进程不会被父进程调用<code>wait</code>函数拿到其退出返回值，从而导致<code>/bin/sh</code>成为僵尸进程。</p>
 <p>不过该僵尸进程在用户命令结束时也会跟着被回收，所以不会出现僵尸进程导致pid用尽的情况，不过在代码中最好要避免这种写法。</p>
+<blockquote>
+<p>2024.06.26 在写另一篇文章<a href=/posts/voice_player_system_programming/ rel>从音频播放c++类的实现学习Linux系统子进程管理</a>中想到这个问题，基本确认了上述的想法。并且由于用户命令在执行中不会关闭pipe管道，所以<code>fgets</code>会阻塞等待用户命令的输出不能调用<code>pclose</code>，此时<code>/bin/sh</code>成为僵尸进程。</p>
+</blockquote>
 <h2 id=空间未满却新建不了文件>空间未满却新建不了文件</h2>
 <p>一般车端都需要日志滚删的功能，从而不至于让日志写满磁盘，该功能的实现，一般很自然想到当剩余空间小于某个阈值时，进行日志文件的删除动作，删除按照文件修改时间由小到大，直到空间满足要求。</p>
 <p>不过，这次遇到了问题是使用<code>df -h</code>查看磁盘空间未满，但是新建文件时又会报<code>No space left on device</code>类似的错误。</p>
@@ -239,7 +242,7 @@ Cancel
 <div class=post-info-line>
 <div class=post-info-md></div>
 <div class=post-info-share>
-<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」" data-hashtags=shell,系統><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-hashtag=shell><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」popen后台符号&导致僵尸进程、空间未满却新建文件失败等" data-hashtags=shell,系統><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-hashtag=shell><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」popen后台符号&导致僵尸进程、空间未满却新建文件失败等"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」popen后台符号&导致僵尸进程、空间未满却新建文件失败等"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/troubleshooting_guide_1/ data-title="问题诊断: 小手册系列「1」popen后台符号&导致僵尸进程、空间未满却新建文件失败等"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
 </div>
 </div>
 </div>

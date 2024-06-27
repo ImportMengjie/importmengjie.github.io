@@ -1,0 +1,465 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>从音频播放c++类的实现学习Linux系统子进程管理 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="从音频播放c++类的实现学习Linux系统子进程管理">
+<meta property="og:description" content="需求 之前车端软件播放音频文件都是在代码中使用popen、system等库函数执行shell命令aplay播放完整的短音频，不需要被打断。而这">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/voice_player_system_programming/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2024-06-25T20:06:55+08:00">
+<meta property="article:modified_time" content="2024-06-25T20:06:55+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="从音频播放c++类的实现学习Linux系统子进程管理">
+<meta name=twitter:description content="需求 之前车端软件播放音频文件都是在代码中使用popen、system等库函数执行shell命令aplay播放完整的短音频，不需要被打断。而这">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/voice_player_system_programming/><link rel=prev href=https://importmengjie.github.io/posts/reading_202312-202406/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从音频播放c++类的实现学习Linux系统子进程管理","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/"},"genre":"posts","keywords":"c\u002b\u002b, shell, 系统","wordcount":3481,"url":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/","datePublished":"2024-06-25T20:06:55+08:00","dateModified":"2024-06-25T20:06:55+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">从音频播放c++类的实现学习Linux系统子进程管理</h1><h2 class=single-subtitle>为了实现一个可以及时停止的音频播放类，学习使用fork、execl、setpgid、waitpid和进程组概念</h2><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/><i class="far fa-folder fa-fw" aria-hidden=true></i>系统编程</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-06-25>2024-06-25</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3481 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;7 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#需求>需求</a></li>
+<li><a href=#代码分析>代码分析</a>
+<ul>
+<li><a href=#打断播放的音频使用进程组实现kill信号同时发给子进程和其产生的子进程>打断播放的音频：使用进程组实现kill信号同时发给子进程和其产生的子进程</a></li>
+<li><a href=#程序崩溃时音频自动停止子进程判断父进程是否还活着>程序崩溃时音频自动停止：子进程判断父进程是否还活着</a></li>
+<li><a href=#锁的使用>锁的使用</a></li>
+</ul>
+</li>
+<li><a href=#完整代码>完整代码</a></li>
+<li><a href=#参考>参考</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><h2 id=需求>需求</h2>
+<p>之前车端软件播放音频文件都是在代码中使用popen、system等库函数执行shell命令aplay播放完整的短音频，不需要被打断。而这次的需求需要声音被及时打断，使用popen等库函数皆不能优雅的提前终止，所以有了此次造轮子。其实boost库中有process模块，也能提前终止进程，但是看其示例感觉比较复杂容易使用不当，其中spawn、group等用法让人不看源代码不学习底层原理不敢使用。权衡了一下，总之都要学习一下进程管理，不如自己造个轮子，也能实操加深理解。</p>
+<h2 id=代码分析>代码分析</h2>
+<p>代码的地址在<a href=https://github.com/ImportMengjie/recipes/blob/main/test/popen/shell_process.cc target=_blank rel="noopener noreffer">这里</a></p>
+<h3 id=打断播放的音频使用进程组实现kill信号同时发给子进程和其产生的子进程>打断播放的音频：使用进程组实现kill信号同时发给子进程和其产生的子进程</h3>
+<p>在遇到另一篇文章中<a href=/posts/troubleshooting_guide_1/#popen%e5%90%8e%e5%8f%b0%e7%ac%a6%e5%8f%b7%e5%af%bc%e8%87%b4%e5%83%b5%e5%b0%b8%e8%bf%9b%e7%a8%8b rel>问题诊断: 小手册系列「1」</a>的“popen后台符号&导致僵尸进程”问题时，我就观察到用<code>popen</code>执行非内建命令时会至少两个进程，一个是<code>/bin/sh</code>，另一个才是输入命令的进程，并且如果执行<code>kill</code>命令杀死<code>/bin/sh</code>进程并不会导致输入命令的进程退出。原因是<code>popen</code>内部先创建shell进程将用户命令作为参数传给shell进程执行，shell进程会创建子进程执行实际的命令，而kill父进程的pid不会将信号发给子进程。</p>
+<p>对于本需求需要主动结束播放音频进程，如果使用<code>popen</code>则难以获取播放音频进程的pid；如果使用<code>fork</code>、<code>exec*</code>系统调用创建子进程可以拿到子进程id，当然可以直接<code>exec*</code>创建播放音频进程并且拿到其pid，通过kill函数可以提前终止。而播放音频命令<code>aplay</code>不支持循环播放，这种做法需要在外部进行循环调用并不优雅，而且假设播放音频命令也创建子进程，kill命令不能结束子进程，可能会造成资源的泄漏。所以打算和<code>popen</code>一样执行shell命令，可以使用<code>while</code>等命令实现循环调用，使用<strong>进程组使得可以将结束信号发给shell进程和其子进程</strong>。</p>
+<p>下面主要介绍下进程组概念，进程组和会话主要用于shell作业控制。</p>
+<p>进程组由一个或多个共享同一进程组标识符（PGID）的进程组成，进程组标识符（PGID）等于首次创建进程组的进程pid，其生命周期为创建时刻到最后一个进程退出进程组，在其生命周期不会有和PGID相同的pid分配给新进程。<strong>子进程会继承父进程的进程组</strong>。</p>
+<p>会话则是一组进程组的集合。进程的会话成员关系是由其会话标识符（SID）确定的，会话标识符也是会话创建进程的pid。下图来自<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>，表示了进程组和会话之间的关系。</p>
+<p><figure><a class=lightgallery href=/images/voice_player_system_programming/process_group.png title=进程组、会话和控制终端之间的关系进程组 data-thumbnail=/images/voice_player_system_programming/process_group.png data-sub-html="<h2>进程组、会话和控制终端之间的关系进程组</h2><p>进程组、会话和控制终端之间的关系进程组</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/voice_player_system_programming/process_group.png data-srcset="/images/voice_player_system_programming/process_group.png, /images/voice_player_system_programming/process_group.png 1.5x, /images/voice_player_system_programming/process_group.png 2x" data-sizes=auto alt=/images/voice_player_system_programming/process_group.png>
+</a><figcaption class=image-caption>进程组、会话和控制终端之间的关系进程组</figcaption>
+</figure></p>
+<p>上图可以看到像<code>sort &lt; file | uniq -c</code>带有管道的命令会创建两个进程且在同一进程组，这样我们在前台执行ctrl+c时的终端会通过<code>killpg</code>将信号发送给进程组中的每个进程，从而结束这条命令。利用这个特点，我们可以<code>fork</code>后的子进程设置其为进程组的首进程，在父进程就可以通过<code>killpg</code>杀死子进程和其产生的子进程，从而达到目的。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=n>pid_t</span> <span class=nf>exec</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>cmd</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+    <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, cmd: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>cmd</span><span class=p>;</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>cmd</span><span class=p>.</span><span class=n>empty</span><span class=p>())</span> <span class=k>return</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+    <span class=n>pid_t</span> <span class=n>pid</span> <span class=o>=</span> <span class=n>fork</span><span class=p>();</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>pid</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+        <span class=o>::</span><span class=n>setpgid</span><span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+        <span class=o>::</span><span class=n>execl</span><span class=p>(</span><span class=s>&#34;/bin/sh&#34;</span><span class=p>,</span> <span class=s>&#34;sh&#34;</span><span class=p>,</span> <span class=s>&#34;-c&#34;</span><span class=p>,</span> <span class=n>cmd</span><span class=p>.</span><span class=n>c_str</span><span class=p>(),</span> <span class=k>nullptr</span><span class=p>);</span>
+        <span class=n>LOG_ERROR</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;execl failure!&#34;</span><span class=p>;</span>
+        <span class=n>_exit</span><span class=p>(</span><span class=n>EXIT_FAILURE</span><span class=p>);</span>
+    <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=p>(</span><span class=n>pid</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>LOG_ERROR</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;fork failed: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid</span><span class=p>;</span>
+    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, setpgid ret: &#34;</span> <span class=o>&lt;&lt;</span> <span class=o>::</span><span class=n>setpgid</span><span class=p>(</span><span class=n>pid</span><span class=p>,</span> <span class=n>pid</span><span class=p>);</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=n>pid</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p>核心代码如上所示，其中<code>setpgid</code>是用来将进程为pid的进程的进程组修改为pgid，定义如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
+</span><span class=cp></span>
+<span class=kt>int</span> <span class=nf>setpgid</span><span class=p>(</span><span class=n>pid_t</span> <span class=n>pid</span><span class=p>,</span> <span class=n>pid_t</span> <span class=n>pgid</span><span class=p>);</span>
+</code></pre></div><p>如果将pid的值设置为0，那么就是设置调用进程的进程组。如果将pgid的值设置为0，那么设置的进程组pgid等于调用进程的pid。所以在<code>fork</code>后的子进程中可以直接调用<code>::setpgid(0, 0);</code>将自己设置为进程组的首进程，即其pid==pgid，从而使得其创建的子进程都继承其进程组id。父进程即可通过<code>killpg(pid, sig)</code>向/bin/sh进程和其产生的子进程发送sig信号。一个进程在其子进程已经执行exec()后就无法修改该子进程的进程组pgid了。</p>
+<p>需要特别注意的是在父进程也调用了<code>::setpgid(pid, pid)</code>，重复设置子进程的进程组id。这是进程安全的做法，由于<code>fork</code>后子进程和父进程执行顺序不确定，如果不在父进程设置，则可能出现子进程还没设置线程组，而父进程就对线程组调用诸如<code>killpg</code>等命令造成并发问题。所以在父进程调用是很有必要的。</p>
+<h3 id=程序崩溃时音频自动停止子进程判断父进程是否还活着>程序崩溃时音频自动停止：子进程判断父进程是否还活着</h3>
+<p>在循环播放音频时，父进程崩溃则不会影响到子进程继续执行，此时声音就会一直被播放，这是不能被接受的。所以考虑在循环执行播放命令时做判断其父进程是否存在。</p>
+<p>我的实现如下，通过持续判断当前进程的父进程(/proc/$$/stat文件中动态更新)是否等于进程创建时的父进程id($PPID)来判断父进程是否活着，如果父进程崩溃了，该子进程会被系统进程收养，其父进程id会改变。之所以没有直接判断$PPID进程是否还存在是因为在$PPID可能被其它进程分配到，此时虽然主进程已经崩溃，但是$PPID却还存在。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=k>while</span> <span class=o>[</span> <span class=nv>$PPID</span> -eq <span class=k>$(</span>cut -d <span class=s1>&#39; &#39;</span> -f <span class=m>4</span> /proc/<span class=nv>$$</span>/stat<span class=k>)</span> <span class=o>]</span><span class=p>;</span> <span class=k>do</span> 
+    aplay voice_path
+<span class=k>done</span>
+</code></pre></div><h3 id=锁的使用>锁的使用</h3>
+<p>对上述进程管理操作，我封装了一个<code>ShellProcess</code>类，用于管理子进程，其只有一个数据成员<code>pid_</code>保存子进程的pid。同时封装<code>VoicePlayer</code>使用<code>ShellProcess</code>管理子进程播放音频。</p>
+<p>在实现阻塞播放一次音频时，发现了一个难点：首先对于<code>shell_process_</code>对象的调用需要加锁保护防止多线程竞争，但是我不希望在阻塞播放音频时全程持有这个锁，这样就不能在其它线程调用<code>stop</code>(其也需要加锁)提前终止这次播放。</p>
+<p>我的实现是在加锁的状态下进行<code>exec</code>播放进程并保存其pid到栈上。然后释放锁再调用<code>waitpid</code>，此时其它线程就可以随时<code>stop</code>了。之后在<code>waitpid</code>返回子进程结束后在, 再申请锁将<code>shell_process_</code>对象持有的pid赋值为-1，表明子进程已经结束。当然为了防止竟态条件，只在该对象持有的pid==保存的pid时才进行操作。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>void</span> <span class=nf>playOnceBlock</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>voice_path</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+    <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, path: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>voice_path</span><span class=p>;</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>check_file_exist</span><span class=p>(</span><span class=n>voice_path</span><span class=p>))</span> <span class=p>{</span>
+        <span class=n>pid_t</span> <span class=n>pid_voice</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+        <span class=p>{</span>
+            <span class=n>std</span><span class=o>::</span><span class=n>lock_guard</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>mutex</span><span class=o>&gt;</span> <span class=n>lk_shell_process</span><span class=p>(</span><span class=n>shell_process_mutex_</span><span class=p>);</span>
+            <span class=n>shell_process_</span> <span class=o>=</span> <span class=n>ShellProcess</span><span class=p>(</span><span class=s>&#34;aplay &#34;</span> <span class=o>+</span> <span class=n>voice_path</span><span class=p>);</span>
+            <span class=n>pid_voice</span> <span class=o>=</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>pid</span><span class=p>();</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid_voice</span><span class=p>;</span>
+            <span class=n>cur_voice_path</span> <span class=o>=</span> <span class=n>voice_path</span><span class=p>;</span>
+        <span class=p>}</span>
+        <span class=n>log_ss</span><span class=p>.</span><span class=n>flush_log</span><span class=p>();</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>pid_voice</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+            <span class=kt>int</span> <span class=n>status</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+            <span class=kt>int</span> <span class=n>waitpid_ret</span> <span class=o>=</span> <span class=o>::</span><span class=n>waitpid</span><span class=p>(</span><span class=n>pid_voice</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>status</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>  <span class=c1>// waitpid阻塞时不持有锁, 其它线程可调用stop提前结束
+</span><span class=c1></span>            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;waitpid, status: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>status</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, exited: &#34;</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>WIFEXITED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>?</span> <span class=n>WEXITSTATUS</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span>
+                    <span class=o>&lt;&lt;</span> <span class=s>&#34;, signal: &#34;</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>WIFSIGNALED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>?</span> <span class=n>WTERMSIG</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, waitpid_ret: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>waitpid_ret</span><span class=p>;</span>
+        <span class=p>}</span>
+        <span class=p>{</span>
+            <span class=n>std</span><span class=o>::</span><span class=n>lock_guard</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>mutex</span><span class=o>&gt;</span> <span class=n>lk_shell_process</span><span class=p>(</span><span class=n>shell_process_mutex_</span><span class=p>);</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;cur_pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>pid</span><span class=p>()</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid_voice: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid_voice</span><span class=p>;</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>shell_process_</span><span class=p>.</span><span class=n>pid</span><span class=p>()</span> <span class=o>==</span> <span class=n>pid_voice</span><span class=p>)</span> <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, terminate: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>terminate</span><span class=p>();</span>
+            <span class=n>cur_voice_path</span> <span class=o>=</span> <span class=s>&#34;&#34;</span><span class=p>;</span>
+        <span class=p>}</span>
+    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, not exist&#34;</span><span class=p>;</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=完整代码>完整代码</h2>
+<p>update on 2024.06.25.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#define LOG_ERROR std::cerr &lt;&lt; std::endl
+</span><span class=cp>#define LOG_INFO std::cout &lt;&lt; std::endl
+</span><span class=cp></span>
+<span class=kt>bool</span> <span class=nf>check_file_exist</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>file_path</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>ifstream</span> <span class=n>file</span><span class=p>(</span><span class=n>file_path</span><span class=p>);</span>
+    <span class=k>return</span> <span class=n>file</span><span class=p>.</span><span class=n>good</span><span class=p>();</span>
+<span class=p>}</span>
+
+<span class=k>class</span> <span class=nc>LogStringStream</span> <span class=o>:</span> <span class=k>public</span> <span class=n>std</span><span class=o>::</span><span class=n>ostringstream</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+    <span class=o>~</span><span class=n>LogStringStream</span><span class=p>()</span> <span class=p>{</span>
+        <span class=k>auto</span> <span class=n>log_str</span> <span class=o>=</span> <span class=k>this</span><span class=o>-&gt;</span><span class=n>str</span><span class=p>();</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>log_str</span><span class=p>.</span><span class=n>size</span><span class=p>())</span> <span class=p>{</span>
+            <span class=n>LOG_INFO</span> <span class=o>&lt;&lt;</span> <span class=n>log_str</span><span class=p>;</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=kt>void</span> <span class=nf>flush_log</span><span class=p>()</span> <span class=p>{</span>
+        <span class=k>auto</span> <span class=n>log_str</span> <span class=o>=</span> <span class=k>this</span><span class=o>-&gt;</span><span class=n>str</span><span class=p>();</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>log_str</span><span class=p>.</span><span class=n>size</span><span class=p>())</span> <span class=p>{</span>
+            <span class=n>LOG_INFO</span> <span class=o>&lt;&lt;</span> <span class=n>log_str</span><span class=p>;</span>
+            <span class=k>this</span><span class=o>-&gt;</span><span class=n>str</span><span class=p>(</span><span class=s>&#34;&#34;</span><span class=p>);</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>};</span>
+<span class=k>class</span> <span class=nc>DeferFunction</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+    <span class=k>explicit</span> <span class=n>DeferFunction</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>function</span><span class=o>&lt;</span><span class=kt>void</span><span class=p>()</span><span class=o>&gt;</span> <span class=o>&amp;</span><span class=n>defer_func</span><span class=p>)</span> <span class=o>:</span> <span class=n>defer_func_</span><span class=p>(</span><span class=n>defer_func</span><span class=p>)</span> <span class=p>{}</span>
+
+    <span class=o>~</span><span class=n>DeferFunction</span><span class=p>()</span> <span class=p>{</span> <span class=n>defer_func_</span><span class=p>();</span> <span class=p>}</span>
+
+<span class=k>private</span><span class=o>:</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>function</span><span class=o>&lt;</span><span class=kt>void</span><span class=p>()</span><span class=o>&gt;</span> <span class=n>defer_func_</span><span class=p>;</span>
+<span class=p>};</span>
+
+<span class=k>class</span> <span class=nc>ShellProcess</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+    <span class=n>ShellProcess</span><span class=p>()</span> <span class=o>=</span> <span class=k>default</span><span class=p>;</span>
+
+    <span class=n>ShellProcess</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>cmd</span><span class=p>)</span> <span class=o>:</span> <span class=n>pid_</span><span class=p>(</span><span class=n>exec</span><span class=p>(</span><span class=n>cmd</span><span class=p>))</span> <span class=p>{}</span>
+
+    <span class=n>ShellProcess</span><span class=p>(</span><span class=n>ShellProcess</span> <span class=o>&amp;&amp;</span><span class=n>lhs</span><span class=p>)</span> <span class=k>noexcept</span> <span class=o>:</span> <span class=n>pid_</span><span class=p>(</span><span class=n>lhs</span><span class=p>.</span><span class=n>pid_</span><span class=p>)</span> <span class=p>{</span> <span class=n>lhs</span><span class=p>.</span><span class=n>pid_</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span> <span class=p>}</span>
+
+    <span class=n>ShellProcess</span> <span class=o>&amp;</span><span class=k>operator</span><span class=o>=</span><span class=p>(</span><span class=n>ShellProcess</span> <span class=o>&amp;&amp;</span><span class=n>lhs</span><span class=p>)</span> <span class=k>noexcept</span> <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=k>this</span> <span class=o>!=</span> <span class=o>&amp;</span><span class=n>lhs</span><span class=p>)</span> <span class=p>{</span>
+            <span class=n>terminate</span><span class=p>();</span>
+            <span class=k>this</span><span class=o>-&gt;</span><span class=n>pid_</span> <span class=o>=</span> <span class=n>lhs</span><span class=p>.</span><span class=n>pid_</span><span class=p>;</span>
+            <span class=n>lhs</span><span class=p>.</span><span class=n>pid_</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=o>*</span><span class=k>this</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=n>ShellProcess</span><span class=p>(</span><span class=k>const</span> <span class=n>ShellProcess</span> <span class=o>&amp;</span><span class=p>)</span> <span class=o>=</span> <span class=k>delete</span><span class=p>;</span>
+    <span class=n>ShellProcess</span> <span class=o>&amp;</span><span class=k>operator</span><span class=o>=</span><span class=p>(</span><span class=k>const</span> <span class=n>ShellProcess</span> <span class=o>&amp;</span><span class=p>)</span> <span class=o>=</span> <span class=k>delete</span><span class=p>;</span>
+
+    <span class=kt>int</span> <span class=nf>terminate</span><span class=p>()</span> <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>pid_</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+            <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid_</span><span class=p>;</span>
+            <span class=kt>int</span> <span class=n>killpg_ret</span> <span class=o>=</span> <span class=o>::</span><span class=n>killpg</span><span class=p>(</span><span class=n>pid_</span><span class=p>,</span> <span class=n>SIGKILL</span><span class=p>);</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, killpg_ret: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>killpg_ret</span><span class=p>;</span>
+            <span class=n>std</span><span class=o>::</span><span class=n>this_thread</span><span class=o>::</span><span class=n>yield</span><span class=p>();</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>killpg_ret</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+                <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, error: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>strerror</span><span class=p>(</span><span class=n>errno</span><span class=p>);</span>
+            <span class=p>}</span>
+            <span class=k>return</span> <span class=n>waitNoBlock</span><span class=p>();</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=kt>int</span> <span class=nf>wait</span><span class=p>()</span> <span class=p>{</span>
+        <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid_</span><span class=p>;</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>pid_</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+            <span class=kt>int</span> <span class=n>status</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+            <span class=kt>int</span> <span class=n>waitpid_ret</span> <span class=o>=</span> <span class=o>::</span><span class=n>waitpid</span><span class=p>(</span><span class=n>pid_</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>status</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+            <span class=n>pid_</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, status: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>status</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, exited: &#34;</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>WIFEXITED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>?</span> <span class=n>WEXITSTATUS</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span>
+                   <span class=o>&lt;&lt;</span> <span class=s>&#34;, signal: &#34;</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>WIFSIGNALED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>?</span> <span class=n>WTERMSIG</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, waitpid_ret: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>waitpid_ret</span><span class=p>;</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>waitpid_ret</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+                <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, error: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>strerror</span><span class=p>(</span><span class=n>errno</span><span class=p>);</span>
+                <span class=k>return</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+            <span class=p>}</span>
+            <span class=k>return</span> <span class=n>status</span><span class=p>;</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=o>~</span><span class=n>ShellProcess</span><span class=p>()</span> <span class=p>{</span> <span class=n>terminate</span><span class=p>();</span> <span class=p>}</span>
+
+    <span class=n>pid_t</span> <span class=nf>pid</span><span class=p>()</span> <span class=k>const</span> <span class=p>{</span> <span class=k>return</span> <span class=n>pid_</span><span class=p>;</span> <span class=p>};</span>
+
+<span class=k>private</span><span class=o>:</span>
+    <span class=n>pid_t</span> <span class=n>exec</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>cmd</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, cmd: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>cmd</span><span class=p>;</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>cmd</span><span class=p>.</span><span class=n>empty</span><span class=p>())</span> <span class=k>return</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+        <span class=n>pid_t</span> <span class=n>pid</span> <span class=o>=</span> <span class=n>fork</span><span class=p>();</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>pid</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+            <span class=o>::</span><span class=n>setpgid</span><span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+            <span class=o>::</span><span class=n>execl</span><span class=p>(</span><span class=s>&#34;/bin/sh&#34;</span><span class=p>,</span> <span class=s>&#34;sh&#34;</span><span class=p>,</span> <span class=s>&#34;-c&#34;</span><span class=p>,</span> <span class=n>cmd</span><span class=p>.</span><span class=n>c_str</span><span class=p>(),</span> <span class=k>nullptr</span><span class=p>);</span>
+            <span class=n>LOG_ERROR</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;execl failure!&#34;</span><span class=p>;</span>
+            <span class=n>_exit</span><span class=p>(</span><span class=n>EXIT_FAILURE</span><span class=p>);</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=nf>if</span> <span class=p>(</span><span class=n>pid</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+            <span class=n>LOG_ERROR</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;fork failed: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid</span><span class=p>;</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, setpgid ret: &#34;</span> <span class=o>&lt;&lt;</span> <span class=o>::</span><span class=n>setpgid</span><span class=p>(</span><span class=n>pid</span><span class=p>,</span> <span class=n>pid</span><span class=p>);</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=n>pid</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=kt>int</span> <span class=nf>waitNoBlock</span><span class=p>()</span> <span class=p>{</span>
+        <span class=n>DeferFunction</span> <span class=n>defer_func</span><span class=p>([</span><span class=k>this</span><span class=p>]</span> <span class=p>{</span> <span class=k>this</span><span class=o>-&gt;</span><span class=n>pid_</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span> <span class=p>});</span>
+        <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid_</span><span class=p>;</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>pid_</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+            <span class=k>static</span> <span class=k>const</span> <span class=kt>int</span> <span class=n>max_retry_times</span> <span class=o>=</span> <span class=mi>15</span><span class=p>;</span>
+            <span class=kt>int</span> <span class=n>status</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+            <span class=kt>int</span> <span class=n>waitpid_ret</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+            <span class=kt>int</span> <span class=n>retry_times</span> <span class=o>=</span> <span class=n>max_retry_times</span><span class=p>;</span>
+            <span class=k>do</span> <span class=p>{</span>
+                <span class=n>waitpid_ret</span> <span class=o>=</span> <span class=o>::</span><span class=n>waitpid</span><span class=p>(</span><span class=n>pid_</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>status</span><span class=p>,</span> <span class=n>WNOHANG</span><span class=p>);</span>
+                <span class=k>if</span> <span class=p>(</span><span class=n>max_retry_times</span> <span class=o>-</span> <span class=n>retry_times</span> <span class=o>&lt;</span> <span class=mi>5</span><span class=p>)</span>
+                    <span class=n>std</span><span class=o>::</span><span class=n>this_thread</span><span class=o>::</span><span class=n>sleep_for</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>chrono</span><span class=o>::</span><span class=n>milliseconds</span><span class=p>(</span><span class=mi>10</span><span class=p>));</span>
+                <span class=k>else</span>
+                    <span class=n>std</span><span class=o>::</span><span class=n>this_thread</span><span class=o>::</span><span class=n>yield</span><span class=p>();</span>
+
+            <span class=p>}</span> <span class=k>while</span> <span class=p>(</span><span class=o>--</span><span class=n>retry_times</span> <span class=o>&gt;</span> <span class=mi>0</span> <span class=o>&amp;&amp;</span> <span class=p>((</span><span class=n>waitpid_ret</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=o>||</span> <span class=p>(</span><span class=n>waitpid_ret</span> <span class=o>==</span> <span class=o>-</span><span class=mi>1</span> <span class=o>&amp;&amp;</span> <span class=n>errno</span> <span class=o>==</span> <span class=n>EINTR</span><span class=p>)</span> <span class=o>||</span>
+                                           <span class=p>(</span><span class=n>waitpid_ret</span> <span class=o>!=</span> <span class=o>-</span><span class=mi>1</span> <span class=o>&amp;&amp;</span> <span class=o>!</span><span class=n>WIFEXITED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>&amp;&amp;</span> <span class=o>!</span><span class=n>WIFSIGNALED</span><span class=p>(</span><span class=n>status</span><span class=p>))));</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, retry_times: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>retry_times</span> <span class=o>+</span> <span class=mi>1</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, status: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>status</span>
+                   <span class=o>&lt;&lt;</span> <span class=s>&#34;, exited: &#34;</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>WIFEXITED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>?</span> <span class=n>WEXITSTATUS</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span>
+                   <span class=o>&lt;&lt;</span> <span class=s>&#34;, signal: &#34;</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>WIFSIGNALED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>?</span> <span class=n>WTERMSIG</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, waitpid_ret: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>waitpid_ret</span><span class=p>;</span>
+            <span class=k>return</span> <span class=n>status</span><span class=p>;</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=n>pid_t</span> <span class=n>pid_</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+<span class=p>};</span>
+
+<span class=k>class</span> <span class=nc>VoicePlayer</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+    <span class=kt>void</span> <span class=n>playContinuous</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>voice_path</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, path: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>voice_path</span><span class=p>;</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>check_file_exist</span><span class=p>(</span><span class=n>voice_path</span><span class=p>))</span> <span class=p>{</span>
+            <span class=n>std</span><span class=o>::</span><span class=n>lock_guard</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>mutex</span><span class=o>&gt;</span> <span class=n>lk_shell_process</span><span class=p>(</span><span class=n>shell_process_mutex_</span><span class=p>);</span>
+            <span class=n>shell_process_</span> <span class=o>=</span> <span class=n>ShellProcess</span><span class=p>(</span><span class=s>&#34;while [ $PPID -eq $(cut -d &#39; &#39; -f 4 /proc/$$/stat) ]; do aplay &#34;</span> <span class=o>+</span> <span class=n>voice_path</span> <span class=o>+</span> <span class=s>&#34;; done&#34;</span><span class=p>);</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>pid</span><span class=p>();</span>
+            <span class=n>cur_voice_path</span> <span class=o>=</span> <span class=n>voice_path</span><span class=p>;</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, not exist&#34;</span><span class=p>;</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=kt>void</span> <span class=nf>playOnce</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>voice_path</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, path: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>voice_path</span><span class=p>;</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>check_file_exist</span><span class=p>(</span><span class=n>voice_path</span><span class=p>))</span> <span class=p>{</span>
+            <span class=n>std</span><span class=o>::</span><span class=n>lock_guard</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>mutex</span><span class=o>&gt;</span> <span class=n>lk_shell_process</span><span class=p>(</span><span class=n>shell_process_mutex_</span><span class=p>);</span>
+            <span class=n>shell_process_</span> <span class=o>=</span> <span class=n>ShellProcess</span><span class=p>(</span><span class=s>&#34;aplay &#34;</span> <span class=o>+</span> <span class=n>voice_path</span><span class=p>);</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>pid</span><span class=p>();</span>
+            <span class=n>cur_voice_path</span> <span class=o>=</span> <span class=n>voice_path</span><span class=p>;</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, not exist&#34;</span><span class=p>;</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=kt>void</span> <span class=nf>playOnceBlock</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>voice_path</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, path: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>voice_path</span><span class=p>;</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>check_file_exist</span><span class=p>(</span><span class=n>voice_path</span><span class=p>))</span> <span class=p>{</span>
+            <span class=n>pid_t</span> <span class=n>pid_voice</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+            <span class=p>{</span>
+                <span class=n>std</span><span class=o>::</span><span class=n>lock_guard</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>mutex</span><span class=o>&gt;</span> <span class=n>lk_shell_process</span><span class=p>(</span><span class=n>shell_process_mutex_</span><span class=p>);</span>
+                <span class=n>shell_process_</span> <span class=o>=</span> <span class=n>ShellProcess</span><span class=p>(</span><span class=s>&#34;aplay &#34;</span> <span class=o>+</span> <span class=n>voice_path</span><span class=p>);</span>
+                <span class=n>pid_voice</span> <span class=o>=</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>pid</span><span class=p>();</span>
+                <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid_voice</span><span class=p>;</span>
+                <span class=n>cur_voice_path</span> <span class=o>=</span> <span class=n>voice_path</span><span class=p>;</span>
+            <span class=p>}</span>
+            <span class=n>log_ss</span><span class=p>.</span><span class=n>flush_log</span><span class=p>();</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>pid_voice</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+                <span class=kt>int</span> <span class=n>status</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+                <span class=kt>int</span> <span class=n>waitpid_ret</span> <span class=o>=</span> <span class=o>::</span><span class=n>waitpid</span><span class=p>(</span><span class=n>pid_voice</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>status</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>  <span class=c1>// waitpid阻塞时不持有锁, 其它线程可调用stop提前结束
+</span><span class=c1></span>                <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;waitpid, status: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>status</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, exited: &#34;</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>WIFEXITED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>?</span> <span class=n>WEXITSTATUS</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span>
+                       <span class=o>&lt;&lt;</span> <span class=s>&#34;, signal: &#34;</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>WIFSIGNALED</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>?</span> <span class=n>WTERMSIG</span><span class=p>(</span><span class=n>status</span><span class=p>)</span> <span class=o>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, waitpid_ret: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>waitpid_ret</span><span class=p>;</span>
+            <span class=p>}</span>
+            <span class=p>{</span>
+                <span class=n>std</span><span class=o>::</span><span class=n>lock_guard</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>mutex</span><span class=o>&gt;</span> <span class=n>lk_shell_process</span><span class=p>(</span><span class=n>shell_process_mutex_</span><span class=p>);</span>
+                <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;cur_pid: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>pid</span><span class=p>()</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, pid_voice: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>pid_voice</span><span class=p>;</span>
+                <span class=k>if</span> <span class=p>(</span><span class=n>shell_process_</span><span class=p>.</span><span class=n>pid</span><span class=p>()</span> <span class=o>==</span> <span class=n>pid_voice</span><span class=p>)</span> <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, terminate: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>terminate</span><span class=p>();</span>
+                <span class=n>cur_voice_path</span> <span class=o>=</span> <span class=s>&#34;&#34;</span><span class=p>;</span>
+            <span class=p>}</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, not exist&#34;</span><span class=p>;</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=kt>void</span> <span class=nf>stop</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>voice_path</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, voice_path: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>voice_path</span><span class=p>;</span>
+        <span class=n>std</span><span class=o>::</span><span class=n>lock_guard</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>mutex</span><span class=o>&gt;</span> <span class=n>lk_shell_process</span><span class=p>(</span><span class=n>shell_process_mutex_</span><span class=p>);</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, cur_voice: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>cur_voice_path</span><span class=p>;</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>voice_path</span> <span class=o>==</span> <span class=n>cur_voice_path</span><span class=p>)</span> <span class=p>{</span>
+            <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, terminate: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>terminate</span><span class=p>();</span>
+            <span class=n>cur_voice_path</span> <span class=o>=</span> <span class=s>&#34;&#34;</span><span class=p>;</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=kt>void</span> <span class=nf>stop</span><span class=p>()</span> <span class=p>{</span>
+        <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span><span class=p>;</span>
+        <span class=n>std</span><span class=o>::</span><span class=n>lock_guard</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>mutex</span><span class=o>&gt;</span> <span class=n>lk_shell_process</span><span class=p>(</span><span class=n>shell_process_mutex_</span><span class=p>);</span>
+        <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, terminate: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>shell_process_</span><span class=p>.</span><span class=n>terminate</span><span class=p>();</span>
+        <span class=n>cur_voice_path</span> <span class=o>=</span> <span class=s>&#34;&#34;</span><span class=p>;</span>
+    <span class=p>}</span>
+
+<span class=k>private</span><span class=o>:</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>mutex</span> <span class=n>shell_process_mutex_</span><span class=p>;</span>
+    <span class=n>ShellProcess</span> <span class=n>shell_process_</span><span class=p>;</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>cur_voice_path</span><span class=p>;</span>
+<span class=p>};</span>
+</code></pre></div><h2 id=参考>参考</h2>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/25809330/ target=_blank rel="noopener noreffer">《Linux/UNIX系统编程手册》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2024-06-25</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/voice_player_system_programming/ data-title=从音频播放c++类的实现学习Linux系统子进程管理 data-hashtags=c++,shell,系统><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/voice_player_system_programming/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/voice_player_system_programming/ data-title=从音频播放c++类的实现学习Linux系统子进程管理><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/voice_player_system_programming/ data-title=从音频播放c++类的实现学习Linux系统子进程管理><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/voice_player_system_programming/ data-title=从音频播放c++类的实现学习Linux系统子进程管理><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c++/>c++</a>,&nbsp;<a href=/tags/shell/>shell</a>,&nbsp;<a href=/tags/%E7%B3%BB%E7%BB%9F/>系统</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/reading_202312-202406/ class=prev rel=prev title="书单盘点: 2023年12月～2024年05月"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>书单盘点: 2023年12月～2024年05月</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>
