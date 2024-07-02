@@ -1,0 +1,376 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>java的字节流 - 旧笔记 - ImportMengjie's Blog</title><meta name=Description content="java字节流总结"><meta property="og:title" content="java的字节流 - 旧笔记">
+<meta property="og:description" content="java字节流总结">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/java_byte_stream/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2017-03-02T11:18:58+00:00">
+<meta property="article:modified_time" content="2017-03-02T11:18:58+00:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="java的字节流 - 旧笔记">
+<meta name=twitter:description content="java字节流总结">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/java_byte_stream/><link rel=next href=https://importmengjie.github.io/posts/python_study_notes/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"java的字节流 - 旧笔记","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/java_byte_stream\/"},"genre":"posts","keywords":"java","wordcount":2145,"url":"https:\/\/importmengjie.github.io\/posts\/java_byte_stream\/","datePublished":"2017-03-02T11:18:58+00:00","dateModified":"2017-03-02T11:18:58+00:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":"java字节流总结"}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">java的字节流 - 旧笔记</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E6%97%A7%E7%AC%94%E8%AE%B0/><i class="far fa-folder fa-fw" aria-hidden=true></i>旧笔记</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2017-03-02>2017-03-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2145 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;5 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li>
+<ul>
+<li><a href=#字节流常用的继承关系>字节流(常用)的继承关系</a></li>
+<li><a href=#在实际应用时可能会经常用到嵌套的方式创建一个流对象举个例子>在实际应用时可能会经常用到嵌套的方式创建一个流对象,举个例子</a></li>
+</ul>
+</li>
+</ul>
+</nav></div>
+</div><div class=content id=content><h3 id=字节流常用的继承关系>字节流(常用)的继承关系</h3>
+<p><img class=lazyload src=/svg/loading.min.svg data-src=/images/java_byte_stream/20170302160328476.png data-srcset="/images/java_byte_stream/20170302160328476.png, /images/java_byte_stream/20170302160328476.png 1.5x, /images/java_byte_stream/20170302160328476.png 2x" data-sizes=auto alt=/images/java_byte_stream/20170302160328476.png title=字节流常用类继承关系></p>
+<h4 id=1inputstream和outputstream--抽象类所以以下都是对它的子类>1.InputStream和OutputStream (抽象类,所以以下都是对它的子类)</h4>
+<ul>
+<li>
+<p>Input和Output都是对于程序来说的,input是从其他地方的数据读取到程序中,output是把程序中的数据存储在其他地方.</p>
+</li>
+<li>
+<p>read和write方法都在执行时<strong>阻塞</strong></p>
+</li>
+<li>
+<p>read和write方法都可以读取一个或多个字节,但读取一个和读取多个字节不是调用了同一个native方法.(没有看源代码之前我以为读多个字节是用循环读入一个字节实现的)</p>
+</li>
+<li>
+<p>InputStream:</p>
+<ul>
+<li>int available()返回当前可读入的字节数量.可以避免阻塞的发生:</li>
+</ul>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java>   <span class=kt>int</span> <span class=n>bytesAvailable</span> <span class=o>=</span> <span class=n>in</span><span class=o>.</span><span class=na>avaliable</span><span class=o>();</span>
+   <span class=k>if</span><span class=o>(</span><span class=n>bytesAvailable</span> <span class=o>&gt;</span> <span class=n>0</span><span class=o>){</span>
+       <span class=kt>byte</span><span class=o>[]</span> <span class=n>data</span> <span class=o>=</span> <span class=k>new</span> <span class=kt>byte</span><span class=o>[</span><span class=n>bytesAvailable</span><span class=o>];</span>
+       <span class=n>in</span><span class=o>.</span><span class=na>read</span><span class=o>(</span><span class=n>data</span><span class=o>);</span>
+   <span class=o>}</span>
+   <span class=err>```</span>
+
+</code></pre></div></li>
+<li>
+<p>OutputStream:</p>
+<ul>
+<li>close()和flush()方法都会冲刷输出流.有一些数据可能临时存储在缓冲区中等待以更大的包的形式传递,如果不冲刷输出流会出现数据丢失的现象!不关闭流是对系统资源的浪费!所以读取完数据一定要close.</li>
+</ul>
+</li>
+</ul>
+<h4 id=2bytearrayinputstream和bytearrayoutputstream>2.ByteArrayInputStream和ByteArrayOutputStream</h4>
+<ul>
+<li>这两个类都是以内存中的一块buffer作为读取的对象,并且<strong>close方法无效</strong>,调用close后此类中的方法可以被调用,不会抛出异常.</li>
+<li>ByteArrayInputStream(不常用):
+<ul>
+<li>
+<p>构造方法:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>ByteArrayInputStream</span><span class=o>(</span><span class=kt>byte</span><span class=o>[]</span> <span class=n>buf</span><span class=o>);</span> <span class=c1>//Creates a ByteArrayInputStream so that it uses buf as its buffer array.
+</span><span class=c1></span><span class=n>ByteArrayInputStream</span><span class=o>(</span><span class=kt>byte</span><span class=o>[]</span> <span class=n>buf</span><span class=o>,</span> <span class=kt>int</span> <span class=n>offset</span><span class=o>,</span> <span class=kt>int</span> <span class=n>length</span><span class=o>);</span>
+</code></pre></div></li>
+<li>
+<p>其他的方法和InputStream差不多.</p>
+</li>
+</ul>
+</li>
+<li>ByteArrayOutputStream(常用作为buffer使用):
+<ul>
+<li>
+<p>构造方法:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>ByteArrayOutputStream</span><span class=o>();</span> <span class=c1>//buffer默认大小为32字节,并且buffer大小可以自动增长
+</span><span class=c1></span><span class=n>ByteArrayOutputStream</span><span class=o>(</span><span class=kt>int</span> <span class=n>size</span><span class=o>);</span>
+</code></pre></div></li>
+<li>
+<p>reset()可将内部buffer的"指针"指向第一个字节,这样可以再用一次.</p>
+</li>
+<li>
+<p>byte[] toByteArray和String toString()用于获取数据,其中toString还可以指定解码的字符集.</p>
+</li>
+<li>
+<p>writeTo(OutputStream out)将buffer中的字节数组输出在out中,相当于调用 out.write(buf, 0, count).</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id=2fileinputstream和fileoutputstream>2.FileInputStream和FileOutputStream</h4>
+<ul>
+<li>
+<p>用于文件的读写,读写方式与父类一样,经常用于传入其他IO类的构造方法.</p>
+</li>
+<li>
+<p>FileInputStream:</p>
+<ul>
+<li>
+<p>构造方法(常用):</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>FileInputStream</span><span class=o>(</span><span class=n>File</span> <span class=n>file</span><span class=o>);</span>
+<span class=n>FileInputStream</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>);</span>
+</code></pre></div></li>
+</ul>
+</li>
+<li>
+<p>FileOutputStream:</p>
+<ul>
+<li>构造方法(常用):</li>
+</ul>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java>   <span class=n>FileOutputStream</span><span class=o>(</span><span class=n>File</span> <span class=n>file</span><span class=o>);</span>
+   <span class=n>FileOutputStream</span><span class=o>(</span><span class=n>File</span> <span class=n>file</span><span class=o>,</span> <span class=kt>boolean</span> <span class=n>append</span><span class=o>);</span>
+   <span class=n>FileOutputStream</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>);</span>
+   <span class=n>FileOutputStream</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>,</span> <span class=kt>boolean</span> <span class=n>append</span><span class=o>);</span>
+   <span class=err>```</span>
+
+</code></pre></div></li>
+</ul>
+<h4 id=2filterinputstream和filteroutputstream>2.FilterInputStream和FilterOutputStream</h4>
+<ul>
+<li>
+<p>这两个类及其子类都需要一个InputStream或OutputStream为参数来构造,这是一种名为装饰(<em>Decorator</em>)的设计模式,它本身只是用传入的参数对象来处理数据,没有做装饰,只是为约束它的子类而写的.具体什么是装饰模式请参考:</p>
+<blockquote>
+<p><a href=http://wenku.baidu.com/view/b883510dba1aa8114431d95d.html target=_blank rel="noopener noreffer">http://wenku.baidu.com/view/b883510dba1aa8114431d95d.html</a></p>
+</blockquote>
+</li>
+<li>
+<p>装饰和代理模式的区别与联系请参考:</p>
+<blockquote>
+<p><a href=http://blog.csdn.net/smalljune/article/details/28631369 target=_blank rel="noopener noreffer">http://blog.csdn.net/smalljune/article/details/28631369</a></p>
+</blockquote>
+</li>
+</ul>
+<h4 id=2objectinputstream和objectoutputstream>2.ObjectInputStream和ObjectOutputStream</h4>
+<ul>
+<li>
+<p>这两个类都是用来对于对象的存取的,用于操作的对象要实现java.io.Serializable接口,此接口只用来标记没有方法需要实现.对于一个复杂的对象来说可能会有很多对象实例作为它的域,这时如果仅仅保存对象的引用是没用的,java中是用序列号(<em>serial number</em>)来标识对象,并将它保存至流中,如果对象之前被保存过,只需记录一下,因为序列号对于相同的对象是相等的,而不同的对象是不相等的(有相关的算法).这就是这种机制之所以称为对象序列化的原因.</p>
+</li>
+<li>
+<p>ObjectInputStream:</p>
+<ul>
+<li>
+<p>构造方法:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>protected</span> <span class=nf>ObjectInputStream</span><span class=o>();</span> <span class=c1>//提供给子类用的...
+</span><span class=c1></span><span class=n>ObjectInputStream</span><span class=o>(</span><span class=n>InputStream</span> <span class=n>in</span><span class=o>);</span>
+</code></pre></div></li>
+<li>
+<p>可以读取的类型包括基本类型和类(实现了Serializable接口).</p>
+</li>
+<li>
+<p>String readUTF(),需要注意的是此处读取的是以修订版的UTF-8编码与标准的UTF-8不同,并且在前两个字节还会保存实际写出的字符长度.所以只在写用于JVM的字符串才用这个方法,对于其他场合应该使用writeChars方法.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>ObjectOutputStream:</p>
+<ul>
+<li>构造方法:</li>
+</ul>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java>    <span class=kd>protected</span> <span class=nf>ObjectOutputStream</span><span class=o>();</span> <span class=c1>//提供给子类用的...
+</span><span class=c1></span>    <span class=n>ObjectOutputStream</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>out</span><span class=o>);</span>
+</code></pre></div></li>
+</ul>
+<h4 id=3bufferedinputstream和bufferedoutputstream>3.BufferedInputStream和BufferedOutputStream</h4>
+<ul>
+<li>
+<p>有一个buffer缓冲(普通的IO类也有buffer缓冲,虽然我不知道默认的大小,但应该这个类的缓冲区会很大吧),可以降低硬盘或其他的东西频繁工作.因为方法过少,通常只是流的一个"包装".</p>
+</li>
+<li>
+<p>BufferedInputStream:</p>
+<ul>
+<li>
+<p>构造方法:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>BufferedInputStream</span><span class=o>(</span><span class=n>InputStream</span> <span class=n>in</span><span class=o>);</span>
+<span class=n>BufferedInputStream</span><span class=o>(</span><span class=n>InputStream</span> <span class=n>in</span><span class=o>,</span> <span class=kt>int</span> <span class=n>size</span><span class=o>);</span> <span class=c1>//size指定缓冲区大小
+</span></code></pre></div></li>
+</ul>
+</li>
+<li>
+<p>BufferedOutputStream:</p>
+<ul>
+<li>构造方法:</li>
+</ul>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java>    <span class=n>BufferedOutputStream</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>out</span><span class=o>);</span>
+    <span class=n>BufferedOutputStream</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>out</span><span class=o>,</span> <span class=kt>int</span> <span class=n>size</span><span class=o>);</span> <span class=c1>//size指定缓冲区大小 
+</span><span class=c1></span>    <span class=err>```</span>
+
+</code></pre></div></li>
+</ul>
+<h4 id=3datainputstream和dataoutputstream>3.DataInputStream和DataOutputStream</h4>
+<ul>
+<li>
+<p>这两个类一般作为文件读写流的最后一个"包装".</p>
+</li>
+<li>
+<p>DataInputStream:</p>
+<ul>
+<li>构造方法:</li>
+</ul>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java>   <span class=n>DataOutputStream</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>out</span><span class=o>);</span>
+   <span class=err>```</span>  
+
+<span class=o>*</span> <span class=n>可以读取基本类型</span><span class=o>,</span><span class=n>一行和String</span><span class=o>(</span><span class=n>UTF</span><span class=o>-</span><span class=n>8修订版</span><span class=o>).</span>
+</code></pre></div></li>
+<li>
+<p>DataOutputStream:</p>
+<ul>
+<li>
+<p>构造方法:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java> <span class=n>DataOutputStream</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>out</span><span class=o>);</span>
+</code></pre></div><ul>
+<li>可以写出基本类型,chars和String(UTF-8修订版).</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id=3printstream>3.PrintStream</h4>
+<ul>
+<li>
+<p>PrintStream输出字符串时可以指定编码,默认编码为系统默认编码.(DataOutputStream则不可以 )</p>
+</li>
+<li>
+<p>不会抛出IO异常,用 checkError()检查是否发生错误.</p>
+</li>
+<li>
+<p>构造方法:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>PrintStream</span><span class=o>(</span><span class=n>File</span> <span class=n>file</span><span class=o>);</span>
+<span class=n>PrintStream</span><span class=o>(</span><span class=n>File</span> <span class=n>file</span><span class=o>,</span> <span class=n>String</span> <span class=n>csn</span><span class=o>)</span> <span class=c1>//csn==charsetname
+</span><span class=c1></span><span class=n>PrintStream</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>out</span><span class=o>)</span>
+<span class=n>PrintStream</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>out</span><span class=o>,</span> <span class=kt>boolean</span> <span class=n>autoFlush</span><span class=o>)</span>
+<span class=n>PrintStream</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>out</span><span class=o>,</span> <span class=kt>boolean</span> <span class=n>autoFlush</span><span class=o>,</span> <span class=n>String</span> <span class=n>encoding</span><span class=o>)</span>
+<span class=n>PrintStream</span><span class=o>(</span><span class=n>String</span> <span class=n>fileName</span><span class=o>)</span>
+<span class=n>PrintStream</span><span class=o>(</span><span class=n>String</span> <span class=n>fileName</span><span class=o>,</span> <span class=n>String</span> <span class=n>csn</span><span class=o>)</span>
+</code></pre></div></li>
+<li>
+<p>System.out正是PrintStream类型,它的方法无需赘言.</p>
+</li>
+</ul>
+<h3 id=在实际应用时可能会经常用到嵌套的方式创建一个流对象举个例子>在实际应用时可能会经常用到嵌套的方式创建一个流对象,举个例子</h3>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>DataInputStream</span> <span class=n>dis</span><span class=o>=</span><span class=k>new</span> <span class=n>DataInputStream</span><span class=o>(</span>
+      <span class=k>new</span> <span class=n>BufferedInputStream</span><span class=o>(</span>
+       <span class=k>new</span> <span class=n>FileInputStream</span><span class=o>(</span><span class=s>&#34;1.dat&#34;</span><span class=o>)));</span><span class=c1>//这样就可以用DataInputStream的很多方法,而且还有缓冲区.
+</span></code></pre></div><blockquote>
+<p>《java核心技术》卷二.
+Java Platform Standard Edition 8 Documentation.</p>
+</blockquote>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2017-03-02</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/java_byte_stream/ data-title="java的字节流 - 旧笔记" data-hashtags=java><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/java_byte_stream/ data-hashtag=java><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/java_byte_stream/ data-title="java的字节流 - 旧笔记"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/java_byte_stream/ data-title="java的字节流 - 旧笔记"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/java_byte_stream/ data-title="java的字节流 - 旧笔记"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/java/>java</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav>
+<a href=/posts/python_study_notes/ class=next rel=next title="Python学习笔记 - 旧笔记">Python学习笔记 - 旧笔记<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/mhchem.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>

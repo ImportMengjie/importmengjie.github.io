@@ -1,0 +1,1273 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>Python学习笔记 - 旧笔记 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="Python学习笔记 - 旧笔记">
+<meta property="og:description" content="函数 默认参数 默认参数必须指向不变对象！(如若可变多次调用会产生不确定的结果) 在调用函数时普通参数和默认参数都可以用: fun(参数名=参数值,">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/python_study_notes/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2017-08-08T11:45:20+08:00">
+<meta property="article:modified_time" content="2017-08-08T11:45:20+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="Python学习笔记 - 旧笔记">
+<meta name=twitter:description content="函数 默认参数 默认参数必须指向不变对象！(如若可变多次调用会产生不确定的结果) 在调用函数时普通参数和默认参数都可以用: fun(参数名=参数值,">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/python_study_notes/><link rel=prev href=https://importmengjie.github.io/posts/java_byte_stream/><link rel=next href=https://importmengjie.github.io/posts/data-structure/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"Python学习笔记 - 旧笔记","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/python_study_notes\/"},"genre":"posts","keywords":"python","wordcount":5467,"url":"https:\/\/importmengjie.github.io\/posts\/python_study_notes\/","datePublished":"2017-08-08T11:45:20+08:00","dateModified":"2017-08-08T11:45:20+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Python学习笔记 - 旧笔记</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E6%97%A7%E7%AC%94%E8%AE%B0/><i class="far fa-folder fa-fw" aria-hidden=true></i>旧笔记</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2017-08-08>2017-08-08</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;5467 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;11 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#函数>函数</a>
+<ul>
+<li><a href=#默认参数>默认参数</a></li>
+<li><a href=#可变参数>可变参数</a></li>
+<li><a href=#关键字参数>关键字参数</a></li>
+<li><a href=#命名关键词参数>命名关键词参数</a></li>
+<li><a href=#参数定义顺序>参数定义顺序</a></li>
+</ul>
+</li>
+<li><a href=#尾递归>尾递归</a></li>
+<li><a href=#循环>循环</a></li>
+<li><a href=#函数式编程>函数式编程</a></li>
+<li><a href=#decorator>decorator</a></li>
+<li><a href=#偏函数>偏函数</a></li>
+<li><a href=#模块>模块</a></li>
+<li><a href=#class>class</a></li>
+<li><a href=#枚举类>枚举类</a></li>
+<li><a href=#type动态创建类>type():动态创建类</a></li>
+<li><a href=#metaclass>metaclass</a></li>
+<li><a href=#调试>调试</a></li>
+<li><a href=#io>IO</a></li>
+<li><a href=#多进程>多进程</a></li>
+<li><a href=#多线程>多线程</a></li>
+<li><a href=#常用模块>常用模块</a></li>
+<li><a href=#异步io>异步IO</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><h2 id=函数>函数</h2>
+<h3 id=默认参数>默认参数</h3>
+<ul>
+<li>默认参数必须指向不变对象！(如若可变多次调用会产生不确定的结果)</li>
+<li>在调用函数时普通参数和默认参数都可以用:</li>
+</ul>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=n>fun</span><span class=p>(</span><span class=n>参数名</span><span class=o>=</span><span class=n>参数值</span><span class=p>,</span><span class=n>参数名</span><span class=o>=</span><span class=n>参数值</span><span class=o>....</span><span class=p>)</span> <span class=o>//</span> <span class=n>顺序可以调换</span><span class=o>.</span>
+</code></pre></div><h3 id=可变参数>可变参数</h3>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>def</span> <span class=nf>fun</span><span class=p>(</span><span class=o>*</span><span class=n>args</span><span class=p>):</span> <span class=o>//</span> <span class=n>定义</span><span class=p>,</span><span class=n>args</span> <span class=ow>is</span> <span class=nb>tuple</span>
+    <span class=k>pass</span>
+
+<span class=n>fun</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span><span class=mi>2</span><span class=p>,</span><span class=mi>3</span><span class=p>)</span> <span class=o>//</span> <span class=n>直接传参调用</span>
+<span class=n>fun</span><span class=p>(</span><span class=o>*</span><span class=n>l</span><span class=p>)</span> <span class=o>//</span> <span class=n>l</span> <span class=ow>is</span> <span class=nb>list</span> <span class=ow>or</span> <span class=nb>tuple</span>
+</code></pre></div><h3 id=关键字参数>关键字参数</h3>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>def</span> <span class=nf>fun</span><span class=p>(</span><span class=o>**</span><span class=n>kw</span><span class=p>):</span> <span class=o>//</span> <span class=n>定义</span><span class=p>,</span><span class=n>kw</span> <span class=ow>is</span> <span class=nb>dict</span>
+    <span class=k>pass</span>
+    
+<span class=n>fun</span><span class=p>(</span><span class=n>key_name1</span><span class=o>=</span><span class=n>value1</span><span class=p>,</span><span class=n>ke_name2</span><span class=o>=</span><span class=n>value2</span><span class=p>)</span>
+<span class=n>fun</span><span class=p>(</span><span class=o>**</span><span class=n>dic</span><span class=p>)</span> <span class=o>//</span> <span class=n>dic</span> <span class=ow>is</span> <span class=nb>dict</span><span class=p>,</span><span class=n>传入的参数只是dic的拷贝</span>
+</code></pre></div><h3 id=命名关键词参数>命名关键词参数</h3>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>def</span> <span class=nf>fun</span><span class=p>(</span><span class=n>arg1</span><span class=p>,</span><span class=o>*</span><span class=p>,</span><span class=n>city</span><span class=p>,</span><span class=n>job</span><span class=p>):</span> 
+    <span class=k>pass</span>
+
+<span class=n>fun</span><span class=p>(</span><span class=s1>&#39;arg1&#39;</span><span class=p>,</span><span class=n>city</span><span class=o>=</span><span class=s1>&#39;beijing&#39;</span><span class=p>,</span><span class=n>job</span><span class=o>=</span><span class=s1>&#39;无&#39;</span><span class=p>)</span> <span class=o>//</span> <span class=n>必须传入参数名</span><span class=p>,</span><span class=n>顺序可以调换</span>
+
+<span class=k>def</span> <span class=nf>fun2</span><span class=p>(</span><span class=n>arg1</span><span class=p>,</span><span class=o>*</span><span class=n>args</span><span class=p>,</span><span class=n>city</span><span class=p>,</span><span class=n>job</span><span class=p>)</span> <span class=o>//</span> <span class=n>此时不需要</span><span class=o>*</span><span class=n>了</span><span class=p>,</span><span class=n>原因可想而知</span><span class=o>.</span>
+
+</code></pre></div><h3 id=参数定义顺序>参数定义顺序</h3>
+<p>必选参数、默认参数、可变参数、命名关键字参数和关键字参数。</p>
+<h2 id=尾递归>尾递归</h2>
+<p>在函数返回的时候，调用自身本身，并且，return语句不能包含表达式。这样，编译器或者解释器就可以把尾递归做优化，使递归本身无论调用多少次，都只占用一个栈帧，不会出现栈溢出的情况。(Python不优化&mldr;)</p>
+<h2 id=循环>循环</h2>
+<ol>
+<li>
+<p>判断一个对象是否可迭代</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>from</span> <span class=nn>collections</span> <span class=kn>import</span> <span class=n>Iterable</span>
+<span class=nb>isinstance</span><span class=p>(</span><span class=s1>&#39;abc&#39;</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>)</span> <span class=c1># str是否可迭代</span>
+
+</code></pre></div></li>
+<li>
+<p>迭代索引+value</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>value</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>([</span><span class=s1>&#39;A&#39;</span><span class=p>,</span> <span class=s1>&#39;B&#39;</span><span class=p>,</span> <span class=s1>&#39;C&#39;</span><span class=p>]):</span>
+    <span class=nb>print</span><span class=p>(</span><span class=n>i</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+</code></pre></div></li>
+<li>
+<p>列表生成器</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=n>l1</span> <span class=o>=</span> <span class=nb>list</span><span class=p>(</span><span class=nb>range</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=mi>11</span><span class=p>))</span>
+<span class=n>l2</span> <span class=o>=</span> <span class=p>[</span><span class=n>x</span> <span class=o>*</span> <span class=n>x</span> <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=mi>11</span><span class=p>)]</span>
+<span class=n>l3</span> <span class=o>=</span> <span class=p>[</span><span class=n>x</span> <span class=o>*</span> <span class=n>x</span> <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=mi>11</span><span class=p>)</span> <span class=k>if</span> <span class=n>x</span> <span class=o>%</span> <span class=mi>2</span> <span class=o>==</span> <span class=mi>0</span><span class=p>]</span>
+<span class=n>l4</span> <span class=o>=</span> <span class=p>[</span><span class=n>m</span> <span class=o>+</span> <span class=n>n</span> <span class=k>for</span> <span class=n>m</span> <span class=ow>in</span> <span class=s1>&#39;ABC&#39;</span> <span class=k>for</span> <span class=n>n</span> <span class=ow>in</span> <span class=s1>&#39;XYZ&#39;</span><span class=p>]</span>
+</code></pre></div></li>
+<li>
+<p>generator</p>
+<p>通过算法生成下一个迭代值,省内存.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=n>g</span> <span class=o>=</span> <span class=p>(</span><span class=n>x</span> <span class=o>*</span> <span class=n>x</span> <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>10</span><span class=p>))</span> <span class=c1># 生成generator</span>
+<span class=nb>next</span><span class=p>(</span><span class=n>g</span><span class=p>)</span> <span class=c1># 通过next函数获取g的下一个元素,当没有元素时会抛出异常</span>
+
+</code></pre></div><p>如果一个函数定义中包含yield关键字，那么这个函数就不再是一个普通函数，而是一个generator.每次调用next()函数执行,遇到yield返回,再次执行从上一次yield之后执行.</p>
+</li>
+<li>
+<p>Iterator:可以调用next()的对象成为Iterator对象.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=n>i</span> <span class=o>=</span> <span class=nb>iter</span><span class=p>([</span><span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>,</span> <span class=mi>3</span><span class=p>,</span> <span class=mi>4</span><span class=p>,</span> <span class=mi>5</span><span class=p>])</span> <span class=c1># 取得Iterator对象.</span>
+</code></pre></div></li>
+</ol>
+<h2 id=函数式编程>函数式编程</h2>
+<ol>
+<li>
+<p>map</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=n>r</span> <span class=o>=</span> <span class=nb>map</span><span class=p>(</span><span class=n>f</span><span class=p>,</span> <span class=p>[</span><span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>,</span> <span class=mi>3</span><span class=p>,</span> <span class=mi>4</span><span class=p>,</span> <span class=mi>5</span><span class=p>,</span> <span class=mi>6</span><span class=p>,</span> <span class=mi>7</span><span class=p>,</span> <span class=mi>8</span><span class=p>,</span> <span class=mi>9</span><span class=p>])</span> <span class=c1># r is Iterator</span>
+<span class=n>l</span> <span class=o>=</span> <span class=nb>list</span><span class=p>(</span><span class=n>r</span><span class=p>)</span> <span class=c1># 转换为list</span>
+</code></pre></div></li>
+<li>
+<p>reduce</p>
+<p>效果:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=n>reduce</span><span class=p>(</span><span class=n>f</span><span class=p>,</span> <span class=p>[</span><span class=n>x1</span><span class=p>,</span> <span class=n>x2</span><span class=p>,</span> <span class=n>x3</span><span class=p>,</span> <span class=n>x4</span><span class=p>])</span> <span class=o>=</span> <span class=n>f</span><span class=p>(</span><span class=n>f</span><span class=p>(</span><span class=n>f</span><span class=p>(</span><span class=n>x1</span><span class=p>,</span> <span class=n>x2</span><span class=p>),</span> <span class=n>x3</span><span class=p>),</span> <span class=n>x4</span><span class=p>)</span>
+</code></pre></div><p>应用:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>from</span> <span class=nn>functools</span> <span class=kn>import</span> <span class=n>reduce</span> 
+<span class=k>def</span> <span class=nf>fn</span><span class=p>(</span><span class=n>x</span><span class=p>,</span> <span class=n>y</span><span class=p>):</span> 
+    <span class=k>return</span> <span class=n>x</span> <span class=o>*</span> <span class=mi>10</span> <span class=o>+</span> <span class=n>y</span>
+
+<span class=n>reduce</span><span class=p>(</span><span class=n>fn</span><span class=p>,</span> <span class=p>[</span><span class=mi>1</span><span class=p>,</span> <span class=mi>3</span><span class=p>,</span> <span class=mi>5</span><span class=p>,</span> <span class=mi>7</span><span class=p>,</span> <span class=mi>9</span><span class=p>])</span> <span class=c1># 生成13579</span>
+
+</code></pre></div></li>
+<li>
+<p>filter</p>
+</li>
+<li>
+<p>sorted</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=nb>sorted</span><span class=p>([</span><span class=mi>36</span><span class=p>,</span> <span class=mi>5</span><span class=p>,</span> <span class=o>-</span><span class=mi>12</span><span class=p>,</span> <span class=mi>9</span><span class=p>,</span> <span class=o>-</span><span class=mi>21</span><span class=p>],</span> <span class=n>key</span><span class=o>=</span><span class=nb>abs</span><span class=p>)</span> <span class=c1># abs函数作用于每个元素</span>
+
+</code></pre></div></li>
+<li>
+<p>闭包:返回函数不要引用任何循环变量，或者后续会发生变化的变量。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>def</span> <span class=nf>count</span><span class=p>():</span>
+    <span class=n>fs</span> <span class=o>=</span> <span class=p>[]</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=mi>4</span><span class=p>):</span>
+        <span class=k>def</span> <span class=nf>f</span><span class=p>():</span>
+            <span class=k>return</span> <span class=n>i</span><span class=o>*</span><span class=n>i</span>
+        <span class=n>fs</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>f</span><span class=p>)</span>
+    <span class=k>return</span> <span class=n>fs</span>
+    <span class=n>f1</span><span class=p>,</span> <span class=n>f2</span><span class=p>,</span> <span class=n>f3</span> <span class=o>=</span> <span class=n>count</span><span class=p>()</span> <span class=c1>#9,9,9</span>
+
+<span class=k>def</span> <span class=nf>count</span><span class=p>():</span>
+    <span class=k>def</span> <span class=nf>f</span><span class=p>(</span><span class=n>j</span><span class=p>):</span>
+        <span class=k>def</span> <span class=nf>g</span><span class=p>():</span>
+            <span class=k>return</span> <span class=n>j</span><span class=o>*</span><span class=n>j</span>
+        <span class=k>return</span> <span class=n>g</span>
+    <span class=n>fs</span> <span class=o>=</span> <span class=p>[]</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=mi>4</span><span class=p>):</span>
+        <span class=n>fs</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>f</span><span class=p>(</span><span class=n>i</span><span class=p>))</span> <span class=c1># f(i)立刻被执行，因此i的当前值被传入f()</span>
+    <span class=k>return</span> <span class=n>fs</span>    
+
+</code></pre></div></li>
+<li>
+<p>lambda 参数名,参数名 : 表达式返回值</p>
+</li>
+</ol>
+<h2 id=decorator>decorator</h2>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 两层调用</span>
+<span class=k>def</span> <span class=nf>log</span><span class=p>(</span><span class=n>func</span><span class=p>):</span>
+    <span class=k>def</span> <span class=nf>wrapper</span><span class=p>(</span><span class=o>*</span><span class=n>args</span><span class=p>,</span> <span class=o>**</span><span class=n>kw</span><span class=p>):</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;call </span><span class=si>%s</span><span class=s1>():&#39;</span> <span class=o>%</span> <span class=n>func</span><span class=o>.</span><span class=vm>__name__</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>func</span><span class=p>(</span><span class=o>*</span><span class=n>args</span><span class=p>,</span> <span class=o>**</span><span class=n>kw</span><span class=p>)</span>
+    <span class=k>return</span> <span class=n>wrapper</span>
+    
+<span class=nd>@log</span>                   <span class=c1>#相当于now = log(now)   </span>
+<span class=k>def</span> <span class=nf>now</span><span class=p>():</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;2015-3-25&#39;</span><span class=p>)</span> 
+
+<span class=c1># 三层调用</span>
+<span class=k>def</span> <span class=nf>log</span><span class=p>(</span><span class=n>text</span><span class=p>):</span>
+    <span class=k>def</span> <span class=nf>decorator</span><span class=p>(</span><span class=n>func</span><span class=p>):</span>
+        <span class=k>def</span> <span class=nf>wrapper</span><span class=p>(</span><span class=o>*</span><span class=n>args</span><span class=p>,</span> <span class=o>**</span><span class=n>kw</span><span class=p>):</span>
+            <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;</span><span class=si>%s</span><span class=s1> </span><span class=si>%s</span><span class=s1>():&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>text</span><span class=p>,</span> <span class=n>func</span><span class=o>.</span><span class=vm>__name__</span><span class=p>))</span>
+            <span class=k>return</span> <span class=n>func</span><span class=p>(</span><span class=o>*</span><span class=n>args</span><span class=p>,</span> <span class=o>**</span><span class=n>kw</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>wrapper</span>
+    <span class=k>return</span> <span class=n>decorator</span>
+    
+    <span class=nd>@log</span><span class=p>(</span><span class=s1>&#39;execute&#39;</span><span class=p>)</span>        <span class=c1>#相当于now = log(&#39;execute&#39;)(now)</span>
+    <span class=k>def</span> <span class=nf>now</span><span class=p>():</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;2015-3-25&#39;</span><span class=p>)</span>
+
+</code></pre></div><h2 id=偏函数>偏函数</h2>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>functools</span>
+<span class=n>int2</span> <span class=o>=</span> <span class=n>functools</span><span class=o>.</span><span class=n>partial</span><span class=p>(</span><span class=nb>int</span><span class=p>,</span> <span class=n>base</span><span class=o>=</span><span class=mi>2</span><span class=p>)</span> <span class=c1># 返回的函数base=2</span>
+
+</code></pre></div><h2 id=模块>模块</h2>
+<pre><code>1. 一个py文件就是一个模块.
+2. 一个目录里面包含__init__.py,这个目录就是一个包(package).
+3. 类似_xxx和__xxx这样的函数或变量就是非公开的（private），不应该被直接引用，比如_abc，__abc等；
+</code></pre>
+<h2 id=class>class</h2>
+<ol>
+<li>
+<p>实例的变量名如果以__开头，就变成了一个私有变量（private），只有内部可以访问，外部不能访问.</p>
+</li>
+<li>
+<p>实的变量名如果以_开头,外部可以访问,但是视为private.</p>
+</li>
+<li>
+<p>鸭子类型</p>
+</li>
+<li>
+<p>type()</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>import</span> <span class=nn>types</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=k>def</span> <span class=nf>fn</span><span class=p>():</span>
+<span class=o>...</span>     <span class=k>pass</span>
+<span class=o>...</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>type</span><span class=p>(</span><span class=n>fn</span><span class=p>)</span><span class=o>==</span><span class=n>types</span><span class=o>.</span><span class=n>FunctionType</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>type</span><span class=p>(</span><span class=nb>abs</span><span class=p>)</span><span class=o>==</span><span class=n>types</span><span class=o>.</span><span class=n>BuiltinFunctionType</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>type</span><span class=p>(</span><span class=k>lambda</span> <span class=n>x</span><span class=p>:</span> <span class=n>x</span><span class=p>)</span><span class=o>==</span><span class=n>types</span><span class=o>.</span><span class=n>LambdaType</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>type</span><span class=p>((</span><span class=n>x</span> <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>10</span><span class=p>)))</span><span class=o>==</span><span class=n>types</span><span class=o>.</span><span class=n>GeneratorType</span>
+<span class=kc>True</span>
+
+</code></pre></div></li>
+<li>
+<p>isinstance()</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=nb>isinstance</span><span class=p>([</span><span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>,</span> <span class=mi>3</span><span class=p>],</span> <span class=p>(</span><span class=nb>list</span><span class=p>,</span> <span class=nb>tuple</span><span class=p>))</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>isinstance</span><span class=p>((</span><span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>,</span> <span class=mi>3</span><span class=p>),</span> <span class=p>(</span><span class=nb>list</span><span class=p>,</span> <span class=nb>tuple</span><span class=p>))</span>
+<span class=kc>True</span>
+
+</code></pre></div></li>
+<li>
+<p>测试对象属性和方法</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3>    <span class=nb>dir</span><span class=p>(</span><span class=s1>&#39;ABC&#39;</span><span class=p>)</span> <span class=c1>#获取对象的属性和方法</span>
+
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>hasattr</span><span class=p>(</span><span class=n>obj</span><span class=p>,</span> <span class=s1>&#39;x&#39;</span><span class=p>)</span> <span class=c1># 有属性&#39;x&#39;吗？</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>obj</span><span class=o>.</span><span class=n>x</span>
+<span class=mi>9</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>hasattr</span><span class=p>(</span><span class=n>obj</span><span class=p>,</span> <span class=s1>&#39;y&#39;</span><span class=p>)</span> <span class=c1># 有属性&#39;y&#39;吗？</span>
+<span class=kc>False</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>setattr</span><span class=p>(</span><span class=n>obj</span><span class=p>,</span> <span class=s1>&#39;y&#39;</span><span class=p>,</span> <span class=mi>19</span><span class=p>)</span> <span class=c1># 设置一个属性&#39;y&#39;</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>hasattr</span><span class=p>(</span><span class=n>obj</span><span class=p>,</span> <span class=s1>&#39;y&#39;</span><span class=p>)</span> <span class=c1># 有属性&#39;y&#39;吗？</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>getattr</span><span class=p>(</span><span class=n>obj</span><span class=p>,</span> <span class=s1>&#39;y&#39;</span><span class=p>)</span> <span class=c1># 获取属性&#39;y&#39;</span>
+<span class=mi>19</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>obj</span><span class=o>.</span><span class=n>y</span> <span class=c1># 获取属性&#39;y&#39;</span>
+<span class=mi>19</span>
+
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>getattr</span><span class=p>(</span><span class=n>obj</span><span class=p>,</span> <span class=s1>&#39;z&#39;</span><span class=p>,</span> <span class=mi>404</span><span class=p>)</span> <span class=c1># 获取属性&#39;z&#39;，如果不存在，返回默认值404</span>
+<span class=mi>404</span>
+
+</code></pre></div></li>
+<li>
+<p>__slots__:限制属性</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>class</span> <span class=nc>Student</span><span class=p>(</span><span class=nb>object</span><span class=p>):</span>
+    <span class=vm>__slots__</span> <span class=o>=</span> <span class=p>(</span><span class=s1>&#39;name&#39;</span><span class=p>,</span> <span class=s1>&#39;age&#39;</span><span class=p>)</span> <span class=c1># 用tuple定义允许绑定的属性名称</span>
+
+</code></pre></div></li>
+<li>
+<p>@property:把一个方法变成属性的调用</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>class</span> <span class=nc>Student</span><span class=p>(</span><span class=nb>object</span><span class=p>):</span>
+
+<span class=nd>@property</span>
+<span class=k>def</span> <span class=nf>score</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+    <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>_score</span>
+
+<span class=nd>@score</span><span class=o>.</span><span class=n>setter</span>
+<span class=k>def</span> <span class=nf>score</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>value</span><span class=p>):</span>
+    <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>value</span><span class=p>,</span> <span class=nb>int</span><span class=p>):</span>
+        <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s1>&#39;score must be an integer!&#39;</span><span class=p>)</span>
+    <span class=k>if</span> <span class=n>value</span> <span class=o>&lt;</span> <span class=mi>0</span> <span class=ow>or</span> <span class=n>value</span> <span class=o>&gt;</span> <span class=mi>100</span><span class=p>:</span>
+        <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s1>&#39;score must between 0 ~ 100!&#39;</span><span class=p>)</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>_score</span> <span class=o>=</span> <span class=n>value</span>
+
+</code></pre></div></li>
+<li>
+<p>__XXX__</p>
+<ol>
+<li>
+<p>__len__():调用len()时调用</p>
+</li>
+<li>
+<p>__str__():类似toString</p>
+</li>
+<li>
+<p>__repr__():为调试服务的toString</p>
+</li>
+<li>
+<p>__iter__():该方法返回一个迭代对象，然后，Python的for循环就会不断调用该迭代对象的__next__()方法拿到循环的下一个值</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>class</span> <span class=nc>Fib</span><span class=p>(</span><span class=nb>object</span><span class=p>):</span>
+<span class=k>def</span> <span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>a</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>b</span> <span class=o>=</span> <span class=mi>0</span><span class=p>,</span> <span class=mi>1</span> <span class=c1># 初始化两个计数器a，b</span>
+
+<span class=k>def</span> <span class=fm>__iter__</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+    <span class=k>return</span> <span class=bp>self</span> <span class=c1># 实例本身就是迭代对象，故返回自己</span>
+
+<span class=k>def</span> <span class=fm>__next__</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>a</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>b</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>b</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>a</span> <span class=o>+</span> <span class=bp>self</span><span class=o>.</span><span class=n>b</span> <span class=c1># 计算下一个值</span>
+    <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>a</span> <span class=o>&gt;</span> <span class=mi>100000</span><span class=p>:</span> <span class=c1># 退出循环的条件</span>
+        <span class=k>raise</span> <span class=ne>StopIteration</span><span class=p>()</span>
+    <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>a</span> <span class=c1># 返回下一个值</span>
+
+</code></pre></div></li>
+<li>
+<p>__getitem__(n):</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 实现切片</span>
+<span class=k>class</span> <span class=nc>Fib</span><span class=p>(</span><span class=nb>object</span><span class=p>):</span>
+<span class=k>def</span> <span class=fm>__getitem__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>n</span><span class=p>):</span>
+    <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>n</span><span class=p>,</span> <span class=nb>int</span><span class=p>):</span> <span class=c1># n是索引</span>
+        <span class=n>a</span><span class=p>,</span> <span class=n>b</span> <span class=o>=</span> <span class=mi>1</span><span class=p>,</span> <span class=mi>1</span>
+        <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>n</span><span class=p>):</span>
+            <span class=n>a</span><span class=p>,</span> <span class=n>b</span> <span class=o>=</span> <span class=n>b</span><span class=p>,</span> <span class=n>a</span> <span class=o>+</span> <span class=n>b</span>
+        <span class=k>return</span> <span class=n>a</span>
+    <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>n</span><span class=p>,</span> <span class=nb>slice</span><span class=p>):</span> <span class=c1># n是切片</span>
+        <span class=n>start</span> <span class=o>=</span> <span class=n>n</span><span class=o>.</span><span class=n>start</span>
+        <span class=n>stop</span> <span class=o>=</span> <span class=n>n</span><span class=o>.</span><span class=n>stop</span>
+        <span class=k>if</span> <span class=n>start</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=n>start</span> <span class=o>=</span> <span class=mi>0</span>
+        <span class=n>a</span><span class=p>,</span> <span class=n>b</span> <span class=o>=</span> <span class=mi>1</span><span class=p>,</span> <span class=mi>1</span>
+        <span class=n>L</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>stop</span><span class=p>):</span>
+            <span class=k>if</span> <span class=n>x</span> <span class=o>&gt;=</span> <span class=n>start</span><span class=p>:</span>
+                <span class=n>L</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>a</span><span class=p>)</span>
+            <span class=n>a</span><span class=p>,</span> <span class=n>b</span> <span class=o>=</span> <span class=n>b</span><span class=p>,</span> <span class=n>a</span> <span class=o>+</span> <span class=n>b</span>
+        <span class=k>return</span> <span class=n>L</span>
+</code></pre></div><p>此外，如果把对象看成dict，<strong>getitem</strong>()的参数也可能是一个可以作key的object，例如str。与之对应的是__setitem__()方法，把对象视作list或dict来对集合赋值。最后，还有一个__delitem__()方法，用于删除某个元素。</p>
+</li>
+<li>
+<p>__getattr__(self, attr):当获取属性时没有找到,就调用它.</p>
+</li>
+<li>
+<p>__call__():可以实现实例本身调用.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 判断对象是否可以实例调用</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>callable</span><span class=p>(</span><span class=n>Student</span><span class=p>())</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>callable</span><span class=p>(</span><span class=nb>max</span><span class=p>)</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>callable</span><span class=p>([</span><span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>,</span> <span class=mi>3</span><span class=p>])</span>
+<span class=kc>False</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>callable</span><span class=p>(</span><span class=kc>None</span><span class=p>)</span>
+<span class=kc>False</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>callable</span><span class=p>(</span><span class=s1>&#39;str&#39;</span><span class=p>)</span>
+<span class=kc>False</span>
+
+</code></pre></div></li>
+</ol>
+</li>
+</ol>
+<h2 id=枚举类>枚举类</h2>
+<ol>
+<li>
+<p>定义</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>from</span> <span class=nn>enum</span> <span class=kn>import</span> <span class=n>Enum</span>
+
+<span class=n>Month</span> <span class=o>=</span> <span class=n>Enum</span><span class=p>(</span><span class=s1>&#39;Month&#39;</span><span class=p>,</span> <span class=p>(</span><span class=s1>&#39;Jan&#39;</span><span class=p>,</span> <span class=s1>&#39;Feb&#39;</span><span class=p>,</span> <span class=s1>&#39;Mar&#39;</span><span class=p>,</span> <span class=s1>&#39;Apr&#39;</span><span class=p>,</span> <span class=s1>&#39;May&#39;</span><span class=p>,</span> <span class=s1>&#39;Jun&#39;</span><span class=p>,</span> <span class=s1>&#39;Jul&#39;</span><span class=p>,</span> <span class=s1>&#39;Aug&#39;</span><span class=p>,</span> <span class=s1>&#39;Sep&#39;</span><span class=p>,</span> <span class=s1>&#39;Oct&#39;</span><span class=p>,</span> <span class=s1>&#39;Nov&#39;</span><span class=p>,</span> <span class=s1>&#39;Dec&#39;</span><span class=p>))</span>
+
+</code></pre></div></li>
+<li>
+<p>遍历</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>for</span> <span class=n>name</span><span class=p>,</span> <span class=n>member</span> <span class=ow>in</span> <span class=n>Month</span><span class=o>.</span><span class=n>__members__</span><span class=o>.</span><span class=n>items</span><span class=p>():</span>
+    <span class=nb>print</span><span class=p>(</span><span class=n>name</span><span class=p>,</span> <span class=s1>&#39;=&gt;&#39;</span><span class=p>,</span> <span class=n>member</span><span class=p>,</span> <span class=s1>&#39;,&#39;</span><span class=p>,</span> <span class=n>member</span><span class=o>.</span><span class=n>value</span><span class=p>)</span>
+<span class=c1># value属性则是自动赋给成员的int常量，默认从1开始计数。</span>
+
+</code></pre></div></li>
+<li>
+<p>自定义枚举类</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>from</span> <span class=nn>enum</span> <span class=kn>import</span> <span class=n>Enum</span><span class=p>,</span> <span class=n>unique</span>
+
+<span class=nd>@unique</span>
+<span class=k>class</span> <span class=nc>Weekday</span><span class=p>(</span><span class=n>Enum</span><span class=p>):</span>
+    <span class=n>Sun</span> <span class=o>=</span> <span class=mi>0</span> <span class=c1># Sun的value被设定为0</span>
+    <span class=n>Mon</span> <span class=o>=</span> <span class=mi>1</span>
+    <span class=n>Tue</span> <span class=o>=</span> <span class=mi>2</span>
+    <span class=n>Wed</span> <span class=o>=</span> <span class=mi>3</span>
+    <span class=n>Thu</span> <span class=o>=</span> <span class=mi>4</span>
+    <span class=n>Fri</span> <span class=o>=</span> <span class=mi>5</span>
+    <span class=n>Sat</span> <span class=o>=</span> <span class=mi>6</span>
+</code></pre></div></li>
+<li>
+<p>访问枚举类型</p>
+</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=n>day1</span> <span class=o>=</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Mon</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=n>day1</span><span class=p>)</span>
+<span class=n>Weekday</span><span class=o>.</span><span class=n>Mon</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=n>Weekday</span><span class=o>.</span><span class=n>Tue</span><span class=p>)</span>
+<span class=n>Weekday</span><span class=o>.</span><span class=n>Tue</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=n>Weekday</span><span class=p>[</span><span class=s1>&#39;Tue&#39;</span><span class=p>])</span>
+<span class=n>Weekday</span><span class=o>.</span><span class=n>Tue</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=n>Weekday</span><span class=o>.</span><span class=n>Tue</span><span class=o>.</span><span class=n>value</span><span class=p>)</span>
+<span class=mi>2</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=n>day1</span> <span class=o>==</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Mon</span><span class=p>)</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=n>day1</span> <span class=o>==</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Tue</span><span class=p>)</span>
+<span class=kc>False</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=n>Weekday</span><span class=p>(</span><span class=mi>1</span><span class=p>))</span>
+<span class=n>Weekday</span><span class=o>.</span><span class=n>Mon</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=n>day1</span> <span class=o>==</span> <span class=n>Weekday</span><span class=p>(</span><span class=mi>1</span><span class=p>))</span>
+<span class=kc>True</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>Weekday</span><span class=p>(</span><span class=mi>7</span><span class=p>)</span>
+<span class=n>Traceback</span> <span class=p>(</span><span class=n>most</span> <span class=n>recent</span> <span class=n>call</span> <span class=n>last</span><span class=p>):</span>
+<span class=o>...</span>
+<span class=ne>ValueError</span><span class=p>:</span> <span class=mi>7</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>a</span> <span class=n>valid</span> <span class=n>Weekday</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=k>for</span> <span class=n>name</span><span class=p>,</span> <span class=n>member</span> <span class=ow>in</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>__members__</span><span class=o>.</span><span class=n>items</span><span class=p>():</span>
+<span class=o>...</span>     <span class=nb>print</span><span class=p>(</span><span class=n>name</span><span class=p>,</span> <span class=s1>&#39;=&gt;&#39;</span><span class=p>,</span> <span class=n>member</span><span class=p>)</span>
+<span class=o>...</span>
+<span class=n>Sun</span> <span class=o>=&gt;</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Sun</span>
+<span class=n>Mon</span> <span class=o>=&gt;</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Mon</span>
+<span class=n>Tue</span> <span class=o>=&gt;</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Tue</span>
+<span class=n>Wed</span> <span class=o>=&gt;</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Wed</span>
+<span class=n>Thu</span> <span class=o>=&gt;</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Thu</span>
+<span class=n>Fri</span> <span class=o>=&gt;</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Fri</span>
+<span class=n>Sat</span> <span class=o>=&gt;</span> <span class=n>Weekday</span><span class=o>.</span><span class=n>Sat</span>
+</code></pre></div><h2 id=type动态创建类>type():动态创建类</h2>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=k>def</span> <span class=nf>fn</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>name</span><span class=o>=</span><span class=s1>&#39;world&#39;</span><span class=p>):</span> <span class=c1># 先定义函数</span>
+<span class=o>...</span>     <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Hello, </span><span class=si>%s</span><span class=s1>.&#39;</span> <span class=o>%</span> <span class=n>name</span><span class=p>)</span>
+<span class=o>...</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>Hello</span> <span class=o>=</span> <span class=nb>type</span><span class=p>(</span><span class=s1>&#39;Hello&#39;</span><span class=p>,</span> <span class=p>(</span><span class=nb>object</span><span class=p>,),</span> <span class=nb>dict</span><span class=p>(</span><span class=n>hello</span><span class=o>=</span><span class=n>fn</span><span class=p>))</span> <span class=c1># 创建Hello class</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>h</span> <span class=o>=</span> <span class=n>Hello</span><span class=p>()</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>h</span><span class=o>.</span><span class=n>hello</span><span class=p>()</span>
+<span class=n>Hello</span><span class=p>,</span> <span class=n>world</span><span class=o>.</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=nb>type</span><span class=p>(</span><span class=n>Hello</span><span class=p>))</span>
+<span class=o>&lt;</span><span class=k>class</span> <span class=err>&#39;</span><span class=nc>type</span><span class=s1>&#39;&gt;</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=nb>print</span><span class=p>(</span><span class=nb>type</span><span class=p>(</span><span class=n>h</span><span class=p>))</span>
+<span class=o>&lt;</span><span class=k>class</span> <span class=err>&#39;</span><span class=nc>__main__</span><span class=o>.</span><span class=n>Hello</span><span class=s1>&#39;&gt;</span>
+
+</code></pre></div><p>要创建一个class对象，type()函数依次传入3个参数：</p>
+<pre><code>1. class的名称；
+2. 继承的父类集合，注意Python支持多重继承，如果只有一个父类，别忘了tuple的单元素写法；
+3. class的方法名称与函数绑定，这里我们把函数fn绑定到方法名hello上。
+</code></pre>
+<h2 id=metaclass>metaclass</h2>
+<ol>
+<li>
+<p>metaclass的类名总是以Metaclass结尾，以便清楚地表示这是一个metaclass.</p>
+</li>
+<li>
+<p>示例:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># metaclass是类的模板，所以必须从`type`类型派生：</span>
+<span class=k>class</span> <span class=nc>ListMetaclass</span><span class=p>(</span><span class=nb>type</span><span class=p>):</span>
+    <span class=k>def</span> <span class=fm>__new__</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>name</span><span class=p>,</span> <span class=n>bases</span><span class=p>,</span> <span class=n>attrs</span><span class=p>):</span>
+        <span class=n>attrs</span><span class=p>[</span><span class=s1>&#39;add&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=k>lambda</span> <span class=bp>self</span><span class=p>,</span> <span class=n>value</span><span class=p>:</span> <span class=bp>self</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>value</span><span class=p>)</span>
+        <span class=k>return</span> <span class=nb>type</span><span class=o>.</span><span class=fm>__new__</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>name</span><span class=p>,</span> <span class=n>bases</span><span class=p>,</span> <span class=n>attrs</span><span class=p>)</span>
+
+<span class=k>class</span> <span class=nc>MyList</span><span class=p>(</span><span class=nb>list</span><span class=p>,</span> <span class=n>metaclass</span><span class=o>=</span><span class=n>ListMetaclass</span><span class=p>):</span>
+    <span class=k>pass</span>
+
+</code></pre></div><p>__new__()方法接收到的参数依次是：</p>
+<pre><code> 1. 当前准备创建的类的对象；
+
+ 2. 类的名字；
+
+ 3. 类继承的父类集合；
+
+ 4. 类的方法集合;    
+</code></pre>
+</li>
+</ol>
+<h2 id=调试>调试</h2>
+<ol>
+<li>
+<p>异常处理:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>try</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;try...&#39;</span><span class=p>)</span>
+    <span class=n>r</span> <span class=o>=</span> <span class=mi>10</span> <span class=o>/</span> <span class=nb>int</span><span class=p>(</span><span class=s1>&#39;2&#39;</span><span class=p>)</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;result:&#39;</span><span class=p>,</span> <span class=n>r</span><span class=p>)</span>
+<span class=k>except</span> <span class=ne>ValueError</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;ValueError:&#39;</span><span class=p>,</span> <span class=n>e</span><span class=p>)</span>
+<span class=k>except</span> <span class=ne>ZeroDivisionError</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;ZeroDivisionError:&#39;</span><span class=p>,</span> <span class=n>e</span><span class=p>)</span>
+<span class=k>else</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;no error!&#39;</span><span class=p>)</span>
+<span class=k>finally</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;finally...&#39;</span><span class=p>)</span>
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;END&#39;</span><span class=p>)</span>
+</code></pre></div></li>
+<li>
+<p>assert(启动Python解释器时可以用-O参数来关闭assert):</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>def</span> <span class=nf>foo</span><span class=p>(</span><span class=n>s</span><span class=p>):</span>
+    <span class=n>n</span> <span class=o>=</span> <span class=nb>int</span><span class=p>(</span><span class=n>s</span><span class=p>)</span>
+    <span class=k>assert</span> <span class=n>n</span> <span class=o>!=</span> <span class=mi>0</span><span class=p>,</span> <span class=s1>&#39;n is zero!&#39;</span>
+    <span class=k>return</span> <span class=mi>10</span> <span class=o>/</span> <span class=n>n</span>
+
+<span class=k>def</span> <span class=nf>main</span><span class=p>():</span>
+    <span class=n>foo</span><span class=p>(</span><span class=s1>&#39;0&#39;</span><span class=p>)</span>
+
+</code></pre></div></li>
+<li>
+<p>unittest</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>unittest</span>
+
+<span class=kn>from</span> <span class=nn>mydict</span> <span class=kn>import</span> <span class=n>Dict</span>
+
+<span class=k>class</span> <span class=nc>TestDict</span><span class=p>(</span><span class=n>unittest</span><span class=o>.</span><span class=n>TestCase</span><span class=p>):</span>
+
+    <span class=k>def</span> <span class=nf>test_init</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=n>d</span> <span class=o>=</span> <span class=n>Dict</span><span class=p>(</span><span class=n>a</span><span class=o>=</span><span class=mi>1</span><span class=p>,</span> <span class=n>b</span><span class=o>=</span><span class=s1>&#39;test&#39;</span><span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span><span class=n>d</span><span class=o>.</span><span class=n>a</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span><span class=n>d</span><span class=o>.</span><span class=n>b</span><span class=p>,</span> <span class=s1>&#39;test&#39;</span><span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertTrue</span><span class=p>(</span><span class=nb>isinstance</span><span class=p>(</span><span class=n>d</span><span class=p>,</span> <span class=nb>dict</span><span class=p>))</span>
+
+    <span class=k>def</span> <span class=nf>test_key</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=n>d</span> <span class=o>=</span> <span class=n>Dict</span><span class=p>()</span>
+        <span class=n>d</span><span class=p>[</span><span class=s1>&#39;key&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=s1>&#39;value&#39;</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span><span class=n>d</span><span class=o>.</span><span class=n>key</span><span class=p>,</span> <span class=s1>&#39;value&#39;</span><span class=p>)</span>
+
+    <span class=k>def</span> <span class=nf>test_attr</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=n>d</span> <span class=o>=</span> <span class=n>Dict</span><span class=p>()</span>
+        <span class=n>d</span><span class=o>.</span><span class=n>key</span> <span class=o>=</span> <span class=s1>&#39;value&#39;</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertTrue</span><span class=p>(</span><span class=s1>&#39;key&#39;</span> <span class=ow>in</span> <span class=n>d</span><span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span><span class=n>d</span><span class=p>[</span><span class=s1>&#39;key&#39;</span><span class=p>],</span> <span class=s1>&#39;value&#39;</span><span class=p>)</span>
+
+    <span class=k>def</span> <span class=nf>test_keyerror</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=n>d</span> <span class=o>=</span> <span class=n>Dict</span><span class=p>()</span>
+        <span class=k>with</span> <span class=bp>self</span><span class=o>.</span><span class=n>assertRaises</span><span class=p>(</span><span class=ne>KeyError</span><span class=p>):</span>
+            <span class=n>value</span> <span class=o>=</span> <span class=n>d</span><span class=p>[</span><span class=s1>&#39;empty&#39;</span><span class=p>]</span>
+
+    <span class=k>def</span> <span class=nf>test_attrerror</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=n>d</span> <span class=o>=</span> <span class=n>Dict</span><span class=p>()</span>
+        <span class=k>with</span> <span class=bp>self</span><span class=o>.</span><span class=n>assertRaises</span><span class=p>(</span><span class=ne>AttributeError</span><span class=p>):</span>
+            <span class=n>value</span> <span class=o>=</span> <span class=n>d</span><span class=o>.</span><span class=n>empty</span>
+
+</code></pre></div><p>setUp()和tearDown()方法会分别在每调用一个测试方法的前后分别被执行。</p>
+</li>
+</ol>
+<h2 id=io>IO</h2>
+<ol>
+<li>
+<p>简单示例:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 编码和忽略错误</span>
+<span class=n>f</span> <span class=o>=</span> <span class=nb>open</span><span class=p>(</span><span class=s1>&#39;/Users/michael/gbk.txt&#39;</span><span class=p>,</span> <span class=s1>&#39;r&#39;</span><span class=p>,</span> <span class=n>encoding</span><span class=o>=</span><span class=s1>&#39;gbk&#39;</span><span class=p>,</span> <span class=n>errors</span><span class=o>=</span><span class=s1>&#39;ignore&#39;</span><span class=p>)</span>
+</code></pre></div></li>
+<li>
+<p>StringIO(在内存中读写str):</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>from</span> <span class=nn>io</span> <span class=kn>import</span> <span class=n>StringIO</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>f</span> <span class=o>=</span> <span class=n>StringIO</span><span class=p>(</span><span class=s1>&#39;Hello!</span><span class=se>\n</span><span class=s1>Hi!</span><span class=se>\n</span><span class=s1>Goodbye!&#39;</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=k>while</span> <span class=kc>True</span><span class=p>:</span>
+<span class=o>...</span>     <span class=n>s</span> <span class=o>=</span> <span class=n>f</span><span class=o>.</span><span class=n>readline</span><span class=p>()</span>
+<span class=o>...</span>     <span class=k>if</span> <span class=n>s</span> <span class=o>==</span> <span class=s1>&#39;&#39;</span><span class=p>:</span>
+<span class=o>...</span>         <span class=k>break</span>
+<span class=o>...</span>     <span class=nb>print</span><span class=p>(</span><span class=n>s</span><span class=o>.</span><span class=n>strip</span><span class=p>())</span>
+<span class=o>...</span>
+<span class=n>Hello</span><span class=err>!</span>
+<span class=n>Hi</span><span class=err>!</span>
+<span class=n>Goodbye</span><span class=err>!</span>
+
+</code></pre></div></li>
+<li>
+<p>BytesIO</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;</span> <span class=kn>from</span> <span class=nn>io</span> <span class=kn>import</span> <span class=n>BytesIO</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>f</span> <span class=o>=</span> <span class=n>BytesIO</span><span class=p>(</span><span class=sa>b</span><span class=s1>&#39;</span><span class=se>\xe4\xb8\xad\xe6\x96\x87</span><span class=s1>&#39;</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>f</span><span class=o>.</span><span class=n>read</span><span class=p>()</span>
+<span class=sa>b</span><span class=s1>&#39;</span><span class=se>\xe4\xb8\xad\xe6\x96\x87</span><span class=s1>&#39;</span>
+
+</code></pre></div></li>
+<li>
+<p>操作文件和目录</p>
+<ol>
+<li>
+<p>目录</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 查看当前目录的绝对路径:</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>abspath</span><span class=p>(</span><span class=s1>&#39;.&#39;</span><span class=p>)</span>
+<span class=s1>&#39;/Users/michael&#39;</span>
+<span class=c1># 在某个目录下创建一个新目录，首先把新目录的完整路径表示出来:</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=s1>&#39;/Users/michael&#39;</span><span class=p>,</span> <span class=s1>&#39;testdir&#39;</span><span class=p>)</span>
+<span class=s1>&#39;/Users/michael/testdir&#39;</span>
+<span class=c1># 然后创建一个目录:</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>os</span><span class=o>.</span><span class=n>mkdir</span><span class=p>(</span><span class=s1>&#39;/Users/michael/testdir&#39;</span><span class=p>)</span>
+<span class=c1># 删掉一个目录:</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>os</span><span class=o>.</span><span class=n>rmdir</span><span class=p>(</span><span class=s1>&#39;/Users/michael/testdir&#39;</span><span class=p>)</span>
+
+<span class=c1># 拆分路径</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>split</span><span class=p>(</span><span class=s1>&#39;/Users/michael/testdir/file.txt&#39;</span><span class=p>)</span>
+<span class=p>(</span><span class=s1>&#39;/Users/michael/testdir&#39;</span><span class=p>,</span> <span class=s1>&#39;file.txt&#39;</span><span class=p>)</span>
+<span class=c1># 文件扩展名</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>splitext</span><span class=p>(</span><span class=s1>&#39;/path/to/file.txt&#39;</span><span class=p>)</span>
+<span class=p>(</span><span class=s1>&#39;/path/to/file&#39;</span><span class=p>,</span> <span class=s1>&#39;.txt&#39;</span><span class=p>)</span>
+
+</code></pre></div></li>
+<li>
+<p>文件</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 对文件重命名:</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>os</span><span class=o>.</span><span class=n>rename</span><span class=p>(</span><span class=s1>&#39;test.txt&#39;</span><span class=p>,</span> <span class=s1>&#39;test.py&#39;</span><span class=p>)</span>
+<span class=c1># 删掉文件:</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>os</span><span class=o>.</span><span class=n>remove</span><span class=p>(</span><span class=s1>&#39;test.py&#39;</span><span class=p>)</span>
+
+<span class=s1>&#39;&#39;&#39;
+</span><span class=s1>    制文件的函数居然在os模块中不存在！原因是复制文件并非由操作系统提供的系统调用。理论上讲，我们通过上一节的读写文件可以完成文件复制，只不过要多写很多代码。
+</span><span class=s1>
+</span><span class=s1>幸运的是shutil模块提供了copyfile()的函数，你还可以在shutil模块中找到很多实用函数，它们可以看做是os模块的补充。
+</span><span class=s1>&#39;&#39;&#39;</span>
+<span class=c1># 列出文件</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=p>[</span><span class=n>x</span> <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=n>os</span><span class=o>.</span><span class=n>listdir</span><span class=p>(</span><span class=s1>&#39;.&#39;</span><span class=p>)</span> <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>isfile</span><span class=p>(</span><span class=n>x</span><span class=p>)</span> <span class=ow>and</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>splitext</span><span class=p>(</span><span class=n>x</span><span class=p>)[</span><span class=mi>1</span><span class=p>]</span><span class=o>==</span><span class=s1>&#39;.py&#39;</span><span class=p>]</span>
+<span class=p>[</span><span class=s1>&#39;apis.py&#39;</span><span class=p>,</span> <span class=s1>&#39;config.py&#39;</span><span class=p>,</span> <span class=s1>&#39;models.py&#39;</span><span class=p>,</span> <span class=s1>&#39;pymonitor.py&#39;</span><span class=p>,</span> <span class=s1>&#39;test_db.py&#39;</span><span class=p>,</span> <span class=s1>&#39;urls.py&#39;</span><span class=p>,</span> <span class=s1>&#39;wsgiapp.py&#39;</span><span class=p>]</span>
+
+</code></pre></div></li>
+</ol>
+</li>
+<li>
+<p>序列化</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 序列化</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=kn>import</span> <span class=nn>pickle</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>d</span> <span class=o>=</span> <span class=nb>dict</span><span class=p>(</span><span class=n>name</span><span class=o>=</span><span class=s1>&#39;Bob&#39;</span><span class=p>,</span> <span class=n>age</span><span class=o>=</span><span class=mi>20</span><span class=p>,</span> <span class=n>score</span><span class=o>=</span><span class=mi>88</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>pickle</span><span class=o>.</span><span class=n>dumps</span><span class=p>(</span><span class=n>d</span><span class=p>)</span>
+<span class=sa>b</span><span class=s1>&#39;</span><span class=se>\x80\x03</span><span class=s1>}q</span><span class=se>\x00</span><span class=s1>(X</span><span class=se>\x03\x00\x00\x00</span><span class=s1>ageq</span><span class=se>\x01</span><span class=s1>K</span><span class=se>\x14</span><span class=s1>X</span><span class=se>\x05\x00\x00\x00</span><span class=s1>scoreq</span><span class=se>\x02</span><span class=s1>KXX</span><span class=se>\x04\x00\x00\x00</span><span class=s1>nameq</span><span class=se>\x03</span><span class=s1>X</span><span class=se>\x03\x00\x00\x00</span><span class=s1>Bobq</span><span class=se>\x04</span><span class=s1>u.&#39;</span>
+
+<span class=c1># 保存到文件</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>f</span> <span class=o>=</span> <span class=nb>open</span><span class=p>(</span><span class=s1>&#39;dump.txt&#39;</span><span class=p>,</span> <span class=s1>&#39;wb&#39;</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>pickle</span><span class=o>.</span><span class=n>dump</span><span class=p>(</span><span class=n>d</span><span class=p>,</span> <span class=n>f</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>f</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
+
+<span class=c1># 从文件读取</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>f</span> <span class=o>=</span> <span class=nb>open</span><span class=p>(</span><span class=s1>&#39;dump.txt&#39;</span><span class=p>,</span> <span class=s1>&#39;rb&#39;</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>d</span> <span class=o>=</span> <span class=n>pickle</span><span class=o>.</span><span class=n>load</span><span class=p>(</span><span class=n>f</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>f</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>d</span>
+<span class=p>{</span><span class=s1>&#39;age&#39;</span><span class=p>:</span> <span class=mi>20</span><span class=p>,</span> <span class=s1>&#39;score&#39;</span><span class=p>:</span> <span class=mi>88</span><span class=p>,</span> <span class=s1>&#39;name&#39;</span><span class=p>:</span> <span class=s1>&#39;Bob&#39;</span><span class=p>}</span>
+
+<span class=c1># JSON</span>
+<span class=nb>print</span><span class=p>(</span><span class=n>json</span><span class=o>.</span><span class=n>dumps</span><span class=p>(</span><span class=n>s</span><span class=p>,</span> <span class=n>default</span><span class=o>=</span><span class=k>lambda</span> <span class=n>obj</span><span class=p>:</span> <span class=n>obj</span><span class=o>.</span><span class=vm>__dict__</span><span class=p>))</span> <span class=c1># __dict__用来存储实例变量</span>
+
+</code></pre></div></li>
+</ol>
+<h2 id=多进程>多进程</h2>
+<ol>
+<li>
+<p>linux</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>os</span>
+
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Process (</span><span class=si>%s</span><span class=s1>) start...&#39;</span> <span class=o>%</span> <span class=n>os</span><span class=o>.</span><span class=n>getpid</span><span class=p>())</span>
+<span class=c1># Only works on Unix/Linux/Mac:</span>
+<span class=n>pid</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>fork</span><span class=p>()</span>
+<span class=k>if</span> <span class=n>pid</span> <span class=o>==</span> <span class=mi>0</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;I am child process (</span><span class=si>%s</span><span class=s1>) and my parent is </span><span class=si>%s</span><span class=s1>.&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>os</span><span class=o>.</span><span class=n>getpid</span><span class=p>(),</span> <span class=n>os</span><span class=o>.</span><span class=n>getppid</span><span class=p>()))</span>
+<span class=k>else</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;I (</span><span class=si>%s</span><span class=s1>) just created a child process (</span><span class=si>%s</span><span class=s1>).&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>os</span><span class=o>.</span><span class=n>getpid</span><span class=p>(),</span> <span class=n>pid</span><span class=p>))</span>
+
+</code></pre></div></li>
+<li>
+<p>通用</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>from</span> <span class=nn>multiprocessing</span> <span class=kn>import</span> <span class=n>Process</span>
+<span class=kn>import</span> <span class=nn>os</span>
+
+<span class=c1># 子进程要执行的代码</span>
+<span class=k>def</span> <span class=nf>run_proc</span><span class=p>(</span><span class=n>name</span><span class=p>):</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Run child process </span><span class=si>%s</span><span class=s1> (</span><span class=si>%s</span><span class=s1>)...&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>name</span><span class=p>,</span> <span class=n>os</span><span class=o>.</span><span class=n>getpid</span><span class=p>()))</span>
+
+<span class=k>if</span> <span class=vm>__name__</span><span class=o>==</span><span class=s1>&#39;__main__&#39;</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Parent process </span><span class=si>%s</span><span class=s1>.&#39;</span> <span class=o>%</span> <span class=n>os</span><span class=o>.</span><span class=n>getpid</span><span class=p>())</span>
+    <span class=n>p</span> <span class=o>=</span> <span class=n>Process</span><span class=p>(</span><span class=n>target</span><span class=o>=</span><span class=n>run_proc</span><span class=p>,</span> <span class=n>args</span><span class=o>=</span><span class=p>(</span><span class=s1>&#39;test&#39;</span><span class=p>,))</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Child process will start.&#39;</span><span class=p>)</span>
+    <span class=n>p</span><span class=o>.</span><span class=n>start</span><span class=p>()</span>
+    <span class=n>p</span><span class=o>.</span><span class=n>join</span><span class=p>()</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Child process end.&#39;</span><span class=p>)</span>
+
+</code></pre></div></li>
+<li>
+<p>进程池</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>from</span> <span class=nn>multiprocessing</span> <span class=kn>import</span> <span class=n>Pool</span>
+<span class=kn>import</span> <span class=nn>os</span><span class=o>,</span> <span class=nn>time</span><span class=o>,</span> <span class=nn>random</span>
+
+<span class=k>def</span> <span class=nf>long_time_task</span><span class=p>(</span><span class=n>name</span><span class=p>):</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Run task </span><span class=si>%s</span><span class=s1> (</span><span class=si>%s</span><span class=s1>)...&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>name</span><span class=p>,</span> <span class=n>os</span><span class=o>.</span><span class=n>getpid</span><span class=p>()))</span>
+    <span class=n>start</span> <span class=o>=</span> <span class=n>time</span><span class=o>.</span><span class=n>time</span><span class=p>()</span>
+    <span class=n>time</span><span class=o>.</span><span class=n>sleep</span><span class=p>(</span><span class=n>random</span><span class=o>.</span><span class=n>random</span><span class=p>()</span> <span class=o>*</span> <span class=mi>3</span><span class=p>)</span>
+    <span class=n>end</span> <span class=o>=</span> <span class=n>time</span><span class=o>.</span><span class=n>time</span><span class=p>()</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Task </span><span class=si>%s</span><span class=s1> runs </span><span class=si>%0.2f</span><span class=s1> seconds.&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>name</span><span class=p>,</span> <span class=p>(</span><span class=n>end</span> <span class=o>-</span> <span class=n>start</span><span class=p>)))</span>
+
+<span class=k>if</span> <span class=vm>__name__</span><span class=o>==</span><span class=s1>&#39;__main__&#39;</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Parent process </span><span class=si>%s</span><span class=s1>.&#39;</span> <span class=o>%</span> <span class=n>os</span><span class=o>.</span><span class=n>getpid</span><span class=p>())</span>
+    <span class=n>p</span> <span class=o>=</span> <span class=n>Pool</span><span class=p>(</span><span class=mi>4</span><span class=p>)</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>5</span><span class=p>):</span>
+        <span class=n>p</span><span class=o>.</span><span class=n>apply_async</span><span class=p>(</span><span class=n>long_time_task</span><span class=p>,</span> <span class=n>args</span><span class=o>=</span><span class=p>(</span><span class=n>i</span><span class=p>,))</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Waiting for all subprocesses done...&#39;</span><span class=p>)</span>
+    <span class=n>p</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
+    <span class=n>p</span><span class=o>.</span><span class=n>join</span><span class=p>()</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;All subprocesses done.&#39;</span><span class=p>)</span>
+
+</code></pre></div></li>
+<li>
+<p>子进程</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>subprocess</span>
+
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;$ nslookup www.python.org&#39;</span><span class=p>)</span>
+<span class=n>r</span> <span class=o>=</span> <span class=n>subprocess</span><span class=o>.</span><span class=n>call</span><span class=p>([</span><span class=s1>&#39;nslookup&#39;</span><span class=p>,</span> <span class=s1>&#39;www.python.org&#39;</span><span class=p>])</span>
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Exit code:&#39;</span><span class=p>,</span> <span class=n>r</span><span class=p>)</span>
+
+</code></pre></div></li>
+</ol>
+<h2 id=多线程>多线程</h2>
+<ol>
+<li>
+<p>创建线程:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>time</span><span class=o>,</span> <span class=nn>threading</span>
+
+<span class=c1># 新线程执行的代码:</span>
+<span class=k>def</span> <span class=nf>loop</span><span class=p>():</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;thread </span><span class=si>%s</span><span class=s1> is running...&#39;</span> <span class=o>%</span> <span class=n>threading</span><span class=o>.</span><span class=n>current_thread</span><span class=p>()</span><span class=o>.</span><span class=n>name</span><span class=p>)</span>
+    <span class=n>n</span> <span class=o>=</span> <span class=mi>0</span>
+    <span class=k>while</span> <span class=n>n</span> <span class=o>&lt;</span> <span class=mi>5</span><span class=p>:</span>
+        <span class=n>n</span> <span class=o>=</span> <span class=n>n</span> <span class=o>+</span> <span class=mi>1</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;thread </span><span class=si>%s</span><span class=s1> &gt;&gt;&gt; </span><span class=si>%s</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>threading</span><span class=o>.</span><span class=n>current_thread</span><span class=p>()</span><span class=o>.</span><span class=n>name</span><span class=p>,</span> <span class=n>n</span><span class=p>))</span>
+        <span class=n>time</span><span class=o>.</span><span class=n>sleep</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;thread </span><span class=si>%s</span><span class=s1> ended.&#39;</span> <span class=o>%</span> <span class=n>threading</span><span class=o>.</span><span class=n>current_thread</span><span class=p>()</span><span class=o>.</span><span class=n>name</span><span class=p>)</span>
+
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;thread </span><span class=si>%s</span><span class=s1> is running...&#39;</span> <span class=o>%</span> <span class=n>threading</span><span class=o>.</span><span class=n>current_thread</span><span class=p>()</span><span class=o>.</span><span class=n>name</span><span class=p>)</span>
+<span class=n>t</span> <span class=o>=</span> <span class=n>threading</span><span class=o>.</span><span class=n>Thread</span><span class=p>(</span><span class=n>target</span><span class=o>=</span><span class=n>loop</span><span class=p>,</span> <span class=n>name</span><span class=o>=</span><span class=s1>&#39;LoopThread&#39;</span><span class=p>)</span>
+<span class=n>t</span><span class=o>.</span><span class=n>start</span><span class=p>()</span>
+<span class=n>t</span><span class=o>.</span><span class=n>join</span><span class=p>()</span>
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;thread </span><span class=si>%s</span><span class=s1> ended.&#39;</span> <span class=o>%</span> <span class=n>threading</span><span class=o>.</span><span class=n>current_thread</span><span class=p>()</span><span class=o>.</span><span class=n>name</span><span class=p>)</span>
+
+</code></pre></div></li>
+<li>
+<p>互斥锁</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=n>balance</span> <span class=o>=</span> <span class=mi>0</span>
+<span class=n>lock</span> <span class=o>=</span> <span class=n>threading</span><span class=o>.</span><span class=n>Lock</span><span class=p>()</span>
+
+<span class=k>def</span> <span class=nf>run_thread</span><span class=p>(</span><span class=n>n</span><span class=p>):</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>100000</span><span class=p>):</span>
+        <span class=c1># 先要获取锁:</span>
+        <span class=n>lock</span><span class=o>.</span><span class=n>acquire</span><span class=p>()</span>
+        <span class=k>try</span><span class=p>:</span>
+            <span class=c1># 放心地改吧:</span>
+            <span class=n>change_it</span><span class=p>(</span><span class=n>n</span><span class=p>)</span>
+        <span class=k>finally</span><span class=p>:</span>
+            <span class=c1># 改完了一定要释放锁:</span>
+            <span class=n>lock</span><span class=o>.</span><span class=n>release</span><span class=p>()</span>
+
+</code></pre></div></li>
+<li>
+<p>Global Interpreter Lock:</p>
+<p>任何Python线程执行前，必须先获得GIL锁，然后，每执行100条字节码，解释器就自动释放GIL锁，让别的线程有机会执行。这个GIL全局锁实际上把所有线程的执行代码都给上了锁，所以，多线程在Python中只能交替执行，即使100个线程跑在100核CPU上，也只能用到1个核。</p>
+</li>
+<li>
+<p>ThreadLocal:线程之间传递参数,每个线程都有一副本,互不干扰.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>threading</span>
+
+<span class=c1># 创建全局ThreadLocal对象:</span>
+<span class=n>local_school</span> <span class=o>=</span> <span class=n>threading</span><span class=o>.</span><span class=n>local</span><span class=p>()</span>
+
+<span class=k>def</span> <span class=nf>process_student</span><span class=p>():</span>
+    <span class=c1># 获取当前线程关联的student:</span>
+    <span class=n>std</span> <span class=o>=</span> <span class=n>local_school</span><span class=o>.</span><span class=n>student</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Hello, </span><span class=si>%s</span><span class=s1> (in </span><span class=si>%s</span><span class=s1>)&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>std</span><span class=p>,</span> <span class=n>threading</span><span class=o>.</span><span class=n>current_thread</span><span class=p>()</span><span class=o>.</span><span class=n>name</span><span class=p>))</span>
+
+<span class=k>def</span> <span class=nf>process_thread</span><span class=p>(</span><span class=n>name</span><span class=p>):</span>
+    <span class=c1># 绑定ThreadLocal的student:</span>
+    <span class=n>local_school</span><span class=o>.</span><span class=n>student</span> <span class=o>=</span> <span class=n>name</span>
+    <span class=n>process_student</span><span class=p>()</span>
+
+<span class=n>t1</span> <span class=o>=</span> <span class=n>threading</span><span class=o>.</span><span class=n>Thread</span><span class=p>(</span><span class=n>target</span><span class=o>=</span> <span class=n>process_thread</span><span class=p>,</span> <span class=n>args</span><span class=o>=</span><span class=p>(</span><span class=s1>&#39;Alice&#39;</span><span class=p>,),</span> <span class=n>name</span><span class=o>=</span><span class=s1>&#39;Thread-A&#39;</span><span class=p>)</span>
+<span class=n>t2</span> <span class=o>=</span> <span class=n>threading</span><span class=o>.</span><span class=n>Thread</span><span class=p>(</span><span class=n>target</span><span class=o>=</span> <span class=n>process_thread</span><span class=p>,</span> <span class=n>args</span><span class=o>=</span><span class=p>(</span><span class=s1>&#39;Bob&#39;</span><span class=p>,),</span> <span class=n>name</span><span class=o>=</span><span class=s1>&#39;Thread-B&#39;</span><span class=p>)</span>
+<span class=n>t1</span><span class=o>.</span><span class=n>start</span><span class=p>()</span>
+<span class=n>t2</span><span class=o>.</span><span class=n>start</span><span class=p>()</span>
+<span class=n>t1</span><span class=o>.</span><span class=n>join</span><span class=p>()</span>
+<span class=n>t2</span><span class=o>.</span><span class=n>join</span><span class=p>()</span>
+
+</code></pre></div></li>
+</ol>
+<h2 id=常用模块>常用模块</h2>
+<ol>
+<li>
+<p>collections</p>
+<ol>
+<li>
+<p>namedtuple</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>from</span> <span class=nn>collections</span> <span class=kn>import</span> <span class=n>namedtuple</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>Point</span> <span class=o>=</span> <span class=n>namedtuple</span><span class=p>(</span><span class=s1>&#39;Point&#39;</span><span class=p>,</span> <span class=p>[</span><span class=s1>&#39;x&#39;</span><span class=p>,</span> <span class=s1>&#39;y&#39;</span><span class=p>])</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>p</span> <span class=o>=</span> <span class=n>Point</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>p</span><span class=o>.</span><span class=n>x</span>
+<span class=mi>1</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>p</span><span class=o>.</span><span class=n>y</span>
+<span class=mi>2</span>
+</code></pre></div></li>
+<li>
+<p>deque</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 双向列表</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=kn>from</span> <span class=nn>collections</span> <span class=kn>import</span> <span class=n>deque</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>q</span> <span class=o>=</span> <span class=n>deque</span><span class=p>([</span><span class=s1>&#39;a&#39;</span><span class=p>,</span> <span class=s1>&#39;b&#39;</span><span class=p>,</span> <span class=s1>&#39;c&#39;</span><span class=p>])</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>q</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=s1>&#39;x&#39;</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>q</span><span class=o>.</span><span class=n>appendleft</span><span class=p>(</span><span class=s1>&#39;y&#39;</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>q</span>
+<span class=n>deque</span><span class=p>([</span><span class=s1>&#39;y&#39;</span><span class=p>,</span> <span class=s1>&#39;a&#39;</span><span class=p>,</span> <span class=s1>&#39;b&#39;</span><span class=p>,</span> <span class=s1>&#39;c&#39;</span><span class=p>,</span> <span class=s1>&#39;x&#39;</span><span class=p>])</span>
+
+</code></pre></div></li>
+<li>
+<p>defaultdict</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>from</span> <span class=nn>collections</span> <span class=kn>import</span> <span class=n>defaultdict</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>dd</span> <span class=o>=</span> <span class=n>defaultdict</span><span class=p>(</span><span class=k>lambda</span><span class=p>:</span> <span class=s1>&#39;N/A&#39;</span><span class=p>)</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>dd</span><span class=p>[</span><span class=s1>&#39;key1&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=s1>&#39;abc&#39;</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>dd</span><span class=p>[</span><span class=s1>&#39;key1&#39;</span><span class=p>]</span> <span class=c1># key1存在</span>
+<span class=s1>&#39;abc&#39;</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>dd</span><span class=p>[</span><span class=s1>&#39;key2&#39;</span><span class=p>]</span> <span class=c1># key2不存在，返回默认值</span>
+<span class=s1>&#39;N/A&#39;</span>
+
+</code></pre></div></li>
+<li>
+<p>OrderedDict</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>from</span> <span class=nn>collections</span> <span class=kn>import</span> <span class=n>OrderedDict</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>d</span> <span class=o>=</span> <span class=nb>dict</span><span class=p>([(</span><span class=s1>&#39;a&#39;</span><span class=p>,</span> <span class=mi>1</span><span class=p>),</span> <span class=p>(</span><span class=s1>&#39;b&#39;</span><span class=p>,</span> <span class=mi>2</span><span class=p>),</span> <span class=p>(</span><span class=s1>&#39;c&#39;</span><span class=p>,</span> <span class=mi>3</span><span class=p>)])</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>d</span> <span class=c1># dict的Key是无序的</span>
+<span class=p>{</span><span class=s1>&#39;a&#39;</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span> <span class=s1>&#39;c&#39;</span><span class=p>:</span> <span class=mi>3</span><span class=p>,</span> <span class=s1>&#39;b&#39;</span><span class=p>:</span> <span class=mi>2</span><span class=p>}</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>od</span> <span class=o>=</span> <span class=n>OrderedDict</span><span class=p>([(</span><span class=s1>&#39;a&#39;</span><span class=p>,</span> <span class=mi>1</span><span class=p>),</span> <span class=p>(</span><span class=s1>&#39;b&#39;</span><span class=p>,</span> <span class=mi>2</span><span class=p>),</span> <span class=p>(</span><span class=s1>&#39;c&#39;</span><span class=p>,</span> <span class=mi>3</span><span class=p>)])</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>od</span> <span class=c1># OrderedDict的Key是有序的</span>
+<span class=n>OrderedDict</span><span class=p>([(</span><span class=s1>&#39;a&#39;</span><span class=p>,</span> <span class=mi>1</span><span class=p>),</span> <span class=p>(</span><span class=s1>&#39;b&#39;</span><span class=p>,</span> <span class=mi>2</span><span class=p>),</span> <span class=p>(</span><span class=s1>&#39;c&#39;</span><span class=p>,</span> <span class=mi>3</span><span class=p>)])</span> <span class=c1># 根据插入顺序</span>
+
+</code></pre></div></li>
+<li>
+<p>Counter</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>from</span> <span class=nn>collections</span> <span class=kn>import</span> <span class=n>Counter</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>c</span> <span class=o>=</span> <span class=n>Counter</span><span class=p>()</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=k>for</span> <span class=n>ch</span> <span class=ow>in</span> <span class=s1>&#39;programming&#39;</span><span class=p>:</span>
+<span class=o>...</span>     <span class=n>c</span><span class=p>[</span><span class=n>ch</span><span class=p>]</span> <span class=o>=</span> <span class=n>c</span><span class=p>[</span><span class=n>ch</span><span class=p>]</span> <span class=o>+</span> <span class=mi>1</span>
+<span class=o>...</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>c</span>
+<span class=n>Counter</span><span class=p>({</span><span class=s1>&#39;g&#39;</span><span class=p>:</span> <span class=mi>2</span><span class=p>,</span> <span class=s1>&#39;m&#39;</span><span class=p>:</span> <span class=mi>2</span><span class=p>,</span> <span class=s1>&#39;r&#39;</span><span class=p>:</span> <span class=mi>2</span><span class=p>,</span> <span class=s1>&#39;a&#39;</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span> <span class=s1>&#39;i&#39;</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span> <span class=s1>&#39;o&#39;</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span> <span class=s1>&#39;n&#39;</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span> <span class=s1>&#39;p&#39;</span><span class=p>:</span> <span class=mi>1</span><span class=p>})</span>
+
+</code></pre></div></li>
+</ol>
+</li>
+<li>
+<p>base64:将3个字节的二进制编码成四字节对应的字符</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>import</span> <span class=nn>base64</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>base64</span><span class=o>.</span><span class=n>b64encode</span><span class=p>(</span><span class=sa>b</span><span class=s1>&#39;binary</span><span class=se>\x00</span><span class=s1>string&#39;</span><span class=p>)</span>
+<span class=sa>b</span><span class=s1>&#39;YmluYXJ5AHN0cmluZw==&#39;</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>base64</span><span class=o>.</span><span class=n>b64decode</span><span class=p>(</span><span class=sa>b</span><span class=s1>&#39;YmluYXJ5AHN0cmluZw==&#39;</span><span class=p>)</span>
+<span class=sa>b</span><span class=s1>&#39;binary</span><span class=se>\x00</span><span class=s1>string&#39;</span>
+
+<span class=c1># url safe</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>base64</span><span class=o>.</span><span class=n>b64encode</span><span class=p>(</span><span class=sa>b</span><span class=s1>&#39;i</span><span class=se>\xb7\x1d\xfb\xef\xff</span><span class=s1>&#39;</span><span class=p>)</span>
+<span class=sa>b</span><span class=s1>&#39;abcd++//&#39;</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>base64</span><span class=o>.</span><span class=n>urlsafe_b64encode</span><span class=p>(</span><span class=sa>b</span><span class=s1>&#39;i</span><span class=se>\xb7\x1d\xfb\xef\xff</span><span class=s1>&#39;</span><span class=p>)</span>
+<span class=sa>b</span><span class=s1>&#39;abcd--__&#39;</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>base64</span><span class=o>.</span><span class=n>urlsafe_b64decode</span><span class=p>(</span><span class=s1>&#39;abcd--__&#39;</span><span class=p>)</span>
+<span class=sa>b</span><span class=s1>&#39;i</span><span class=se>\xb7\x1d\xfb\xef\xff</span><span class=s1>&#39;</span>
+
+</code></pre></div></li>
+<li>
+<p>struct</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>import</span> <span class=nn>struct</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>struct</span><span class=o>.</span><span class=n>pack</span><span class=p>(</span><span class=s1>&#39;&gt;I&#39;</span><span class=p>,</span> <span class=mi>10240099</span><span class=p>)</span> <span class=c1># &gt;表示字节顺序是big-endian，也就是网络序，I表示4字节无符号整数。</span>
+<span class=sa>b</span><span class=s1>&#39;</span><span class=se>\x00\x9c</span><span class=s1>@c&#39;</span>
+
+<span class=o>&gt;&gt;&gt;</span> <span class=n>struct</span><span class=o>.</span><span class=n>unpack</span><span class=p>(</span><span class=s1>&#39;&gt;IH&#39;</span><span class=p>,</span> <span class=sa>b</span><span class=s1>&#39;</span><span class=se>\xf0\xf0\xf0\xf0\x80\x80</span><span class=s1>&#39;</span><span class=p>)</span> <span class=c1># I：4字节无符号整数和H：2字节无符号整数。</span>
+<span class=p>(</span><span class=mi>4042322160</span><span class=p>,</span> <span class=mi>32896</span><span class=p>)</span>
+
+</code></pre></div></li>
+<li>
+<p>hashlib</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>hashlib</span>
+<span class=n>md5</span> <span class=o>=</span> <span class=n>hashlib</span><span class=o>.</span><span class=n>md5</span><span class=p>()</span>
+<span class=n>md5</span><span class=o>.</span><span class=n>update</span><span class=p>(</span><span class=s1>&#39;how to use md5 in python hashlib?&#39;</span><span class=o>.</span><span class=n>encode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span>
+<span class=nb>print</span><span class=p>(</span><span class=n>md5</span><span class=o>.</span><span class=n>hexdigest</span><span class=p>())</span>
+
+<span class=c1># 如果数据量过大,可以分块调用update</span>
+<span class=kn>import</span> <span class=nn>hashlib</span>
+<span class=n>md5</span> <span class=o>=</span> <span class=n>hashlib</span><span class=o>.</span><span class=n>md5</span><span class=p>()</span>
+<span class=n>md5</span><span class=o>.</span><span class=n>update</span><span class=p>(</span><span class=s1>&#39;how to use md5 in &#39;</span><span class=o>.</span><span class=n>encode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span>
+<span class=n>md5</span><span class=o>.</span><span class=n>update</span><span class=p>(</span><span class=s1>&#39;python hashlib?&#39;</span><span class=o>.</span><span class=n>encode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span>
+<span class=nb>print</span><span class=p>(</span><span class=n>md5</span><span class=o>.</span><span class=n>hexdigest</span><span class=p>())</span>
+
+</code></pre></div></li>
+<li>
+<p>itertools</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=o>&gt;&gt;&gt;</span> <span class=kn>import</span> <span class=nn>itertools</span>
+
+<span class=c1># 无限迭代</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>natuals</span> <span class=o>=</span> <span class=n>itertools</span><span class=o>.</span><span class=n>count</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
+
+<span class=c1># 重复无限迭代    </span>
+<span class=o>&gt;&gt;&gt;</span> <span class=n>cs</span> <span class=o>=</span> <span class=n>itertools</span><span class=o>.</span><span class=n>cycle</span><span class=p>(</span><span class=s1>&#39;ABC&#39;</span><span class=p>)</span> <span class=c1># 注意字符串也是序列的一种</span>
+
+<span class=c1># 单一元素迭代,可以指定次数</span>
+<span class=n>ns</span> <span class=o>=</span> <span class=n>itertools</span><span class=o>.</span><span class=n>repeat</span><span class=p>(</span><span class=s1>&#39;A&#39;</span><span class=p>,</span> <span class=mi>3</span><span class=p>)</span>
+
+<span class=c1># 合并迭代 </span>
+<span class=o>&gt;&gt;&gt;</span> <span class=k>for</span> <span class=n>c</span> <span class=ow>in</span> <span class=n>itertools</span><span class=o>.</span><span class=n>chain</span><span class=p>(</span><span class=s1>&#39;ABC&#39;</span><span class=p>,</span> <span class=s1>&#39;XYZ&#39;</span><span class=p>):</span>
+<span class=o>...</span>     <span class=nb>print</span><span class=p>(</span><span class=n>c</span><span class=p>)</span>
+
+<span class=c1># groupby()把迭代器中相邻的重复元素挑出来放在一起</span>
+<span class=o>&gt;&gt;&gt;</span> <span class=k>for</span> <span class=n>key</span><span class=p>,</span> <span class=n>group</span> <span class=ow>in</span> <span class=n>itertools</span><span class=o>.</span><span class=n>groupby</span><span class=p>(</span><span class=s1>&#39;AAABBBCCAAA&#39;</span><span class=p>):</span>
+<span class=o>...</span>     <span class=nb>print</span><span class=p>(</span><span class=n>key</span><span class=p>,</span> <span class=nb>list</span><span class=p>(</span><span class=n>group</span><span class=p>))</span>
+<span class=o>...</span>
+<span class=n>A</span> <span class=p>[</span><span class=s1>&#39;A&#39;</span><span class=p>,</span> <span class=s1>&#39;A&#39;</span><span class=p>,</span> <span class=s1>&#39;A&#39;</span><span class=p>]</span>
+<span class=n>B</span> <span class=p>[</span><span class=s1>&#39;B&#39;</span><span class=p>,</span> <span class=s1>&#39;B&#39;</span><span class=p>,</span> <span class=s1>&#39;B&#39;</span><span class=p>]</span>
+<span class=n>C</span> <span class=p>[</span><span class=s1>&#39;C&#39;</span><span class=p>,</span> <span class=s1>&#39;C&#39;</span><span class=p>]</span>
+<span class=n>A</span> <span class=p>[</span><span class=s1>&#39;A&#39;</span><span class=p>,</span> <span class=s1>&#39;A&#39;</span><span class=p>,</span> <span class=s1>&#39;A&#39;</span><span class=p>]</span>
+
+</code></pre></div></li>
+<li>
+<p>contextlib:任何对象，只要正确实现了上下文管理，就可以用于with语句。实现上下文管理是通过__enter__和__exit__这两个方法实现的。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>from</span> <span class=nn>contextlib</span> <span class=kn>import</span> <span class=n>contextmanager</span>
+<span class=k>class</span> <span class=nc>Query</span><span class=p>(</span><span class=nb>object</span><span class=p>):</span>
+
+    <span class=k>def</span> <span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>name</span><span class=p>):</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
+
+    <span class=k>def</span> <span class=nf>query</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Query info about </span><span class=si>%s</span><span class=s1>...&#39;</span> <span class=o>%</span> <span class=bp>self</span><span class=o>.</span><span class=n>name</span><span class=p>)</span>
+
+<span class=nd>@contextmanager</span>
+<span class=k>def</span> <span class=nf>create_query</span><span class=p>(</span><span class=n>name</span><span class=p>):</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Begin&#39;</span><span class=p>)</span>
+    <span class=n>q</span> <span class=o>=</span> <span class=n>Query</span><span class=p>(</span><span class=n>name</span><span class=p>)</span>
+    <span class=k>yield</span> <span class=n>q</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;End&#39;</span><span class=p>)</span>
+
+
+<span class=c1># 用contextmanager实现前后自动执行代码</span>
+<span class=nd>@contextmanager</span>
+<span class=k>def</span> <span class=nf>tag</span><span class=p>(</span><span class=n>name</span><span class=p>):</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;&lt;</span><span class=si>%s</span><span class=s2>&gt;&#34;</span> <span class=o>%</span> <span class=n>name</span><span class=p>)</span>
+    <span class=k>yield</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;&lt;/</span><span class=si>%s</span><span class=s2>&gt;&#34;</span> <span class=o>%</span> <span class=n>name</span><span class=p>)</span>
+
+<span class=k>with</span> <span class=n>tag</span><span class=p>(</span><span class=s2>&#34;h1&#34;</span><span class=p>):</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;hello&#34;</span><span class=p>)</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;world&#34;</span><span class=p>)</span>
+
+<span class=c1># 如果一个对象没有实现上下文，我们就不能把它用于with语句。这个时候，可以用closing()来把该对象变为上下文对象。</span>
+<span class=kn>from</span> <span class=nn>contextlib</span> <span class=kn>import</span> <span class=n>closing</span>
+<span class=kn>from</span> <span class=nn>urllib.request</span> <span class=kn>import</span> <span class=n>urlopen</span>
+
+<span class=k>with</span> <span class=n>closing</span><span class=p>(</span><span class=n>urlopen</span><span class=p>(</span><span class=s1>&#39;https://www.python.org&#39;</span><span class=p>))</span> <span class=k>as</span> <span class=n>page</span><span class=p>:</span>
+    <span class=k>for</span> <span class=n>line</span> <span class=ow>in</span> <span class=n>page</span><span class=p>:</span>
+        <span class=nb>print</span><span class=p>(</span><span class=n>line</span><span class=p>)</span>
+
+</code></pre></div></li>
+<li>
+<p>urllib</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>from</span> <span class=nn>urllib</span> <span class=kn>import</span> <span class=n>request</span>
+
+<span class=k>with</span> <span class=n>request</span><span class=o>.</span><span class=n>urlopen</span><span class=p>(</span><span class=s1>&#39;https://api.douban.com/v2/book/2129650&#39;</span><span class=p>)</span> <span class=k>as</span> <span class=n>f</span><span class=p>:</span>
+    <span class=n>data</span> <span class=o>=</span> <span class=n>f</span><span class=o>.</span><span class=n>read</span><span class=p>()</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Status:&#39;</span><span class=p>,</span> <span class=n>f</span><span class=o>.</span><span class=n>status</span><span class=p>,</span> <span class=n>f</span><span class=o>.</span><span class=n>reason</span><span class=p>)</span>
+    <span class=k>for</span> <span class=n>k</span><span class=p>,</span> <span class=n>v</span> <span class=ow>in</span> <span class=n>f</span><span class=o>.</span><span class=n>getheaders</span><span class=p>():</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;</span><span class=si>%s</span><span class=s1>: </span><span class=si>%s</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>k</span><span class=p>,</span> <span class=n>v</span><span class=p>))</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Data:&#39;</span><span class=p>,</span> <span class=n>data</span><span class=o>.</span><span class=n>decode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span>
+
+<span class=c1># 加请求头</span>
+<span class=kn>from</span> <span class=nn>urllib</span> <span class=kn>import</span> <span class=n>request</span>
+
+<span class=n>req</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=n>Request</span><span class=p>(</span><span class=s1>&#39;http://www.douban.com/&#39;</span><span class=p>)</span>
+<span class=n>req</span><span class=o>.</span><span class=n>add_header</span><span class=p>(</span><span class=s1>&#39;User-Agent&#39;</span><span class=p>,</span> <span class=s1>&#39;Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25&#39;</span><span class=p>)</span>
+<span class=k>with</span> <span class=n>request</span><span class=o>.</span><span class=n>urlopen</span><span class=p>(</span><span class=n>req</span><span class=p>)</span> <span class=k>as</span> <span class=n>f</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Status:&#39;</span><span class=p>,</span> <span class=n>f</span><span class=o>.</span><span class=n>status</span><span class=p>,</span> <span class=n>f</span><span class=o>.</span><span class=n>reason</span><span class=p>)</span>
+    <span class=k>for</span> <span class=n>k</span><span class=p>,</span> <span class=n>v</span> <span class=ow>in</span> <span class=n>f</span><span class=o>.</span><span class=n>getheaders</span><span class=p>():</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;</span><span class=si>%s</span><span class=s1>: </span><span class=si>%s</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>k</span><span class=p>,</span> <span class=n>v</span><span class=p>))</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Data:&#39;</span><span class=p>,</span> <span class=n>f</span><span class=o>.</span><span class=n>read</span><span class=p>()</span><span class=o>.</span><span class=n>decode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span>
+
+<span class=c1># post登录</span>
+
+<span class=kn>from</span> <span class=nn>urllib</span> <span class=kn>import</span> <span class=n>request</span><span class=p>,</span> <span class=n>parse</span>
+
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Login to weibo.cn...&#39;</span><span class=p>)</span>
+<span class=n>email</span> <span class=o>=</span> <span class=nb>input</span><span class=p>(</span><span class=s1>&#39;Email: &#39;</span><span class=p>)</span>
+<span class=n>passwd</span> <span class=o>=</span> <span class=nb>input</span><span class=p>(</span><span class=s1>&#39;Password: &#39;</span><span class=p>)</span>
+<span class=n>login_data</span> <span class=o>=</span> <span class=n>parse</span><span class=o>.</span><span class=n>urlencode</span><span class=p>([</span>
+    <span class=p>(</span><span class=s1>&#39;username&#39;</span><span class=p>,</span> <span class=n>email</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;password&#39;</span><span class=p>,</span> <span class=n>passwd</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;entry&#39;</span><span class=p>,</span> <span class=s1>&#39;mweibo&#39;</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;client_id&#39;</span><span class=p>,</span> <span class=s1>&#39;&#39;</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;savestate&#39;</span><span class=p>,</span> <span class=s1>&#39;1&#39;</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;ec&#39;</span><span class=p>,</span> <span class=s1>&#39;&#39;</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;pagerefer&#39;</span><span class=p>,</span> <span class=s1>&#39;https://passport.weibo.cn/signin/welcome?entry=mweibo&amp;r=http%3A</span><span class=si>%2F%2F</span><span class=s1>m.weibo.cn</span><span class=si>%2F</span><span class=s1>&#39;</span><span class=p>)</span>
+<span class=p>])</span>
+
+<span class=n>req</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=n>Request</span><span class=p>(</span><span class=s1>&#39;https://passport.weibo.cn/sso/login&#39;</span><span class=p>)</span>
+<span class=n>req</span><span class=o>.</span><span class=n>add_header</span><span class=p>(</span><span class=s1>&#39;Origin&#39;</span><span class=p>,</span> <span class=s1>&#39;https://passport.weibo.cn&#39;</span><span class=p>)</span>
+<span class=n>req</span><span class=o>.</span><span class=n>add_header</span><span class=p>(</span><span class=s1>&#39;User-Agent&#39;</span><span class=p>,</span> <span class=s1>&#39;Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25&#39;</span><span class=p>)</span>
+<span class=n>req</span><span class=o>.</span><span class=n>add_header</span><span class=p>(</span><span class=s1>&#39;Referer&#39;</span><span class=p>,</span> <span class=s1>&#39;https://passport.weibo.cn/signin/login?entry=mweibo&amp;res=wel&amp;wm=3349&amp;r=http%3A</span><span class=si>%2F%2F</span><span class=s1>m.weibo.cn</span><span class=si>%2F</span><span class=s1>&#39;</span><span class=p>)</span>
+
+<span class=k>with</span> <span class=n>request</span><span class=o>.</span><span class=n>urlopen</span><span class=p>(</span><span class=n>req</span><span class=p>,</span> <span class=n>data</span><span class=o>=</span><span class=n>login_data</span><span class=o>.</span><span class=n>encode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span> <span class=k>as</span> <span class=n>f</span><span class=p>:</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Status:&#39;</span><span class=p>,</span> <span class=n>f</span><span class=o>.</span><span class=n>status</span><span class=p>,</span> <span class=n>f</span><span class=o>.</span><span class=n>reason</span><span class=p>)</span>
+    <span class=k>for</span> <span class=n>k</span><span class=p>,</span> <span class=n>v</span> <span class=ow>in</span> <span class=n>f</span><span class=o>.</span><span class=n>getheaders</span><span class=p>():</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;</span><span class=si>%s</span><span class=s1>: </span><span class=si>%s</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>k</span><span class=p>,</span> <span class=n>v</span><span class=p>))</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Data:&#39;</span><span class=p>,</span> <span class=n>f</span><span class=o>.</span><span class=n>read</span><span class=p>()</span><span class=o>.</span><span class=n>decode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span>
+
+<span class=c1># 代理</span>
+<span class=n>proxy_handler</span> <span class=o>=</span> <span class=n>urllib</span><span class=o>.</span><span class=n>request</span><span class=o>.</span><span class=n>ProxyHandler</span><span class=p>({</span><span class=s1>&#39;http&#39;</span><span class=p>:</span> <span class=s1>&#39;http://www.example.com:3128/&#39;</span><span class=p>})</span>
+<span class=n>proxy_auth_handler</span> <span class=o>=</span> <span class=n>urllib</span><span class=o>.</span><span class=n>request</span><span class=o>.</span><span class=n>ProxyBasicAuthHandler</span><span class=p>()</span>
+<span class=n>proxy_auth_handler</span><span class=o>.</span><span class=n>add_password</span><span class=p>(</span><span class=s1>&#39;realm&#39;</span><span class=p>,</span> <span class=s1>&#39;host&#39;</span><span class=p>,</span> <span class=s1>&#39;username&#39;</span><span class=p>,</span> <span class=s1>&#39;password&#39;</span><span class=p>)</span>
+<span class=n>opener</span> <span class=o>=</span> <span class=n>urllib</span><span class=o>.</span><span class=n>request</span><span class=o>.</span><span class=n>build_opener</span><span class=p>(</span><span class=n>proxy_handler</span><span class=p>,</span> <span class=n>proxy_auth_handler</span><span class=p>)</span>
+<span class=k>with</span> <span class=n>opener</span><span class=o>.</span><span class=n>open</span><span class=p>(</span><span class=s1>&#39;http://www.example.com/login.html&#39;</span><span class=p>)</span> <span class=k>as</span> <span class=n>f</span><span class=p>:</span>
+    <span class=k>pass</span>
+
+</code></pre></div></li>
+<li>
+<p>PIL(Python Imaging Library)</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=c1># 操作图片</span>
+<span class=kn>from</span> <span class=nn>PIL</span> <span class=kn>import</span> <span class=n>Image</span>
+
+<span class=c1># 打开一个jpg图像文件，注意是当前路径:</span>
+<span class=n>im</span> <span class=o>=</span> <span class=n>Image</span><span class=o>.</span><span class=n>open</span><span class=p>(</span><span class=s1>&#39;test.jpg&#39;</span><span class=p>)</span>
+<span class=c1># 获得图像尺寸:</span>
+<span class=n>w</span><span class=p>,</span> <span class=n>h</span> <span class=o>=</span> <span class=n>im</span><span class=o>.</span><span class=n>size</span>
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Original image size: </span><span class=si>%s</span><span class=s1>x</span><span class=si>%s</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>w</span><span class=p>,</span> <span class=n>h</span><span class=p>))</span>
+<span class=c1># 缩放到50%:</span>
+<span class=n>im</span><span class=o>.</span><span class=n>thumbnail</span><span class=p>((</span><span class=n>w</span><span class=o>//</span><span class=mi>2</span><span class=p>,</span> <span class=n>h</span><span class=o>//</span><span class=mi>2</span><span class=p>))</span>
+<span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Resize image to: </span><span class=si>%s</span><span class=s1>x</span><span class=si>%s</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>w</span><span class=o>//</span><span class=mi>2</span><span class=p>,</span> <span class=n>h</span><span class=o>//</span><span class=mi>2</span><span class=p>))</span>
+<span class=c1># 把缩放后的图像用jpeg格式保存:</span>
+<span class=n>im</span><span class=o>.</span><span class=n>save</span><span class=p>(</span><span class=s1>&#39;thumbnail.jpg&#39;</span><span class=p>,</span> <span class=s1>&#39;jpeg&#39;</span><span class=p>)</span>
+
+<span class=c1>#模糊效果</span>
+<span class=kn>from</span> <span class=nn>PIL</span> <span class=kn>import</span> <span class=n>Image</span><span class=p>,</span> <span class=n>ImageFilter</span>
+
+<span class=c1># 打开一个jpg图像文件，注意是当前路径:</span>
+<span class=n>im</span> <span class=o>=</span> <span class=n>Image</span><span class=o>.</span><span class=n>open</span><span class=p>(</span><span class=s1>&#39;test.jpg&#39;</span><span class=p>)</span>
+<span class=c1># 应用模糊滤镜:</span>
+<span class=n>im2</span> <span class=o>=</span> <span class=n>im</span><span class=o>.</span><span class=n>filter</span><span class=p>(</span><span class=n>ImageFilter</span><span class=o>.</span><span class=n>BLUR</span><span class=p>)</span>
+<span class=n>im2</span><span class=o>.</span><span class=n>save</span><span class=p>(</span><span class=s1>&#39;blur.jpg&#39;</span><span class=p>,</span> <span class=s1>&#39;jpeg&#39;</span><span class=p>)</span>
+
+<span class=c1># 生成验证码</span>
+<span class=kn>from</span> <span class=nn>PIL</span> <span class=kn>import</span> <span class=n>Image</span><span class=p>,</span> <span class=n>ImageDraw</span><span class=p>,</span> <span class=n>ImageFont</span><span class=p>,</span> <span class=n>ImageFilter</span>
+
+<span class=kn>import</span> <span class=nn>random</span>
+
+<span class=c1># 随机字母:</span>
+<span class=k>def</span> <span class=nf>rndChar</span><span class=p>():</span>
+    <span class=k>return</span> <span class=nb>chr</span><span class=p>(</span><span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>65</span><span class=p>,</span> <span class=mi>90</span><span class=p>))</span>
+
+<span class=c1># 随机颜色1:</span>
+<span class=k>def</span> <span class=nf>rndColor</span><span class=p>():</span>
+    <span class=k>return</span> <span class=p>(</span><span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>64</span><span class=p>,</span> <span class=mi>255</span><span class=p>),</span> <span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>64</span><span class=p>,</span> <span class=mi>255</span><span class=p>),</span> <span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>64</span><span class=p>,</span> <span class=mi>255</span><span class=p>))</span>
+
+<span class=c1># 随机颜色2:</span>
+<span class=k>def</span> <span class=nf>rndColor2</span><span class=p>():</span>
+    <span class=k>return</span> <span class=p>(</span><span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>32</span><span class=p>,</span> <span class=mi>127</span><span class=p>),</span> <span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>32</span><span class=p>,</span> <span class=mi>127</span><span class=p>),</span> <span class=n>random</span><span class=o>.</span><span class=n>randint</span><span class=p>(</span><span class=mi>32</span><span class=p>,</span> <span class=mi>127</span><span class=p>))</span>
+
+<span class=c1># 240 x 60:</span>
+<span class=n>width</span> <span class=o>=</span> <span class=mi>60</span> <span class=o>*</span> <span class=mi>4</span>
+<span class=n>height</span> <span class=o>=</span> <span class=mi>60</span>
+<span class=n>image</span> <span class=o>=</span> <span class=n>Image</span><span class=o>.</span><span class=n>new</span><span class=p>(</span><span class=s1>&#39;RGB&#39;</span><span class=p>,</span> <span class=p>(</span><span class=n>width</span><span class=p>,</span> <span class=n>height</span><span class=p>),</span> <span class=p>(</span><span class=mi>255</span><span class=p>,</span> <span class=mi>255</span><span class=p>,</span> <span class=mi>255</span><span class=p>))</span>
+<span class=c1># 创建Font对象:</span>
+<span class=n>font</span> <span class=o>=</span> <span class=n>ImageFont</span><span class=o>.</span><span class=n>truetype</span><span class=p>(</span><span class=s1>&#39;Arial.ttf&#39;</span><span class=p>,</span> <span class=mi>36</span><span class=p>)</span>
+<span class=c1># 创建Draw对象:</span>
+<span class=n>draw</span> <span class=o>=</span> <span class=n>ImageDraw</span><span class=o>.</span><span class=n>Draw</span><span class=p>(</span><span class=n>image</span><span class=p>)</span>
+<span class=c1># 填充每个像素:</span>
+<span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>width</span><span class=p>):</span>
+    <span class=k>for</span> <span class=n>y</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>height</span><span class=p>):</span>
+        <span class=n>draw</span><span class=o>.</span><span class=n>point</span><span class=p>((</span><span class=n>x</span><span class=p>,</span> <span class=n>y</span><span class=p>),</span> <span class=n>fill</span><span class=o>=</span><span class=n>rndColor</span><span class=p>())</span>
+<span class=c1># 输出文字:</span>
+<span class=k>for</span> <span class=n>t</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>4</span><span class=p>):</span>
+    <span class=n>draw</span><span class=o>.</span><span class=n>text</span><span class=p>((</span><span class=mi>60</span> <span class=o>*</span> <span class=n>t</span> <span class=o>+</span> <span class=mi>10</span><span class=p>,</span> <span class=mi>10</span><span class=p>),</span> <span class=n>rndChar</span><span class=p>(),</span> <span class=n>font</span><span class=o>=</span><span class=n>font</span><span class=p>,</span> <span class=n>fill</span><span class=o>=</span><span class=n>rndColor2</span><span class=p>())</span>
+<span class=c1># 模糊:</span>
+<span class=n>image</span> <span class=o>=</span> <span class=n>image</span><span class=o>.</span><span class=n>filter</span><span class=p>(</span><span class=n>ImageFilter</span><span class=o>.</span><span class=n>BLUR</span><span class=p>)</span>
+<span class=n>image</span><span class=o>.</span><span class=n>save</span><span class=p>(</span><span class=s1>&#39;code.jpg&#39;</span><span class=p>,</span> <span class=s1>&#39;jpeg&#39;</span><span class=p>)</span>
+
+</code></pre></div></li>
+</ol>
+<h2 id=异步io>异步IO</h2>
+<ol>
+<li>
+<p>协程(Coroutine):</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=k>def</span> <span class=nf>consumer</span><span class=p>():</span>
+    <span class=n>r</span> <span class=o>=</span> <span class=s1>&#39;&#39;</span>
+    <span class=k>while</span> <span class=kc>True</span><span class=p>:</span>
+        <span class=n>n</span> <span class=o>=</span> <span class=k>yield</span> <span class=n>r</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=n>n</span><span class=p>:</span>
+            <span class=k>return</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;[CONSUMER] Consuming </span><span class=si>%s</span><span class=s1>...&#39;</span> <span class=o>%</span> <span class=n>n</span><span class=p>)</span>
+        <span class=n>r</span> <span class=o>=</span> <span class=s1>&#39;200 OK&#39;</span>
+
+<span class=k>def</span> <span class=nf>produce</span><span class=p>(</span><span class=n>c</span><span class=p>):</span>
+    <span class=n>c</span><span class=o>.</span><span class=n>send</span><span class=p>(</span><span class=kc>None</span><span class=p>)</span>
+    <span class=n>n</span> <span class=o>=</span> <span class=mi>0</span>
+    <span class=k>while</span> <span class=n>n</span> <span class=o>&lt;</span> <span class=mi>5</span><span class=p>:</span>
+        <span class=n>n</span> <span class=o>=</span> <span class=n>n</span> <span class=o>+</span> <span class=mi>1</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;[PRODUCER] Producing </span><span class=si>%s</span><span class=s1>...&#39;</span> <span class=o>%</span> <span class=n>n</span><span class=p>)</span>
+        <span class=n>r</span> <span class=o>=</span> <span class=n>c</span><span class=o>.</span><span class=n>send</span><span class=p>(</span><span class=n>n</span><span class=p>)</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;[PRODUCER] Consumer return: </span><span class=si>%s</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=n>r</span><span class=p>)</span>
+    <span class=n>c</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
+
+<span class=n>c</span> <span class=o>=</span> <span class=n>consumer</span><span class=p>()</span>
+<span class=n>produce</span><span class=p>(</span><span class=n>c</span><span class=p>)</span>
+
+</code></pre></div><ol>
+<li>首先调用c.send(None)启动生成器；</li>
+<li>然后，一旦生产了东西，通过c.send(n)切换到consumer执行；</li>
+<li>consumer通过yield拿到消息，处理，又通过yield把结果传回；</li>
+<li>produce拿到consumer处理的结果，继续生产下一条消息；</li>
+<li>produce决定不生产了，通过c.close()关闭consumer，整个过程结束。</li>
+</ol>
+</li>
+<li>
+<p>asyncio</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>asyncio</span>
+
+<span class=nd>@asyncio</span><span class=o>.</span><span class=n>coroutine</span>
+<span class=k>def</span> <span class=nf>wget</span><span class=p>(</span><span class=n>host</span><span class=p>):</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;wget </span><span class=si>%s</span><span class=s1>...&#39;</span> <span class=o>%</span> <span class=n>host</span><span class=p>)</span>
+    <span class=n>connect</span> <span class=o>=</span> <span class=n>asyncio</span><span class=o>.</span><span class=n>open_connection</span><span class=p>(</span><span class=n>host</span><span class=p>,</span> <span class=mi>80</span><span class=p>)</span>
+    <span class=n>reader</span><span class=p>,</span> <span class=n>writer</span> <span class=o>=</span> <span class=k>yield from</span> <span class=n>connect</span>
+    <span class=n>header</span> <span class=o>=</span> <span class=s1>&#39;GET / HTTP/1.0</span><span class=se>\r\n</span><span class=s1>Host: </span><span class=si>%s</span><span class=se>\r\n\r\n</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=n>host</span>
+    <span class=n>writer</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>header</span><span class=o>.</span><span class=n>encode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span>
+    <span class=k>yield from</span> <span class=n>writer</span><span class=o>.</span><span class=n>drain</span><span class=p>()</span>
+    <span class=k>while</span> <span class=kc>True</span><span class=p>:</span>
+        <span class=n>line</span> <span class=o>=</span> <span class=k>yield from</span> <span class=n>reader</span><span class=o>.</span><span class=n>readline</span><span class=p>()</span>
+        <span class=k>if</span> <span class=n>line</span> <span class=o>==</span> <span class=sa>b</span><span class=s1>&#39;</span><span class=se>\r\n</span><span class=s1>&#39;</span><span class=p>:</span>
+            <span class=k>break</span>
+        <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;</span><span class=si>%s</span><span class=s1> header &gt; </span><span class=si>%s</span><span class=s1>&#39;</span> <span class=o>%</span> <span class=p>(</span><span class=n>host</span><span class=p>,</span> <span class=n>line</span><span class=o>.</span><span class=n>decode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>)</span><span class=o>.</span><span class=n>rstrip</span><span class=p>()))</span>
+    <span class=c1># Ignore the body, close the socket</span>
+    <span class=n>writer</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
+
+<span class=n>loop</span> <span class=o>=</span> <span class=n>asyncio</span><span class=o>.</span><span class=n>get_event_loop</span><span class=p>()</span>
+<span class=n>tasks</span> <span class=o>=</span> <span class=p>[</span><span class=n>wget</span><span class=p>(</span><span class=n>host</span><span class=p>)</span> <span class=k>for</span> <span class=n>host</span> <span class=ow>in</span> <span class=p>[</span><span class=s1>&#39;www.sina.com.cn&#39;</span><span class=p>,</span> <span class=s1>&#39;www.sohu.com&#39;</span><span class=p>,</span> <span class=s1>&#39;www.163.com&#39;</span><span class=p>]]</span>
+<span class=n>loop</span><span class=o>.</span><span class=n>run_until_complete</span><span class=p>(</span><span class=n>asyncio</span><span class=o>.</span><span class=n>wait</span><span class=p>(</span><span class=n>tasks</span><span class=p>))</span>
+<span class=n>loop</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
+</code></pre></div></li>
+</ol>
+<blockquote>
+<p>Python从3.5版开始为asyncio提供了async和await的新语法；</p>
+</blockquote>
+<ol start=3>
+<li>
+<p>aiohttp:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python3 data-lang=python3><span class=kn>import</span> <span class=nn>asyncio</span>
+
+<span class=kn>from</span> <span class=nn>aiohttp</span> <span class=kn>import</span> <span class=n>web</span>
+
+<span class=k>async</span> <span class=k>def</span> <span class=nf>index</span><span class=p>(</span><span class=n>request</span><span class=p>):</span>
+    <span class=k>await</span> <span class=n>asyncio</span><span class=o>.</span><span class=n>sleep</span><span class=p>(</span><span class=mf>0.5</span><span class=p>)</span>
+    <span class=k>return</span> <span class=n>web</span><span class=o>.</span><span class=n>Response</span><span class=p>(</span><span class=n>body</span><span class=o>=</span><span class=sa>b</span><span class=s1>&#39;&lt;h1&gt;Index&lt;/h1&gt;&#39;</span><span class=p>)</span>
+
+<span class=k>async</span> <span class=k>def</span> <span class=nf>hello</span><span class=p>(</span><span class=n>request</span><span class=p>):</span>
+    <span class=k>await</span> <span class=n>asyncio</span><span class=o>.</span><span class=n>sleep</span><span class=p>(</span><span class=mf>0.5</span><span class=p>)</span>
+    <span class=n>text</span> <span class=o>=</span> <span class=s1>&#39;&lt;h1&gt;hello, </span><span class=si>%s</span><span class=s1>!&lt;/h1&gt;&#39;</span> <span class=o>%</span> <span class=n>request</span><span class=o>.</span><span class=n>match_info</span><span class=p>[</span><span class=s1>&#39;name&#39;</span><span class=p>]</span>
+    <span class=k>return</span> <span class=n>web</span><span class=o>.</span><span class=n>Response</span><span class=p>(</span><span class=n>body</span><span class=o>=</span><span class=n>text</span><span class=o>.</span><span class=n>encode</span><span class=p>(</span><span class=s1>&#39;utf-8&#39;</span><span class=p>))</span>
+
+<span class=k>async</span> <span class=k>def</span> <span class=nf>init</span><span class=p>(</span><span class=n>loop</span><span class=p>):</span>
+    <span class=n>app</span> <span class=o>=</span> <span class=n>web</span><span class=o>.</span><span class=n>Application</span><span class=p>(</span><span class=n>loop</span><span class=o>=</span><span class=n>loop</span><span class=p>)</span>
+    <span class=n>app</span><span class=o>.</span><span class=n>router</span><span class=o>.</span><span class=n>add_route</span><span class=p>(</span><span class=s1>&#39;GET&#39;</span><span class=p>,</span> <span class=s1>&#39;/&#39;</span><span class=p>,</span> <span class=n>index</span><span class=p>)</span>
+    <span class=n>app</span><span class=o>.</span><span class=n>router</span><span class=o>.</span><span class=n>add_route</span><span class=p>(</span><span class=s1>&#39;GET&#39;</span><span class=p>,</span> <span class=s1>&#39;/hello/</span><span class=si>{name}</span><span class=s1>&#39;</span><span class=p>,</span> <span class=n>hello</span><span class=p>)</span>
+    <span class=n>srv</span> <span class=o>=</span> <span class=k>await</span> <span class=n>loop</span><span class=o>.</span><span class=n>create_server</span><span class=p>(</span><span class=n>app</span><span class=o>.</span><span class=n>make_handler</span><span class=p>(),</span> <span class=s1>&#39;127.0.0.1&#39;</span><span class=p>,</span> <span class=mi>8000</span><span class=p>)</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s1>&#39;Server started at http://127.0.0.1:8000...&#39;</span><span class=p>)</span>
+    <span class=k>return</span> <span class=n>srv</span>
+
+<span class=n>loop</span> <span class=o>=</span> <span class=n>asyncio</span><span class=o>.</span><span class=n>get_event_loop</span><span class=p>()</span>
+<span class=n>loop</span><span class=o>.</span><span class=n>run_until_complete</span><span class=p>(</span><span class=n>init</span><span class=p>(</span><span class=n>loop</span><span class=p>))</span>
+<span class=n>loop</span><span class=o>.</span><span class=n>run_forever</span><span class=p>()</span>
+
+</code></pre></div><blockquote>
+<p>廖雪峰python教程 <a href=https://www.liaoxuefeng.com/ target=_blank rel="noopener noreffer">https://www.liaoxuefeng.com/</a></p>
+</blockquote>
+</li>
+</ol>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2017-08-08</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/python_study_notes/ data-title="Python学习笔记 - 旧笔记" data-hashtags=python><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/python_study_notes/ data-hashtag=python><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/python_study_notes/ data-title="Python学习笔记 - 旧笔记"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/python_study_notes/ data-title="Python学习笔记 - 旧笔记"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/python_study_notes/ data-title="Python学习笔记 - 旧笔记"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/python/>python</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/java_byte_stream/ class=prev rel=prev title="java的字节流 - 旧笔记"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>java的字节流 - 旧笔记</a>
+<a href=/posts/data-structure/ class=next rel=next title="考研807数据结构复习笔记 - 旧笔记">考研807数据结构复习笔记 - 旧笔记<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>
