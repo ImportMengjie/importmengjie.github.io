@@ -3,7 +3,7 @@
 <meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <meta name=robots content="noodp">
-<title>这我都不知道「1」一些我竟然不知道的计算机相关知识 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="这我都不知道「1」一些我竟然不知道的计算机相关知识">
+<title>这都不知道「1」一些我竟然不知道的计算机相关知识 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="这都不知道「1」一些我竟然不知道的计算机相关知识">
 <meta property="og:description" content="i++和++i的左右值问题 i++和++i很常用，之前的理解仅限++i前置++会先自增后进行运算；而i++后置++则会在参与运算完后才会自增。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://importmengjie.github.io/posts/dont-even-know-that_1/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
@@ -11,14 +11,14 @@
 <meta property="article:modified_time" content="2023-12-17T00:15:58+08:00"><meta property="og:site_name" content="ImportMengjie">
 <meta name=twitter:card content="summary_large_image">
 <meta name=twitter:image content="https://importmengjie.github.io/logo.png">
-<meta name=twitter:title content="这我都不知道「1」一些我竟然不知道的计算机相关知识">
+<meta name=twitter:title content="这都不知道「1」一些我竟然不知道的计算机相关知识">
 <meta name=twitter:description content="i++和++i的左右值问题 i++和++i很常用，之前的理解仅限++i前置++会先自增后进行运算；而i++后置++则会在参与运算完后才会自增。">
 <meta name=application-name content="ImportMengjie's Blog">
 <meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/dont-even-know-that_1/><link rel=prev href=https://importmengjie.github.io/posts/troubleshooting_guide_1/><link rel=next href=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"这我都不知道「1」一些我竟然不知道的计算机相关知识","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/dont-even-know-that_1\/"},"genre":"posts","keywords":"c\u002b\u002b, 系统, 这我都不知道","wordcount":953,"url":"https:\/\/importmengjie.github.io\/posts\/dont-even-know-that_1\/","datePublished":"2023-12-17T00:15:58+08:00","dateModified":"2023-12-17T00:15:58+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"这都不知道「1」一些我竟然不知道的计算机相关知识","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/dont-even-know-that_1\/"},"genre":"posts","keywords":"c\u002b\u002b, 系统","wordcount":953,"url":"https:\/\/importmengjie.github.io\/posts\/dont-even-know-that_1\/","datePublished":"2023-12-17T00:15:58+08:00","dateModified":"2023-12-17T00:15:58+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -81,8 +81,8 @@ Cancel
 <div class=container><div class=toc id=toc-auto>
 <h2 class=toc-title>Contents</h2>
 <div class=toc-content id=toc-content-auto></div>
-</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">这我都不知道「1」一些我竟然不知道的计算机相关知识</h1><h2 class=single-subtitle>最近发现我竟然不知道或理解错误的基础知识</h2><div class=post-meta>
-<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA/><i class="far fa-folder fa-fw" aria-hidden=true></i>计算机</a></span></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">这都不知道「1」一些我竟然不知道的计算机相关知识</h1><h2 class=single-subtitle>最近发现我竟然不知道或理解错误的基础知识</h2><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E8%BF%99%E9%83%BD%E4%B8%8D%E7%9F%A5%E9%81%93/><i class="far fa-folder fa-fw" aria-hidden=true></i>这都不知道</a></span></div>
 <div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-12-17>2023-12-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;953 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;2 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
@@ -156,12 +156,12 @@ lrwxrwxrwx <span class=m>1</span> root root /etc/localtime -&gt; /usr/share/zone
 <div class=post-info-line>
 <div class=post-info-md></div>
 <div class=post-info-share>
-<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这我都不知道「1」一些我竟然不知道的计算机相关知识 data-hashtags=c++,系统,这我都不知道><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这我都不知道「1」一些我竟然不知道的计算机相关知识><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这我都不知道「1」一些我竟然不知道的计算机相关知识><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这我都不知道「1」一些我竟然不知道的计算机相关知识><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这都不知道「1」一些我竟然不知道的计算机相关知识 data-hashtags=c++,系统><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这都不知道「1」一些我竟然不知道的计算机相关知识><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这都不知道「1」一些我竟然不知道的计算机相关知识><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/dont-even-know-that_1/ data-title=这都不知道「1」一些我竟然不知道的计算机相关知识><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
 </div>
 </div>
 </div>
 <div class=post-info-more>
-<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c++/>c++</a>,&nbsp;<a href=/tags/%E7%B3%BB%E7%BB%9F/>系统</a>,&nbsp;<a href=/tags/%E8%BF%99%E6%88%91%E9%83%BD%E4%B8%8D%E7%9F%A5%E9%81%93/>这我都不知道</a></section>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c++/>c++</a>,&nbsp;<a href=/tags/%E7%B3%BB%E7%BB%9F/>系统</a></section>
 <section>
 <span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
 </section>
