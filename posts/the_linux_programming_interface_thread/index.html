@@ -1,0 +1,423 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记">
+<meta property="og:description" content="本文是在阅读《Linux/UNIX系统编程手册》1相关内容做的笔记。一些在unix*系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/the_linux_programming_interface_thread/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2024-07-02T20:18:43+08:00">
+<meta property="article:modified_time" content="2024-07-02T20:18:43+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记">
+<meta name=twitter:description content="本文是在阅读《Linux/UNIX系统编程手册》1相关内容做的笔记。一些在unix*系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/><link rel=prev href=https://importmengjie.github.io/posts/voice_player_system_programming/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_thread\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":6820,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_thread\/","datePublished":"2024-07-02T20:18:43+08:00","dateModified":"2024-07-02T20:18:43+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class=toc-content id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%AD%A6%E4%B9%A0%E5%85%88%E8%BF%9B%E7%9A%84%E7%A7%91%E5%AD%A6%E6%8A%80%E6%9C%AF/><i class="far fa-folder fa-fw" aria-hidden=true></i>学习先进的科学技术</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-02>2024-07-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;6820 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;14 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#创建新进程-fork>创建新进程: fork()</a>
+<ul>
+<li><a href=#fork的内存语义>fork的内存语义</a></li>
+<li><a href=#资源管理与fork2>资源管理与fork</a></li>
+<li><a href=#多线程与fork2>多线程与fork</a></li>
+</ul>
+</li>
+<li><a href=#执行新程序-execve>执行新程序: execve()</a>
+<ul>
+<li><a href=#exec库函数>exec()库函数</a></li>
+<li><a href=#文件描述符与exec>文件描述符与exec()</a></li>
+</ul>
+</li>
+<li><a href=#进程的终止-_exit和exit>进程的终止: _exit()和exit()</a>
+<ul>
+<li><a href=#fork与_exitexit函数>fork()与_exit()/exit()函数</a></li>
+</ul>
+</li>
+<li><a href=#等待子进程wait和waitpid>等待子进程wait()和waitpid()</a>
+<ul>
+<li><a href=#等待返回值>等待返回值</a></li>
+<li><a href=#sigchld信号>SIGCHLD信号</a></li>
+</ul>
+</li>
+<li><a href=#进程组和会话控制终端>进程组和会话、控制终端</a>
+<ul>
+<li><a href=#进程组>进程组</a></li>
+<li><a href=#会话>会话</a></li>
+<li><a href=#关闭终端-sighup信号>关闭终端: SIGHUP信号</a></li>
+</ul>
+</li>
+<li><a href=#作业控制>作业控制</a>
+<ul>
+<li><a href=#在shell中使用作业控制>在shell中使用作业控制</a></li>
+</ul>
+</li>
+<li><a href=#参考>参考</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><p>本文是在阅读《Linux/UNIX系统编程手册》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>相关内容做的笔记。一些在unix*系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多。</p>
+<h2 id=创建新进程-fork>创建新进程: fork()</h2>
+<p>fork系统调用创建新进程(child)，几乎为调用进程(parent)的翻版。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=n>pid_t</span> <span class=nf>fork</span><span class=p>();</span>
+</code></pre></div><p><strong>程序代码可通过返回值来区分父/子进程。在父进程将返回子进程的pid，父进程可以通过子进程的pid管理子进程</strong>。而子进程将返回0，在子进程中可以通过<code>getpid</code>和<code>getppid</code>分别获取子进程和父进程的pid。但创建失败时则会返回-1，一般的原因是进程数量超过了系统的限制。</p>
+<p><strong>不应该对fork后父子进程执行顺序有任何假设</strong>，如果需要确保一定的顺序需要进程间同步。在<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e4%bd%bf%e7%94%a8%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%ae%9e%e7%8e%b0kill%e4%bf%a1%e5%8f%b7%e5%90%8c%e6%97%b6%e5%8f%91%e7%bb%99%e5%ad%90%e8%bf%9b%e7%a8%8b%e5%92%8c%e5%85%b6%e4%ba%a7%e7%94%9f%e7%9a%84%e5%ad%90%e8%bf%9b%e7%a8%8b rel>从音频播放c++类的实现学习Linux系统子进程管理</a>中就通过父子进程在fork后都调用相同的作用的系统调用来设置子进程的进程组id，从而保证在任何调用顺序下，父子进程后续的执行都能确保进程组设置成功。</p>
+<h3 id=fork的内存语义>fork的内存语义</h3>
+<p><strong>执行fork后子进程会和父进程拥有一模一样的内存空间</strong>，现代UNIX实现都是采用写时复制(copy-on-write)技术来节省物理内存消耗，即：父子进程在fork之后共享物理内存，在二者对内存页面有修改是才将要修改的内存页面拷贝，将子进程对应的表项修改，之后父子进程就可以分别修改各自的页拷贝。在书中提到利用这个特性，可以在已知某个func会导致内存泄漏或是过渡内存碎片，可以使用子进程执行该函数，就不会影响主进程的内存占用，最后通过进程间通信来获取结果。</p>
+<p>在fork后父子进程内存是一模一样的，打开的文件fd中存储的系统级打开文件表引用是一样的，故其当前文件的偏移量、打开文件的状态标志等都是共享的，参考<a href=/posts/shell-redirection/#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6%e5%92%8c%e6%89%93%e5%bc%80%e6%96%87%e4%bb%b6%e4%b9%8b%e9%97%b4%e7%9a%84%e5%85%b3%e7%b3%bb rel>从文件描述符和打开文件之间的关系重新理解shell重定向</a>。利用这个特性可以通过<code>pipe</code>等进行父子进程之间通信。</p>
+<h3 id=资源管理与fork2>资源管理与fork<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup></h3>
+<p>fork之后，子进程不会继承如下资源状态：</p>
+<ol>
+<li>父进程的内存锁，mlock(2)、mlockall(2)。</li>
+<li>父进程的文件锁，fcntl(2)。</li>
+<li>父进程的某些定时器，setitimer(2)、alarm(2)、timer_create(2)</li>
+</ol>
+<p>如果在子进程对如上类的资源进行释放操作就会释放一个不拥有的资源，导致未定义行为。考虑在c++中，一般通过使用对象来包装资源，利用对象的生命周期管理资源(RAII)，在构造对象时获取资源，在对象出作用域析构时释放资源。因为释放资源并不是显性调用，在fork之后子进程可能“无意”释放了不拥有的资源，造成未定义行为。</p>
+<h3 id=多线程与fork2>多线程与fork<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup></h3>
+<p>fork之后，对于子进程除了当前的线程之外，其他线程都消失了，会导致一个危险的局面。其他线程可能正持有某个锁，fork之后对于子进程来说其他线程已经没有了再也没有机会解锁，如果试图再对该mutex加锁就会立刻死锁。所以fork()后只能调用可重入函数。对于诸如<code>malloc</code>、<code>printf</code>函数都不可使用，所以对于多线程程序来说调用fork唯一安全的做法就是fork后立即调用exec()执行另一个程序，彻底断绝子进程和父进程的关系。</p>
+<blockquote>
+<p>SUSv3对可重入函数定义: 函数由多条线程调用时，即便交叉执行，其效果也与各线程任意顺序依次调用一致。</p>
+<p>我的理解是“在执行过程中可以被中断，并且在中断后能够被安全地再次调用的函数“，更新全局变量(不是sig_atomic_t类型)或静态变量的函数都不是可重入的函数。所以诸如<code>malloc</code>函数由于涉及到全局状态的修改是不可重入函数。</p>
+</blockquote>
+<h2 id=执行新程序-execve>执行新程序: execve()</h2>
+<p>系统调用execve()将新程序加载到某一进程的内存空间，进程的内存空间会被新程序所取代，在执行了各种初始化代码会从新程序的main()函数开始执行。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=kt>int</span> <span class=nf>execve</span><span class=p>(</span><span class=k>const</span> <span class=kt>char</span> <span class=o>*</span><span class=n>pathname</span><span class=p>,</span> <span class=kt>char</span> <span class=o>*</span><span class=k>const</span> <span class=n>argv</span><span class=p>[],</span> <span class=kt>char</span> <span class=o>*</span><span class=k>const</span> <span class=n>envp</span><span class=p>[]);</span>
+</code></pre></div><p>参数pathname可以时绝对路径或者相对于调用进程当前目录的相对路径；参数argv指定了传给新进程的命令行参数，相当于main()函数的第2个参数(argv)，以NULL结束；参数envp指定了新程序的环境列表，对应environ数组，以NULL结束，字符串格式为name=alue；</p>
+<blockquote>
+<p>Linux特有的/proc/PID/exe是符号链接包含对应进程中正在运行的可执行文件的绝对路径名。</p>
+</blockquote>
+<p>通常也不用检查execve()的返回值，因为如果成功则切换到新程序执行不会继续执行，失败的话返回值一定是-1并且代表发生了错误，可以通过errno来判断错误原因，有如下可能：</p>
+<ul>
+<li>EACCES: 参数pathname指向的文件因为权限等原因不可执行。</li>
+<li>ENOENT: pathname所指代的文件并不存在。</li>
+<li>ENOEXEC: pathname所指代的文件不是<strong>ELF文件</strong>格式。</li>
+<li>ETEXTBSY: 存在进程已经以写入方式打开pathname所指代的文件。</li>
+</ul>
+<blockquote>
+<p>ELF(Executable and Linking Format)标准描述了可执行文件的布局，二进制可执行文件都需要符合该标准。同时该标准也允许定义一个解释器来运行程序以字符#!开头。</p>
+</blockquote>
+<h3 id=exec库函数>exec()库函数</h3>
+<p>库函数为执行exec()提供了多种API选择，这些函数都是参数有所区别为了方便使用对execve()调用的封装。</p>
+<p>下表对exec()函数之间的差异总结。简单来说:</p>
+<ul>
+<li>函数名带p，代表可以之之提供程序的文件名，库函数通过环境变量<code>$PATH</code>的目录列表找到对应的可执行文件，与shell对命令的搜索方式一致。</li>
+<li>函数名带l，代表可以使用参数列表来指定argv，并且以NULL指针结尾。带v的则是使用数组的形式传入argv，数组的最后一个元素也需要是NULL。</li>
+<li>函数名带e，带白哦可以通过envp以数组的形式显示指定函数的环境变量。其它不带e的函数则是继承调用者的环境变量。</li>
+</ul>
+<h4 id=exec函数之间的差异总结>exec()函数之间的差异总结</h4>
+<table>
+<thead>
+<tr>
+<th style=text-align:center>函数名</th>
+<th style=text-align:center>程序文件描述</th>
+<th style=text-align:center>参数描述</th>
+<th style=text-align:center>环境变量来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style=text-align:center><code>execve()</code></td>
+<td style=text-align:center>路径名</td>
+<td style=text-align:center>数组</td>
+<td style=text-align:center><code>envp</code> 参数</td>
+</tr>
+<tr>
+<td style=text-align:center><code>execle()</code></td>
+<td style=text-align:center>路径名</td>
+<td style=text-align:center>列表</td>
+<td style=text-align:center><code>envp</code> 参数</td>
+</tr>
+<tr>
+<td style=text-align:center><code>execlp()</code></td>
+<td style=text-align:center>文件名+PATH</td>
+<td style=text-align:center>列表</td>
+<td style=text-align:center>调用者的 <code>environ</code></td>
+</tr>
+<tr>
+<td style=text-align:center><code>execvp()</code></td>
+<td style=text-align:center>文件名+PATH</td>
+<td style=text-align:center>数组</td>
+<td style=text-align:center>调用者的 <code>environ</code></td>
+</tr>
+<tr>
+<td style=text-align:center><code>execv()</code></td>
+<td style=text-align:center>路径名</td>
+<td style=text-align:center>数组</td>
+<td style=text-align:center>调用者的 <code>environ</code></td>
+</tr>
+<tr>
+<td style=text-align:center><code>execl()</code></td>
+<td style=text-align:center>路径名</td>
+<td style=text-align:center>列表</td>
+<td style=text-align:center>调用者的 <code>environ</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id=文件描述符与exec>文件描述符与exec()</h3>
+<p><strong>默认情况下exec()的调用程序打开的所有文件描述符在exec()成功后的程序中会保持打开状态</strong>。shell利用这一特性为其所执行的程序处理I/O重定向。例如:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nv>$ls</span> /tmp &gt; dir.txt
+</code></pre></div><p>shell运行该命令时会执行如下步骤:</p>
+<ol>
+<li>
+<p>fork()创建子进程。</p>
+</li>
+<li>
+<p>子进程以描述符1(stdout)打开文件dir.txt作为输出，采取如下方式:</p>
+<ul>
+<li>
+<p>使用dump2()强制将标准输出fd=1复制成文件dir.txt的fd的副本。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=n>fd</span> <span class=o>=</span> <span class=n>open</span><span class=p>(</span><span class=s>&#34;dir.txt&#34;</span><span class=p>,</span> <span class=p>...);</span>
+<span class=k>if</span> <span class=p>(</span><span class=n>fd</span> <span class=o>!=</span> <span class=n>STDOUT_FILENO</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>dup2</span><span class=p>(</span><span class=n>fd</span><span class=p>,</span> <span class=n>STDOUT_FILENO</span><span class=p>);</span>
+    <span class=n>close</span><span class=p>(</span><span class=n>fd</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div></li>
+</ul>
+</li>
+<li>
+<p>子shell调用exec()执行程序ls，ls将其结果输出到df=1标准输出，亦即文件dir.txt中。</p>
+</li>
+</ol>
+<h4 id=执行时关闭close-on-exec标志fd_cloexec>执行时关闭(close-on-exec)标志(FD_CLOEXEC)</h4>
+<p>大部分情况下，出于节省或安全的角度来讲程序在执行exec()之前需要关闭某些特定的文件描述符。当然可以在exec()调用close()实现这一目的，但是有如下局限性：某些fd是由库函数打开，程序主动close()可能会比较困难；假设exec()失败了，之前close()的fd可能还需要。</p>
+<p>由此内核为每个文件描述符提供了执行时关闭的标志。设置这一标志，在程序exec()成功时会自动关闭该文件描述符。可以使用fcntl()和ioctl()等函数对某一个fd设置或清除这一标志位。</p>
+<h2 id=进程的终止-_exit和exit>进程的终止: _exit()和exit()</h2>
+<p>进程一般有两种结束方式，其一为一些信号触发的异常结束，其二就是程序主动调用_exit()系统调用正常结束程序。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=kt>void</span> <span class=nf>_exit</span><span class=p>(</span><span class=kt>int</span> <span class=n>status</span><span class=p>);</span>
+</code></pre></div><p>参数status为进程的退出状态，父进程调用wait()可以获得该状态。<strong>虽然为int类型，但是仅有低8位有效，并且由于shell在程序被信号终止时会将环境变量$?设置为128与信号值的和，所以返回值不能大于128,否则就与信号触发的退出区分不清了</strong>。</p>
+<p>程序一般调用c语言库函数exit()主动退出，该函数会在退出前执行如下动作:</p>
+<ol>
+<li>调用atexit()和on_exit()注册的退出处理程序。</li>
+<li>刷新stdio缓冲区。</li>
+<li>执行exit_()系统调用退出程序。</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;stdlib.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=kt>void</span> <span class=nf>exit</span><span class=p>(</span><span class=kt>int</span> <span class=n>status</span><span class=p>);</span>
+</code></pre></div><p>另外<strong>从main()函数中return n时等同于调用exit(n)。在C99标准中定义了，main()函数不写return等同于exit(0)</strong>。</p>
+<h3 id=fork与_exitexit函数>fork()与_exit()/exit()函数</h3>
+<p>在进程的用户空间中维护stdio缓冲区，因此通过fork()创建子进程时会复制该缓冲区。如果父/子进程都使用exit()退出会导致刷新各自的stdio缓冲区，从而导致重复的输出结果。<strong>故fork()后的子进程应该使用_exit()退出</strong>。</p>
+<p>另外根据前边的介绍，如果父进程是多线程程序fork()后的子进程只会继承调用线程，假使fork()时正好有其它线程加锁操作stdio缓冲区，此时子进程的stdio缓冲区的锁已经被锁定并且不会被解锁，<strong>此时子进程调用exit()会发生死锁</strong>。</p>
+<h2 id=等待子进程wait和waitpid>等待子进程wait()和waitpid()</h2>
+<p>系统调用wait()和waitpid()都是用来等待子进程终止并且获取其退出状态status。wait()等待调用进程的任一子进程终止，waitpid()可以指定等待的子进程pid。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;sys/wait.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=n>pid_t</span> <span class=nf>wait</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>status</span><span class=p>);</span>
+<span class=n>pid_t</span> <span class=nf>waitpid</span><span class=p>(</span><span class=n>pid_t</span> <span class=n>pid</span><span class=p>,</span> <span class=kt>int</span> <span class=o>*</span><span class=n>status</span><span class=p>,</span> <span class=kt>int</span> <span class=n>options</span><span class=p>);</span>
+</code></pre></div><p>正常二者都会返回结束的子进程pid，出错时返回-1，错误原因之一调用进程无被等待的子进程，此时errno设置为ECHILD。</p>
+<p>对于waitpid(),其参数pid表示需要等待的具体子进程，意义如下:</p>
+<ul>
+<li>pid > 0: 等待进程ID为pid的子进程。</li>
+<li>pid == 0: 等待与调用进程在同一进程组的所有子进程。</li>
+<li>pid == -1: 等待任意子进程，wait(&status)与waitpid(-1, &staus, 0)等价</li>
+<li>pid &lt; -1: 等待进程组id==abs(pid)的所有子进程。</li>
+</ul>
+<p>参数options时一个位掩码，可以设置如下标志位</p>
+<ul>
+<li>WUNTRACED: 还返回因信号而停止的子进程信息。</li>
+<li>WCONTINUED: 返回那些因受到SIGCONT信号而恢复执行的子进程信息。</li>
+<li>WNOHANG: 如果指定的子进程未发生状态改变，则立即返回，<strong>不会阻塞</strong>。这时waitpid()返回0。</li>
+</ul>
+<h3 id=等待返回值>等待返回值</h3>
+<p>头文件&lt;sys/wait.h>定义了一组解析等待状态值status的宏。</p>
+<ul>
+<li>WIFEXITED(status): 若子进程是通过_exit()正常结束则返回true，此时WEXITSTATUS(status)返回子进程的退出状态。</li>
+<li>WIFSIGNALED(status): 若子进程是被信号杀死时返回true，此时WTERNSIG(status)返回导致子进程终止的信号编号。若子进程产生coredump，则WCOREDUMP(status)返回true。</li>
+<li>WIFSTOPPED(status): 若子进程因信号而停止，则返回true，此时WSTOPSIG(status)返回导致子进程停止的信号编号。</li>
+<li>WIFCONTINUED(status): 若子进程因SIGCONT而恢复执行，则返回true。</li>
+</ul>
+<h3 id=sigchld信号>SIGCHLD信号</h3>
+<p>子进程终止系统会向父进程发送SIGCHLD信号，该信号的默认处理就是忽略。在设置该信号的处理函数时，可以使用wait获取子进程退出状态，但是需要注意的是: <strong>当调用信号处理程序时，默认会暂时将该信号阻塞起来，且不会对其进行排队处理</strong>。故当SIGCHILD信号处理程序正在执行中时，相继有两个子进程终止产生2个SIGCHLD信号被阻塞，父进程也只能捕获一次。所以SIGCHLD处理程序需要内部循环以WNOHANG标志来非阻塞的调用waitpid()，才可以避免出现僵尸进程，如以下代码。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=k>while</span> <span class=p>(</span><span class=n>waitpid</span><span class=p>(</span><span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>,</span> <span class=n>WNOHANG</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=k>continue</span><span class=p>;</span>
+</code></pre></div><h4 id=忽略sigchld信号>忽略SIGCHLD信号</h4>
+<p>虽然对于SIGCHLD的默认处置就是忽略，但是<strong>显式的将SIGCHLD信号设置未SIG_IGN系统会将其后产生的子进程立即删除，不会转为僵尸进程，同时后续的wait()调用不会返回子进程的任何信息</strong>。在这方面，信号SIGCHLD的处理不同于其它信号。</p>
+<h2 id=进程组和会话控制终端>进程组和会话、控制终端</h2>
+<p>进程组和会话、控制终端是实现命令行的底层概念，用于命令行的输入、输出，shell的作业控制。</p>
+<p>进程组由一个或多个共享同一进程组标识符（PGID）的进程组成，进程组标识符（PGID）等于首次创建进程组的进程pid，其生命周期为创建时刻到最后一个进程退出进程组，在其生命周期不会有和PGID相同的pid分配给新进程。<strong>子进程会继承父进程的进程组</strong>。可以使用killpg()命令将信号发给进程组的每个成员进程，另一篇<a href=/posts/voice_player_system_programming/ rel>从音频播放c++类的实现学习Linux系统子进程管理</a>就是利用这一特性实现杀死子进程和其产生的子进程。</p>
+<p>会话则是一组进程组的集合。进程的会话成员关系是由其会话标识符（SID）确定的，会话标识符也是会话创建进程的pid。</p>
+<blockquote>
+<p>当fork()创建新进程时，内核会保证不会和以有的进程组ID和会话ID相同。即使进程组或会话的首进程退出，新进程也不会服用首进程的PID。</p>
+</blockquote>
+<p>每个会话可以拥有一个控制终端，终端是用户的交互设备，现代的图形界面都是使用终端模拟器xterm等软件，通过伪终端技术模拟终端设备。</p>
+<p>下图表示了进程组和会话、控制终端之间的关系。</p>
+<p><figure><a class=lightgallery href=/images/voice_player_system_programming/process_group.png title=进程组、会话和控制终端之间的关系进程组 data-thumbnail=/images/voice_player_system_programming/process_group.png data-sub-html="<h2>进程组、会话和控制终端之间的关系进程组</h2><p>进程组、会话和控制终端之间的关系进程组</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/voice_player_system_programming/process_group.png data-srcset="/images/voice_player_system_programming/process_group.png, /images/voice_player_system_programming/process_group.png 1.5x, /images/voice_player_system_programming/process_group.png 2x" data-sizes=auto alt=/images/voice_player_system_programming/process_group.png>
+</a><figcaption class=image-caption>进程组、会话和控制终端之间的关系进程组</figcaption>
+</figure></p>
+<p>以上图举个实际的栗子: 打开Ubuntu系统的Terminal终端模拟软件，该软件模拟了一个终端设备并且执行/bin/bash进程pid=400。bash进程成为会话SID=400的首进程和终端的控制进程，也是进程组PGID=400的唯一成员。</p>
+<p>用户输入执行<code>find / 2> /dev/null | wc -l &</code>，bash进程会把管道相连的两个进程find和wc放入同一个PGID=658进程组。由于命令以&结尾被放入后台进程组中。</p>
+<p>用户接着输入执行<code>sort &lt; longlist | uniq -c</code>，同样会将两个管道相连的进程放入同一个PGID=660进程组，并且处于前端进程组，可以接受用户的输入。显而易见，同一时间只能有一个进程组成为前端进程组。如果输入ctrl+c终端会将中断信号发送给前端进程组的每个成员，正常情况下两个进程都会结束。</p>
+<p><strong>由于本人不打算开发一个终端软件或者是shell软件所以对以下内容并不准备深入了解细节，只求懂个大概，简单写一写。</strong></p>
+<h3 id=进程组>进程组</h3>
+<p>通过<code>pid_t getpgrp()</code>和<code>int setpgid(pid_t pid, pid_t pgid)</code>获取和设置进程的进程组。参考另一篇<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e4%bd%bf%e7%94%a8%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%ae%9e%e7%8e%b0kill%e4%bf%a1%e5%8f%b7%e5%90%8c%e6%97%b6%e5%8f%91%e7%bb%99%e5%ad%90%e8%bf%9b%e7%a8%8b%e5%92%8c%e5%85%b6%e4%ba%a7%e7%94%9f%e7%9a%84%e5%ad%90%e8%bf%9b%e7%a8%8b rel>使用进程组实现kill信号同时发给子进程和其产生的子进程</a>中的实际应用。</p>
+<h3 id=会话>会话</h3>
+<p>通过<code>pid_t getsid(pid_t pid)</code>和<code>pid_t setsid()</code>来获取进程的sid和设置当前进程为新会话的首进程和<strong>该会话中的新进程组的首进程</strong>。</p>
+<p>注意：已经是进程组的首进程就不能调用setsid()设置自己为新会话的首进程。原因是如果可以的话，调用后进程组中原有的其他成员还属于原来的会话中，就会出现该进程组的成员不属于同一个会话中。</p>
+<h3 id=关闭终端-sighup信号>关闭终端: SIGHUP信号</h3>
+<p>当控制进程(bash)失去与其终端的连接后，内核会向控制进程发送SIGHUP信号；当控制进程结束时，内核会向该控制进程关联的终端前台进程组发送SIGHUP信号。SIGHUP信号默认的行为是终止进程。bash进程设置了SIGHUP信号处理函数，在退出前将SIGHUP信号发送给由它创建的各个进程组。</p>
+<p>所以我们在ssh断开连接或者关闭终端时，还在运行的任务会被结束。常用的nohup(1)命令就是在执行的命令时将SIGHUP信号设置为SIG_IGN，这样在终端退出时执行的命令不会结束。</p>
+<h2 id=作业控制>作业控制</h2>
+<p>作业控制用来支持一个shell用户同时执行多个命令，其中最多一个命令在前台执行，其余命令在后台运行。命令可以被停止和恢复以及在前后台之间移动。</p>
+<h3 id=在shell中使用作业控制>在shell中使用作业控制</h3>
+<p>首先，shell会为每个后台任务赋予一个唯一的作业号从1开始，在将任务放入后台时会将作业号放在[作业号]方括号中打印出来，后边跟着进程的PID或管道的最后一个进程的PID。通过jobs命令可以列出所有后台作业及其状态。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>$ sleep 60<span class=p>&amp;</span>
+<span class=o>[</span>1<span class=o>]</span> <span class=m>24599</span>
+$ sleep <span class=m>600</span>
+^Z
+<span class=o>[</span>2<span class=o>]</span>+  Stopped                 sleep <span class=m>600</span>
+$ <span class=nb>jobs</span>
+<span class=o>[</span>1<span class=o>]</span>-  Running                 sleep <span class=m>60</span> <span class=p>&amp;</span>
+<span class=o>[</span>2<span class=o>]</span>+  Stopped                 sleep <span class=m>600</span>
+</code></pre></div><p>使用%num可以引用作业，num为作业号。省略%num则默认指在前台最新被放入后台的作业。</p>
+<p>产生后台作业的方式有<strong>使用ctrl+z向前台进程组发送SIGSTP(和SIGKILL一样不可修改信号默认处理函数)暂停进程并且放入后台</strong>，或者<strong>在命令执行时加上&符号，该命令会立即在后台执行，不会暂停</strong>。可以使用fg %num命令在前台恢复作业号num的任务，也可以使用bg %num命令发送SIGCONT信号来恢复被暂停的作业。通过kill -STOP %num也可以将后台作业暂停。</p>
+<p>在后台的作业尝试从读取标准输入，就会受到SIGTTIN信号，默认动作就是停止作业。默认情况下，后台作业是可以写入标准输出打印在终端中的。如果终端设置了TOSTOP标志，那么但后台作业尝试输出到终端时会受到SIGTTOU信号，默认动作也时停止作业。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>$ stty tostop
+$ date <span class=p>&amp;</span>
+<span class=o>[</span>4<span class=o>]</span> <span class=m>34046</span>
+$
+<span class=o>[</span>4<span class=o>]</span>+  Stopped                 date
+$ <span class=nb>fg</span>
+date
+Wed Jul <span class=m>10</span> 11:21:32 PM CST <span class=m>2024</span>
+</code></pre></div><p>下图对作业的状态转换进行了总结。</p>
+<p><figure><a class=lightgallery href=/images/the_linux_programming_interface_thread/shell_jobs.png title=作业控制状态转换 data-thumbnail=/images/the_linux_programming_interface_thread/shell_jobs.png data-sub-html="<h2>作业控制状态转换</h2><p>作业控制状态转换</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/the_linux_programming_interface_thread/shell_jobs.png data-srcset="/images/the_linux_programming_interface_thread/shell_jobs.png, /images/the_linux_programming_interface_thread/shell_jobs.png 1.5x, /images/the_linux_programming_interface_thread/shell_jobs.png 2x" data-sizes=auto alt=/images/the_linux_programming_interface_thread/shell_jobs.png>
+</a><figcaption class=image-caption>作业控制状态转换</figcaption>
+</figure></p>
+<h2 id=参考>参考</h2>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/25809330/ target=_blank rel="noopener noreffer">《Linux/UNIX系统编程手册》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:2 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/20471211/ target=_blank rel="noopener noreffer">《Linux多线程服务端编程：使用muduo C++网络库》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2024-07-02</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记" data-hashtags=系统编程,读书笔记,《Linux/UNIX系统编程手册》><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/ data-hashtag=系统编程><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/>系统编程</a>,&nbsp;<a href=/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/>读书笔记</a>,&nbsp;<a href=/tags/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C/>《Linux/UNIX系统编程手册》</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/voice_player_system_programming/ class=prev rel=prev title=从音频播放c++类的实现学习Linux系统子进程管理><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>从音频播放c++类的实现学习Linux系统子进程管理</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.js></script></body>
+</html>
