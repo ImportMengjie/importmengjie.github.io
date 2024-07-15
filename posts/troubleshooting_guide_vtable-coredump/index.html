@@ -80,7 +80,7 @@ Cancel
 </div><main class=main>
 <div class=container><div class=toc id=toc-auto>
 <h2 class=toc-title>Contents</h2>
-<div class=toc-content id=toc-content-auto></div>
+<div class="toc-content always-active" id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">记一次虚函数二进制兼容问题导致的coredump - 问题诊断</h1><h2 class=single-subtitle>诡异coredump</h2><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/troubleshooting/><i class="far fa-folder fa-fw" aria-hidden=true></i>troubleshooting</a></span></div>
 <div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2023-09-21>2023-09-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3177 words&nbsp;
@@ -338,6 +338,7 @@ base ~RunMe<span class=o>()</span>
 <li>虚函数调用是通过偏移来决定的跟函数名无关，如果三方库如果更新了虚函数，即使跟本模块无关，最好也要重新编译下，否则可能会发生诡异的问题</li>
 <li>虚函数的二进制兼容性并不好，如果用《Linux多线程服务端编程：使用muduo C++网络库》中所推荐的函数指针的方式来实现类似虚函数的功能则是极好的</li>
 </ol>
+<hr>
 <h2 id=参考>参考</h2>
 <section class=footnotes role=doc-endnotes>
 <hr>

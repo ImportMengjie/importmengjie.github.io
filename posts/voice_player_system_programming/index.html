@@ -18,7 +18,7 @@
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/voice_player_system_programming/><link rel=prev href=https://importmengjie.github.io/posts/reading_202312-202406/><link rel=next href=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从音频播放c++类的实现学习Linux系统子进程管理","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/"},"genre":"posts","keywords":"c\u002b\u002b, shell, 系统编程","wordcount":3571,"url":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/","datePublished":"2024-06-25T20:06:55+08:00","dateModified":"2024-06-25T20:06:55+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从音频播放c++类的实现学习Linux系统子进程管理","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/"},"genre":"posts","keywords":"c\u002b\u002b, shell, 系统编程","wordcount":3535,"url":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/","datePublished":"2024-06-25T20:06:55+08:00","dateModified":"2024-06-25T20:06:55+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -80,10 +80,10 @@ Cancel
 </div><main class=main>
 <div class=container><div class=toc id=toc-auto>
 <h2 class=toc-title>Contents</h2>
-<div class=toc-content id=toc-content-auto></div>
+<div class="toc-content always-active" id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">从音频播放c++类的实现学习Linux系统子进程管理</h1><h2 class=single-subtitle>为了实现一个可以及时停止的音频播放类，学习使用fork、execl、setpgid、waitpid和进程组概念</h2><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%AD%A6%E4%B9%A0%E5%85%88%E8%BF%9B%E7%9A%84%E7%A7%91%E5%AD%A6%E6%8A%80%E6%9C%AF/><i class="far fa-folder fa-fw" aria-hidden=true></i>学习先进的科学技术</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-06-25>2024-06-25</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3571 words&nbsp;
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-06-25>2024-06-25</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3535 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;8 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
@@ -98,8 +98,8 @@ Cancel
 <li><a href=#需求>需求</a></li>
 <li><a href=#代码分析>代码分析</a>
 <ul>
-<li><a href=#打断播放的音频使用进程组实现kill信号同时发给子进程和其产生的子进程>打断播放的音频：使用进程组实现kill信号同时发给子进程和其产生的子进程</a></li>
-<li><a href=#程序崩溃时音频自动停止子进程判断父进程是否还活着>程序崩溃时音频自动停止：子进程判断父进程是否还活着</a></li>
+<li><a href=#打断播放的音频进程组的应用>打断播放的音频：进程组的应用</a></li>
+<li><a href=#程序崩溃时音频自动停止>程序崩溃时音频自动停止</a></li>
 <li><a href=#锁的使用>锁的使用</a></li>
 </ul>
 </li>
@@ -112,7 +112,7 @@ Cancel
 <p>之前车端软件播放音频文件都是在代码中使用popen、system等库函数执行shell命令aplay播放完整的短音频，不需要被打断。而这次的需求需要声音被及时打断，使用popen等库函数皆不能优雅的提前终止，所以有了此次造轮子。其实boost库中有process模块，也能提前终止进程，但是看其示例感觉比较复杂容易使用不当，其中spawn、group等用法让人不看源代码不学习底层原理不敢使用。权衡了一下，总之都要学习一下进程管理，不如自己造个轮子，也能实操加深理解。</p>
 <h2 id=代码分析>代码分析</h2>
 <p>代码的地址在<a href=https://github.com/ImportMengjie/recipes/blob/main/test/popen/shell_process.cc target=_blank rel="noopener noreffer">这里</a></p>
-<h3 id=打断播放的音频使用进程组实现kill信号同时发给子进程和其产生的子进程>打断播放的音频：使用进程组实现kill信号同时发给子进程和其产生的子进程</h3>
+<h3 id=打断播放的音频进程组的应用>打断播放的音频：进程组的应用</h3>
 <p>在遇到另一篇文章中<a href=/posts/troubleshooting_guide_1/#popen%e5%90%8e%e5%8f%b0%e7%ac%a6%e5%8f%b7%e5%af%bc%e8%87%b4%e5%83%b5%e5%b0%b8%e8%bf%9b%e7%a8%8b rel>问题诊断: 小手册系列「1」</a>的“popen后台符号&导致僵尸进程”问题时，我就观察到用<code>popen</code>执行非内建命令时会至少两个进程，一个是<code>/bin/sh</code>，另一个才是输入命令的进程，并且如果执行<code>kill</code>命令杀死<code>/bin/sh</code>进程并不会导致输入命令的进程退出。原因是<code>popen</code>内部先创建shell进程将用户命令作为参数传给shell进程执行，shell进程会创建子进程执行实际的命令，而kill父进程的pid不会将信号发给子进程。</p>
 <p>对于本需求需要主动结束播放音频进程，如果使用<code>popen</code>则难以获取播放音频进程的pid；如果使用<code>fork</code>、<code>exec*</code>系统调用创建子进程可以拿到子进程id，当然可以直接<code>exec*</code>创建播放音频进程并且拿到其pid，通过kill函数可以提前终止。而播放音频命令<code>aplay</code>不支持循环播放，这种做法需要在外部进行循环调用并不优雅，而且假设播放音频命令也创建子进程，kill命令不能结束子进程，可能会造成资源的泄漏。所以打算和<code>popen</code>一样执行shell命令，可以使用<code>while</code>等命令实现循环调用，使用<strong>进程组使得可以将结束信号发给shell进程和其子进程</strong>。</p>
 <p>下面主要介绍下进程组概念，进程组和会话主要用于shell作业控制。</p>
@@ -149,7 +149,7 @@ Cancel
 <blockquote>
 <p>-c选项shell会直接执行该命令，而不是创建一个子shell进程。</p>
 </blockquote>
-<h3 id=程序崩溃时音频自动停止子进程判断父进程是否还活着>程序崩溃时音频自动停止：子进程判断父进程是否还活着</h3>
+<h3 id=程序崩溃时音频自动停止>程序崩溃时音频自动停止</h3>
 <p>在循环播放音频时，父进程崩溃则不会影响到子进程继续执行，此时声音就会一直被播放，这是不能被接受的。所以考虑在循环执行播放命令时做判断其父进程是否存在。</p>
 <p>我的实现如下，通过持续判断当前进程的父进程(/proc/$$/stat文件中动态更新)是否等于进程创建时的父进程id($PPID)来判断父进程是否活着，如果父进程崩溃了，该子进程会被系统进程收养，其父进程id会改变。之所以没有直接判断$PPID进程是否还存在是因为在$PPID可能被其它进程分配到，此时虽然主进程已经崩溃，但是$PPID却还存在。</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=k>while</span> <span class=o>[</span> <span class=nv>$PPID</span> -eq <span class=k>$(</span>cut -d <span class=s1>&#39; &#39;</span> -f <span class=m>4</span> /proc/<span class=nv>$$</span>/stat<span class=k>)</span> <span class=o>]</span><span class=p>;</span> <span class=k>do</span> 
@@ -412,7 +412,8 @@ Cancel
     <span class=n>ShellProcess</span> <span class=n>shell_process_</span><span class=p>;</span>
     <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>cur_voice_path</span><span class=p>;</span>
 <span class=p>};</span>
-</code></pre></div><h2 id=参考>参考</h2>
+</code></pre></div><hr>
+<h2 id=参考>参考</h2>
 <section class=footnotes role=doc-endnotes>
 <hr>
 <ol>
@@ -441,7 +442,7 @@ Cancel
 </section>
 </div>
 <div class=post-nav><a href=/posts/reading_202312-202406/ class=prev rel=prev title="书单盘点: 2023年12月～2024年05月"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>书单盘点: 2023年12月～2024年05月</a>
-<a href=/posts/the_linux_programming_interface_thread/ class=next rel=next title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记">进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div>
+<a href=/posts/the_linux_programming_interface_thread/ class=next rel=next title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】">进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div>
 </div>
 <div id=comments><div id=giscus class=comment></div><noscript>
 Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.

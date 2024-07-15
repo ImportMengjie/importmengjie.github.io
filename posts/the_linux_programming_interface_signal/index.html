@@ -1,0 +1,558 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】">
+<meta property="og:description" content="本文是在阅读《Linux/UNIX系统编程手册》1第20、21、22章做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/the_linux_programming_interface_signal/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2024-07-11T22:34:45+08:00">
+<meta property="article:modified_time" content="2024-07-11T22:34:45+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】">
+<meta name=twitter:description content="本文是在阅读《Linux/UNIX系统编程手册》1第20、21、22章做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/><link rel=prev href=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":7919,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/","datePublished":"2024-07-11T22:34:45+08:00","dateModified":"2024-07-11T22:34:45+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class="toc-content always-active" id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%AD%A6%E4%B9%A0%E5%85%88%E8%BF%9B%E7%9A%84%E7%A7%91%E5%AD%A6%E6%8A%80%E6%9C%AF/><i class="far fa-folder fa-fw" aria-hidden=true></i>学习先进的科学技术</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-11>2024-07-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;7919 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;16 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#信号基本概念>信号基本概念</a>
+<ul>
+<li><a href=#信号类型和默认行为>信号类型和默认行为</a></li>
+<li><a href=#多线程与信号>多线程与信号</a></li>
+<li><a href=#发送信号>发送信号</a></li>
+<li><a href=#信号传递的时机与顺序>信号传递的时机与顺序</a></li>
+</ul>
+</li>
+<li><a href=#设置信号处置函数>设置信号处置函数</a>
+<ul>
+<li><a href=#signal>signal()</a></li>
+<li><a href=#sigaction>sigaction()</a></li>
+<li><a href=#信号的其它处置>信号的其它处置</a></li>
+</ul>
+</li>
+<li><a href=#信号处置函数>信号处置函数</a>
+<ul>
+<li><a href=#异步信号安全函数>异步信号安全函数</a></li>
+<li><a href=#信号中断系统调用>信号中断系统调用</a></li>
+</ul>
+</li>
+<li><a href=#参考>参考</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><p>本文是在阅读《Linux/UNIX系统编程手册》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>第20、21、22章做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多。</p>
+<h2 id=信号基本概念>信号基本概念</h2>
+<p>信号是事件发生时对进程的通知机制。针对每种信号定义了唯一的整数，从1开始顺序增加，&lt;signal.h>以SIGxxxx的形式对信号整数进行宏定义。信号分为两大类，第一组为标准信号也就是我们通常使用的信号类型，Linux中编号范围为1～31。另一类信号为实时信号，实时信号相对于标准信号有队列管理、在传递顺序有所保证并且可以伴随数据传递，主要用于进程间通信。本文主要讨论标准信号。</p>
+<p><strong>信号因某些事件产生到进程处理期间，处于等待(pending)状态</strong>。信号在传递给进程时会打断进程的执行，视具体的信号执行如下默认操作之一:</p>
+<ul>
+<li>忽略信号: 内核将信号丢弃，对进程不会产生任何影响。</li>
+<li>终止进程: 进程会异常终止。</li>
+<li>产生coredump并终止: 将进程的虚拟内存镜像存储为coredump文件，同时进程终止。</li>
+<li>停止进程: 暂停进程的执行。</li>
+<li>继续进程: 恢复暂停的进程执行。</li>
+</ul>
+<p>除了以上特定信号的默认行为之外，程序也能改变<strong>某些信号</strong>到达时的默认行为。但并不是所有的信号都可以修改其默认行为。程序可以通过signal()或sigaction()设置某个信号的处置方式为如下之一:</p>
+<ul>
+<li>捕获: 执行用户给定的处置函数。</li>
+<li>忽略: 忽略信号。</li>
+<li>采取默认的行为，撤销之前对该信号处置的修改。</li>
+</ul>
+<p>为了确保一段代码不被某些信号所中断，程序可以添加某些信号到进程的信号掩码中，这样信号到达时会被阻塞。直到程序从信号掩码中删除，阻塞的信号才会被处理。</p>
+<h3 id=信号类型和默认行为>信号类型和默认行为</h3>
+<p>Linux对标准信号的编号为1～31，有些信号名称由于为了与其他UNIX实现保持源码兼容有别名。下面对一些常用的信号做介绍。括号中是信号值，不同Linux版本可能不同。</p>
+<ul>
+<li>SIGABRT(6): 但进程主动调用abort()函数时，系统向进程发送该信号。默认情况下会终止进程并且产生coredump文件。</li>
+<li>SIGALRAM(14): 调用alram()或setitimer()设置的定时器到期，内核将产生该信号，默认行为是终止进程。</li>
+<li><strong>硬件异常产生的信号:以下信号不可被忽略或阻塞或从信号处置函数中正常返回，否则会产生未定义的行为。</strong>
+<ul>
+<li>SIGBUG( 7): 总线错误，对内存地址的引用不合法。</li>
+<li>SIGSEGV(11): 对内存地址的引用不合法。</li>
+<li>SIGFPE( 8): 算术错误，比如除以0。</li>
+<li>SIGILL( 4): 进程试图执行非法(格式不正确)的机器语言指令。</li>
+</ul>
+</li>
+<li>SIGCHLD(17): 内核向父进程发送该信号通知某一子进程终止\停止\恢复，详情参考<a href=/posts/the_linux_programming_interface_thread/#sigchld%e4%bf%a1%e5%8f%b7 rel>sigchld信号</a>。</li>
+<li>作业控制信号: 暂停和继续的信号，参考<a href=/posts/the_linux_programming_interface_thread/#%e5%9c%a8shell%e4%b8%ad%e4%bd%bf%e7%94%a8%e4%bd%9c%e4%b8%9a%e6%8e%a7%e5%88%b6 rel>在shell中使用作业控制</a>
+<ul>
+<li>SIGSTP(20): 停止进程。命令行中输入ctrl+z可以向前台进程组发送该信号，并且将进程组放入后台。</li>
+<li>SIGCONT(18): 继续进程，默认情况忽略该信号，进程可以捕获该信号，以便在恢复运行时执行某些操作。</li>
+</ul>
+</li>
+<li>SIGSTOP(19): <strong>必停进程</strong>，无法阻塞、忽略或者捕获。</li>
+<li>SIGKILL( 9): <strong>必杀信号</strong>，无法阻塞、忽略或者捕获。</li>
+<li>SIGTERM(15): 用来终止进程的标准信号，命令kill和killall发送的默认信号。好的程序应该考虑为SIGTERM设置处置函数以便于终止时清除临时文件和释放其它资源。故好的提前终止进程的方法是，先发送SIGTERM来终止进程，把SIGKILL作为最后的手段。在另一篇文章中<a href=/posts/voice_player_system_programming/ rel>从音频播放c++类的实现学习Linux系统子进程管理</a>提前结束进程采用的SIGKILL信号并不规范。</li>
+<li>SIGHUP( 1): 当终端断开时，系统将会发送该信号给shell进程，参考<a href=/posts/the_linux_programming_interface_thread/#%e5%85%b3%e9%97%ad%e7%bb%88%e7%ab%af-sighup%e4%bf%a1%e5%8f%b7 rel>关闭终端-sighup信号</a>，默认行为是终止进程。一些守护进程如init、httpd和inetd等捕获了该信号，在收到该信号时会重新初始化并且重读配置文件。</li>
+<li><strong>SIGQUIT( 3): 默认终止进程并且产生coredump。命令行中输入ctrl+\可以向前台进程组发送该信号。</strong></li>
+<li>SIGPIPE: 当某一进程试图向管道、FIFO或socket写入信息时，这些设备无相应的读进程，通常由于读进程close文件描述符，默认行为是终止进程。<strong>服务器程序通常忽略此信号，否则如果对方断开连接，继续write的话程序会意外终止。</strong></li>
+</ul>
+<h3 id=多线程与信号>多线程与信号</h3>
+<blockquote>
+<p>在多线程程序中，使用signal的第一原则就是不要使用signal。<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup></p>
+</blockquote>
+<p>UNIX信号模型是基于UNIX进程模型而设计的，问世比pthreads要早几十年，自然而然信号与线程模型二者结合使用会非常复杂。两本书<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup><sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>都不建议在多线程程序中使用signal。以下是多线程遇到信号的一些关键点:</p>
+<ul>
+<li>信号的动作属于进程层面，如果动作是停止或者终止则会终止该进程的所有线程。</li>
+<li>信号的处置函数属于进程层面，某个线程设置信号处置函数则所有线程都共享该信号处置函数，某个线程将某个信号忽略，则所有线程都会忽略该信号。</li>
+<li>信号的发送一般针对整个进程，如果该进程为此信号设置了处置函数，则内核会任选一条线程来执行信号处置函数。</li>
+<li>信号的发送也可针对特定线程，有如下三种情况信号针对线程直接由该线程执行处置函数:
+<ul>
+<li>信号的产生源于线程的硬件错误，如SIGBUS、SIGFPE、SIGILL、SIGSEGV。</li>
+<li>但线程试图向一个试图向已经关闭的管道、FIFO或socket写入信息时产生的SIGPIPE信号。</li>
+<li>由函数pthread_kill()或pthread_sigqueue()所产生的信号，这些函数允许在同一进程下向其它线程发送信号。下文的raise()函数就是调用pthread_kill()向调用线程发送信号。</li>
+</ul>
+</li>
+</ul>
+<p>在《Linux多线程服务端编程：使用muduo C++网络库》<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>中给出了多线程使用信号的建议，包括:</p>
+<ul>
+<li>不要用signal作为IPC手段，包括不要使用SIGUSR1等信号来触发服务端的行为。</li>
+<li>不要使用基于signal实现的定时函数，包括alarm/ualram/setitimer/timer_create/sleep/usleep等等。</li>
+<li>不主动处理各种异常信号，只用默认语义: 结束进程。除了一个例外SIGPIPE，服务器程序通常忽略此信号。</li>
+<li>在没有别的替代方法的情况下，比方说需要处理SIGCHLD信号，可以把异步信号转换成同步的文件描述符事件。传统做法是在signal_handler里往特定的pipe(2)写一个字节，主进程从中读取事件，从而将其纳入到统一的IO事件处理框架之中。现代的Linux增加了signalfd(2)把信号直接转换曾文件描述符事件，从而从根本上避免使用signal_handler。</li>
+</ul>
+<h3 id=发送信号>发送信号</h3>
+<p>在shell中一般使用kill命令向指定进程发送指定信号，kill()系统调用类似可以在代码中向指定进程发送指定信号。函数定义如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;signal.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=kt>int</span> <span class=nf>kill</span><span class=p>(</span><span class=n>pid_t</span> <span class=n>pid</span><span class=p>,</span> <span class=kt>int</span> <span class=n>sig</span><span class=p>);</span>
+</code></pre></div><p>其pid参数表示具体发送信号的进程，意义如下:</p>
+<ul>
+<li>pid > 0: 发送给pid指定的进程。</li>
+<li>pid == 0: 发送给调用进程在同一进程组的所有子进程，包括调用进程自己。</li>
+<li>pid == -1: 发送给调用进程所有有权发送信号的所有进程，除去调用进程自身和init进程(PID=1)。如果一个特权进程调用，那么会发送信号给系统中除去上述两个进程之外的所有进程。</li>
+<li>pid &lt; -1: 发送给进程组id==abs(pid)的所有进程。另一个函数killpg()实现同样的功能，kill(-pgrp, sig)等价于killpg(pgrp, sig)。在<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e8%bf%9b%e7%a8%8b%e7%bb%84%e7%9a%84%e5%ba%94%e7%94%a8 rel>打断播放的音频进程组的应用</a>使用killpg()杀死进程组的所有进程。</li>
+</ul>
+<p>可以通过kill()检查另一个进程是否存在，将参数sig指定为0，则不会发送信号影响另一个进程。若调用失败且errno为ESRCH表明进程不存在。若调用失败且errno为EPERM，表明进存在但调用进程无权向目标进程发送信号，或者调用成功，都表示进程存在。</p>
+<h4 id=向自身发送信号-raise>向自身发送信号: raise</h4>
+<p>进程向自身发送信号可以调用raise()函数，其定义如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;signal.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=kt>int</span> <span class=nf>raise</span><span class=p>(</span><span class=kt>int</span> <span class=n>sig</span><span class=p>);</span>
+</code></pre></div><p>在单线程程序中，调用raise()相当于调用kill(getpid(), sig)。而对于多线程程序，则相当于pthread_kill(pthread_self(), sig)意味着<strong>将信号传递给调用raise()的线程，而不是kill(getpid(), sig)会传递给任意线程。</strong></p>
+<h3 id=信号传递的时机与顺序>信号传递的时机与顺序</h3>
+<h4 id=信号传递的时机>信号传递的时机</h4>
+<p>如果信号是同步产生的，例如进程本身执行造成的信号，如硬件异常SIGBUS、SIGFPE、SIGILL、SIGSEGV等或者进程调用上述的raise()函数，会立即传递信号。</p>
+<p>而对于异步产生的信号(即引发信号产生的事件来源于内核或者其它进程)，信号的产生和实际传递给进程之间存在延迟，此时信号处于等待(pending)状态。而传递给进程的时机是进程正在执行且发生由内核态到用户态的下一次切换时，意味着以下时刻彩绘传递信号:</p>
+<ul>
+<li>进程再度获得调度。<strong>所以可能在任意地方中断进程执行流，开始执行信号处置函数。</strong></li>
+<li>系统调用完成时。<strong>信号的传递可能引起正在阻塞的系统调用过早完成。</strong></li>
+</ul>
+<h4 id=信号传递的顺序>信号传递的顺序</h4>
+<p>如果进程某一个时刻有多个信号等待时，就目前Linux而言，会按照信号的编号升序排序，信号编号小的优先于信号编号大传递给进程。但是不能对该顺序由任何依赖，SUSv3标准规定该顺序由系统实现而定。</p>
+<p>当多个解除了阻塞的信号在等待传递时，如果在信号处置函数执行期间发生了内核态到用户态的切换，那么将中断处置函数的执行，转而去调用第二个信号的处置函数。如下图所示。</p>
+<p><figure><a class=lightgallery href=/images/the_linux_programming_interface_signal/multi_signal_pending.png title=对多个解除信号的传递 data-thumbnail=/images/the_linux_programming_interface_signal/multi_signal_pending.png data-sub-html="<h2>对多个解除信号的传递</h2><p>对多个解除信号的传递</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/the_linux_programming_interface_signal/multi_signal_pending.png data-srcset="/images/the_linux_programming_interface_signal/multi_signal_pending.png, /images/the_linux_programming_interface_signal/multi_signal_pending.png 1.5x, /images/the_linux_programming_interface_signal/multi_signal_pending.png 2x" data-sizes=auto alt=/images/the_linux_programming_interface_signal/multi_signal_pending.png>
+</a><figcaption class=image-caption>对多个解除信号的传递</figcaption>
+</figure></p>
+<h2 id=设置信号处置函数>设置信号处置函数</h2>
+<p>UNIX系统提供了两种方法改变信号处置函数: signal()和sigaction()。signal()系统调用时设置信号处置的原始API，比sigaction()简单。当然sigaction()提供了signal()所不具备的功能。signal()在不同的UNIX实现之间存在差异，所以对于可移植性有追求的程序应该使用sigaction()。</p>
+<h3 id=signal>signal()</h3>
+<blockquote>
+<p>signal()函数虽然记录在Linux手册页的第2部分，但实际被实现为基于sigaction()系统调用的glibc库函数。</p>
+</blockquote>
+<p>函数原型如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;signal.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=k>typedef</span> <span class=nf>void</span><span class=p>(</span><span class=o>*</span><span class=n>sighandler_t</span><span class=p>)(</span><span class=kt>int</span><span class=p>);</span>
+<span class=n>sighandler_t</span> <span class=nf>signal</span><span class=p>(</span><span class=kt>int</span> <span class=n>sig</span><span class=p>,</span> <span class=n>sighandler_t</span> <span class=n>handler</span><span class=p>);</span>
+</code></pre></div><p>参数sig表示希望修改处置函数的信号编号；参数handler表示处置函数的地址，处置函数的声明形式为: <code>void handdler(int sig)</code>；返回值则是之前的信号处置函数地址，或者是SIG_DEL默认处置、SIG_IGN忽略处置和SIG_ERR表示调用失败。</p>
+<p>在为signal()指定handler参数时，可以使用如下值来代替函数地址:</p>
+<ul>
+<li>SIG_DFL: 将信号处置函数重置为默认值。</li>
+<li>SIG_IGN: 忽略该信号。</li>
+</ul>
+<h3 id=sigaction>sigaction()</h3>
+<p>sigaction()系统调用用法比signal()复杂，当更具灵活性和移植性。其函数原型如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;signal.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=kt>int</span> <span class=nf>sigaction</span><span class=p>(</span><span class=kt>int</span> <span class=n>sig</span><span class=p>,</span> <span class=n>constr</span> <span class=k>struct</span> <span class=n>sigaction</span> <span class=o>*</span><span class=n>act</span><span class=p>,</span> <span class=k>struct</span> <span class=n>sigaction</span> <span class=o>*</span><span class=n>oldact</span><span class=p>);</span>
+</code></pre></div><p>参数sig表示想要操作的信号编号，该参数是除去SIGKILL和SIGSTOP之外的任何信号。参数act是一枚指针，指向描述信号新处置的数据结构，如果仅对现有的处置感兴趣可以将其设置为NULL。参数oldact是指向同一个数据结构的指针，用来返回之前信号处置的相关信息，如果不想获取此类信息，可以将其指定为NULL。act和oldact所指向的数据结构如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=k>struct</span> <span class=n>sigaction</span> <span class=p>{</span>
+  <span class=kt>void</span> <span class=p>(</span><span class=o>*</span><span class=n>sa_handler</span><span class=p>)(</span><span class=kt>int</span><span class=p>);</span>     <span class=c1>// 信号处置函数地址
+</span><span class=c1></span>  <span class=n>sigset_t</span> <span class=n>sa_mask</span><span class=p>;</span>            <span class=c1>// 处置函数阻塞的信号集合
+</span><span class=c1></span>  <span class=kt>int</span> <span class=n>sa_flags</span><span class=p>;</span>                <span class=c1>// 设置标志位
+</span><span class=c1></span>  <span class=kt>void</span> <span class=p>(</span><span class=o>*</span><span class=n>sa_restorer</span><span class=p>)(</span><span class=kt>void</span><span class=p>);</span>  <span class=c1>// 不是给引用程序使用
+</span><span class=c1></span><span class=p>};</span>
+</code></pre></div><p>数据结构sigaction中字段sa_handler字段对应signal()的handler参数，可以指定为信号处置函数的地址或常量SIG_IGN、SIG_DFL之一。仅当sa_handler是信号处置函数的地址时，彩绘对sa_mask和sa_flags字段进行处理。字段sa_restorer供内核使用，应用程序不应该使用。</p>
+<p>字段sa_mask定义了一组信号集合，表示在调用信号处置函数时阻塞该集合的所有信号。此外，引发处置函数的信号将自动加在这个集合中，也就是如果同一个信号到达，信号处置函数不会递归的中断自己。<strong>由于不会对遭遇阻塞的信号进行排队处理，如果过程中重复受到这些信号中的任何信号，再后边对信号的传递也是一次性的。</strong></p>
+<p>字段sa_flags定义位掩码，用于设置信号处理过程中的各种选项，可以使用或运算相加设置。(以下仅为部分重要选项)</p>
+<ul>
+<li>SA_NOCLDSTOP: 若sig为SIGCHLD信号，则当子进程终止或恢复时不会产生该信号给调用进程。</li>
+<li>SA_NOCLDWAIT: 若sig为SIGCHLD信号，则当子进程终止时不会将其转化成僵尸进程。和设置SIGCHLD的处置为SIG_IGN主要区别在于，前述方法允许系统在子进程终止时向进程发送SIGCHLD信号，虽然已经无法调用wait()来获取子进程的状态，但并不在标准中保证，在包括Linux的一些UNIX实现中，内核确实会在设置该标志的情况下为父进程产生SIGCHLD信号。而另一些UNIX实现则不会。</li>
+<li>SA_NODEFER: 不会在执行处置函数时将自动触发信号放入到阻塞信号集合中。</li>
+<li>SA_RESTART: 自动重启由信号处置程序中断的系统调用。后边由详细介绍。</li>
+</ul>
+<h4 id=信号集合sigset_t>信号集合sigset_t</h4>
+<p>多个信号可用sigset_t数据结构来表示，Linux中是位掩码实现，但标准并为对实现有要求。所以在初始化一个sigset_t结构时，为了可移植性不可使用memset()等清零初始化，因为有可能实现采用位掩码之外的结构来表示信号集。必须使用如下函数: sigemptyset()函数初始化一个空的信号集，sigfillset()函数此诗话一个信号集，使其包含所有信号包括实时信号。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;signal.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=kt>int</span> <span class=nf>sigemptyset</span><span class=p>(</span><span class=n>sigset_t</span> <span class=o>*</span><span class=n>set</span><span class=p>);</span>
+<span class=kt>int</span> <span class=nf>sigfillset</span><span class=p>(</span><span class=n>sigset_t</span> <span class=o>*</span><span class=n>set</span><span class=p>);</span>
+</code></pre></div><p>信号集初始化后，可以分别使用sigaddset()和sigdelset()函数将向信号集加入或删除指定信号。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;signal.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=kt>int</span> <span class=nf>sigaddset</span><span class=p>(</span><span class=n>sigset_t</span> <span class=o>*</span><span class=n>set</span><span class=p>,</span> <span class=kt>int</span> <span class=n>sig</span><span class=p>);</span>
+<span class=kt>int</span> <span class=nf>sigdelset</span><span class=p>(</span><span class=n>sigset_t</span> <span class=o>*</span><span class=n>set</span><span class=p>,</span> <span class=kt>int</span> <span class=n>sig</span><span class=p>);</span>
+</code></pre></div><p>使用sigismember()函数可以测试指定信号是否在指定信号集中；GUN C库还实现了3个非标准函数: sigandset()求两个信号集的交集; sigorset()求两个信号集的并集; sigisemptyset()判断信号集是否为空。</p>
+<h3 id=信号的其它处置>信号的其它处置</h3>
+<h4 id=信号掩码阻塞信号传递>信号掩码(阻塞信号传递)</h4>
+<p>内核为每个进程维护一组信号掩码集合，表示阻塞一组信号对该进程传递。直至进程信号掩码移出该信号，从而解除阻塞为止。并且并不会对阻塞的信号做排队处理。对于多线程程序，信号掩码属于线程属性，每个线程可以使用pthread_sigmask()函数来独立检查和修改其信号掩码。</p>
+<p>操作信号掩码有如下几种方式:</p>
+<ul>
+<li>使用sigprocmask()系统调用，可以显式向信号掩码中加入或删除信号。</li>
+<li>默认情况下调用信号处置函数时，会将引发调用的信号自动添加到信号掩码中。</li>
+<li>调用sigaction()时指定一组信号，当调用该处置函数时程序会将该组信号添加到信号掩码中。</li>
+</ul>
+<h4 id=获取处于等待的信号>获取处于等待的信号</h4>
+<p>可以调用sigpending()获取当前正在被阻塞的信号，该函数返回处于等待状态的信号集。</p>
+<h4 id=等待信号-pause>等待信号: pause()</h4>
+<p>调用pause()将暂停进程的执行，直到信号来临。</p>
+<h2 id=信号处置函数>信号处置函数</h2>
+<p>通过前面的介绍，信号可能会在任意地方打断正在执行的进程开始执行信号处置函数，甚于信号处置函数本身也可能被打断。那么对于信号处置函数就要求<strong>可重入</strong>。</p>
+<blockquote>
+<p>可重入概念: 如果同一个进程多个线程可以安全的同时调用某一函数并且函数可以<strong>交叉执行</strong>。所谓交叉执行就表示不能使用一些同步锁，同步锁可以让函数线程安全但不能保证可重入。</p>
+</blockquote>
+<p><strong>信号处置函数如果需要修改全局数据，那么被修改的变量必须是volatile sig_atomic_t类型</strong>，否则被打断的进程在恢复执行后无法立刻看到信号处置函数改动后的数据，因为编译器可能假定该变量不会被他处修改从而优化了内存访问。并且<strong>使用sig_atomic_t变量唯一能做的是在信号处置函数中设置，在主程序中进行检查，反之也可。</strong></p>
+<p>编写信号处置函数有如下两种选择:</p>
+<ol>
+<li>确保信号处置函数本身是可重入的，并且<strong>只调用异步信号安全的函数</strong>。</li>
+<li>当主程序执行不安全函数或是去操作信号处置函数也可能修改的全局数据结构时，阻塞信号的传递。在复杂程序中难以保证。</li>
+</ol>
+<blockquote>
+<p>如果使用同一处置函数来处理不同信号或者调用sigaction()时设置了SA_NODEFER标志，那么处置函数可能会中断自己。因此，处置函数如果更新了全局或局部静态变量，即使主程序不使用这些变量，该函数依然是不可重入的。</p>
+</blockquote>
+<h3 id=异步信号安全函数>异步信号安全函数</h3>
+<p><strong>异步信号安全函数指的是某一函数是可重入或者信号处置函数无法将其中断的函数</strong>。对于系统函数有如下:</p>
+<table>
+<thead>
+<tr>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>_Exit() (v3)</td>
+<td>_exit()</td>
+<td>abort() (v3)</td>
+<td>accept() (v3)</td>
+<td>access()</td>
+</tr>
+<tr>
+<td>aio_error() (v2)</td>
+<td>aio_return() (v2)</td>
+<td>aio_suspend() (v2)</td>
+<td>alarm()</td>
+<td>bind() (v3)</td>
+</tr>
+<tr>
+<td>cfgetispeed()</td>
+<td>getpid()</td>
+<td>getppid()</td>
+<td>getsockname() (v3)</td>
+<td>getsockopt() (v3)</td>
+</tr>
+<tr>
+<td>getuid()</td>
+<td>kill()</td>
+<td>link()</td>
+<td>listen() (v3)</td>
+<td>lseek()</td>
+</tr>
+<tr>
+<td>lstat() (v3)</td>
+<td>mkdir()</td>
+<td>sigdelset()</td>
+<td>sigemptyset()</td>
+<td>sigfillset()</td>
+</tr>
+<tr>
+<td>sigismember()</td>
+<td>signal() (v2)</td>
+<td>sigpause() (v2)</td>
+<td>sigpending()</td>
+<td>sigprocmask()</td>
+</tr>
+<tr>
+<td>sigqueue() (v2)</td>
+<td>sigset() (v2)</td>
+<td>sigsuspend()</td>
+<td>cfgetospeed()</td>
+<td>cfsetispeed()</td>
+</tr>
+<tr>
+<td>cfsetospeed()</td>
+<td>chdir()</td>
+<td>chmod()</td>
+<td>chown()</td>
+<td>clock_gettime() (v2)</td>
+</tr>
+<tr>
+<td>close()</td>
+<td>connect() (v3)</td>
+<td>creat()</td>
+<td>dup()</td>
+<td>dup2()</td>
+</tr>
+<tr>
+<td>execle()</td>
+<td>execve()</td>
+<td>fchmod() (v3)</td>
+<td>fchown() (v3)</td>
+<td>fcntl()</td>
+</tr>
+<tr>
+<td>fdatasync() (v2)</td>
+<td>fork()</td>
+<td>fpathconf() (v2)</td>
+<td>fstat()</td>
+<td>fsync() (v2)</td>
+</tr>
+<tr>
+<td>ftruncate() (v3)</td>
+<td>getegid()</td>
+<td>geteuid()</td>
+<td>getgid()</td>
+<td>getgroups()</td>
+</tr>
+<tr>
+<td>getpeername() (v3)</td>
+<td>getpgrp()</td>
+<td>mkfifo()</td>
+<td>open()</td>
+<td>pathconf()</td>
+</tr>
+<tr>
+<td>pause()</td>
+<td>pipe()</td>
+<td>poll() (v3)</td>
+<td>posix_trace_event() (v3)</td>
+<td>pselect() (v3)</td>
+</tr>
+<tr>
+<td>raise() (v2)</td>
+<td>read()</td>
+<td>readlink() (v3)</td>
+<td>recv() (v3)</td>
+<td>recvfrom() (v3)</td>
+</tr>
+<tr>
+<td>recvmsg() (v3)</td>
+<td>rename()</td>
+<td>rmdir()</td>
+<td>select() (v3)</td>
+<td>sem_post() (v2)</td>
+</tr>
+<tr>
+<td>send() (v3)</td>
+<td>sendmsg() (v3)</td>
+<td>sendto() (v3)</td>
+<td>setgid()</td>
+<td>setpgid()</td>
+</tr>
+<tr>
+<td>setsid()</td>
+<td>setsockopt() (v3)</td>
+<td>setuid()</td>
+<td>shutdown() (v3)</td>
+<td>sigaction()</td>
+</tr>
+<tr>
+<td>sigaddset()</td>
+<td>sleep()</td>
+<td>socket() (v3)</td>
+<td>sockatmark() (v3)</td>
+<td>socketpair() (v3)</td>
+</tr>
+<tr>
+<td>stat()</td>
+<td>symlink() (v3)</td>
+<td>sysconf()</td>
+<td>tcdrain()</td>
+<td>tcflow()</td>
+</tr>
+<tr>
+<td>tcflush()</td>
+<td>tcgetattr()</td>
+<td>tcgetpgrp()</td>
+<td>tcsendbreak()</td>
+<td>tcsetattr()</td>
+</tr>
+<tr>
+<td>tcsetpgrp()</td>
+<td>time()</td>
+<td>timer_getoverrun() (v2)</td>
+<td>timer_gettime() (v2)</td>
+<td>timer_settime() (v2)</td>
+</tr>
+<tr>
+<td>times()</td>
+<td>umask()</td>
+<td>uname()</td>
+<td>unlink()</td>
+<td>utime()</td>
+</tr>
+<tr>
+<td>wait()</td>
+<td>waitpid()</td>
+<td>write()</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>除该表之外所有的函数对于信号来讲都是不安全的，但当且仅当信号处置函数中断了不安全函数的执行并且信号处置函数也调用了这个不安全的函数时才会不安全。</p>
+<h3 id=信号中断系统调用>信号中断系统调用</h3>
+<p>一些阻塞的系统调用(blocking system call)，例如read()。<strong>当系统调用正在阻塞时，信号传递来引发处置函数的调用后，默认情况下，系统调用会失败，并将errno置为EINTR</strong>。(对于非阻塞系统调用则系统会执行完成后才响应信号，内核态切换到用户态才会执行信号处置函数)</p>
+<p>通过该特性可以使用定时器产生SIGALRM来设置read()之类的阻塞系统调用超时。不过，一般的情况是希望找到中断的系统调用得以继续运行。为此需要手动重启系统调用。在GUN C库中提供了非标准的宏TEMP_FAILURE_RETRY()用于重启系统调用，定义类似如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
+</span><span class=cp>#define TEMP_FAILURE_RETRY(stmt) while((stmt) == -1 &amp;&amp; errno == EINTR);
+</span><span class=cp></span><span class=c1>// 例子
+</span><span class=c1></span><span class=n>TEMP_FAILURE_RETRY</span><span class=p>(</span><span class=n>cnt</span> <span class=o>=</span> <span class=n>read</span><span class=p>(</span><span class=n>fd</span><span class=p>,</span> <span class=n>buf</span><span class=p>,</span> <span class=n>BUF_SIZZE</span><span class=p>));</span>
+<span class=k>if</span> <span class=p>(</span><span class=n>cnt</span> <span class=o>==</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span>
+  <span class=n>errExit</span><span class=p>(</span><span class=s>&#34;read);</span>
+</code></pre></div><p>另外的一种方式是在sigaction()创建信号处置函数时，设置<code>SA_RESTART</code>标志，从而针对该信号触发的信号处置函数执行完毕后会自动重启被中断的阻塞系统调用。不幸的是，并非所有的阻塞系统调用都可以通过指定该标志位进行重启。在Linux上以下阻塞系统调用以及构建于其上的库函数即使指定该标志也不会自动重启:</p>
+<ul>
+<li>poll()、ppoll()、select()和 pselect()这些 I/O 多路复用调用。(SUSv3 明文规定，无论设置 SA_RESTART 标志与否，都不对select()和pselect()遭处理器函数中断时的行为进行定义)</li>
+<li>Linux 特有的epoll_wait()和 epoll_pwait()系统调用。</li>
+<li>Linux 特有的io_getevents()系统调用。</li>
+<li>操作System V消息队列和信号量的阻塞系统调用：semop()、semtimedop()、msgrcv() 和 msgsnd()。(虽然System V原本并未提供自动重启系统调用的功能，但在某些UNIX实现上，如果设置了 SA_RESTART标志，这些系统调用还是会自动重启)</li>
+<li>对 inotify 文件描述符发起的 read()调用。</li>
+<li>用于将进程挂起指定时间的系统调用和库函数：sleep()、nanosleep()和clock_nanosleep()。</li>
+<li>特意设计用来等待某一信号到达的系统调用：pause()、sigsuspend()、sigtimedwait()和sigwaitinfo()。</li>
+</ul>
+<p>在Linux上进程因为信号(SIGSTOP、SIGSTP等)而停止后又受到SIGCONT信号而继续执行时，也会使得某些系统调用产生EINTR错误。以下的系统调用和函数存在这一行为: epoll_pwait()、epoll_wait()、对 inotify 文件描述符执行的read()调用、semop()、semtimedop()、sigtimedwait()和 sigwaitinfo()。故在使用这些函数时需要添加代码来重新启动这些系统调用，即使程序未设置信号处置函数。</p>
+<hr>
+<h2 id=参考>参考</h2>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/25809330/ target=_blank rel="noopener noreffer">《Linux/UNIX系统编程手册》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:2 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/20471211/ target=_blank rel="noopener noreffer">《Linux多线程服务端编程：使用muduo C++网络库》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2024-07-11</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/ data-title="信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】" data-hashtags=系统编程,读书笔记,《Linux/UNIX系统编程手册》><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/ data-hashtag=系统编程><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/ data-title="信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/ data-title="信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/ data-title="信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/>系统编程</a>,&nbsp;<a href=/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/>读书笔记</a>,&nbsp;<a href=/tags/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C/>《Linux/UNIX系统编程手册》</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/the_linux_programming_interface_thread/ class=prev rel=prev title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.485ce22971162ae594e2f22468d97519fb9c08a7112e3a012e8684cfe098b474.js integrity="sha256-SFziKXEWKuWU4vIkaNl1GfucCKcRLjoBLoaEz+CYtHQ="></script></body>
+</html>
