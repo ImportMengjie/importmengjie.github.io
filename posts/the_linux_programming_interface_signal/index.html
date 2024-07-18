@@ -16,9 +16,9 @@
 <meta name=application-name content="ImportMengjie's Blog">
 <meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
-<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/><link rel=prev href=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/><link rel=prev href=https://importmengjie.github.io/posts/the_linux_programming_interface_thread/><link rel=next href=https://importmengjie.github.io/posts/v4l2_learning_1/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":7919,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/","datePublished":"2024-07-11T22:34:45+08:00","dateModified":"2024-07-11T22:34:45+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":8146,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/","datePublished":"2024-07-11T22:34:45+08:00","dateModified":"2024-07-11T22:34:45+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -82,9 +82,9 @@ Cancel
 <h2 class=toc-title>Contents</h2>
 <div class="toc-content always-active" id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】</h1><div class=post-meta>
-<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%AD%A6%E4%B9%A0%E5%85%88%E8%BF%9B%E7%9A%84%E7%A7%91%E5%AD%A6%E6%8A%80%E6%9C%AF/><i class="far fa-folder fa-fw" aria-hidden=true></i>学习先进的科学技术</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-11>2024-07-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;7919 words&nbsp;
-<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;16 minutes&nbsp;
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/><i class="far fa-folder fa-fw" aria-hidden=true></i>《Linux/UNIX系统编程手册》读书笔记</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-11>2024-07-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;8146 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;17 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
 </div>
@@ -283,6 +283,7 @@ Cancel
 <p>通过前面的介绍，信号可能会在任意地方打断正在执行的进程开始执行信号处置函数，甚于信号处置函数本身也可能被打断。那么对于信号处置函数就要求<strong>可重入</strong>。</p>
 <blockquote>
 <p>可重入概念: 如果同一个进程多个线程可以安全的同时调用某一函数并且函数可以<strong>交叉执行</strong>。所谓交叉执行就表示不能使用一些同步锁，同步锁可以让函数线程安全但不能保证可重入。</p>
+<p>线程安全和可重入: 可重入的函数一定是线程安全，反过来却不一定。<strong>通过同步锁来实现的线程安全函数一定不是可重入的</strong>，想象刚一上锁要修改数据时被打断，又重入该函数又会上同一个锁，假如这个锁是不可重入的则直接死锁，即使是可重入的锁对于锁所保护的临界区数据也被修改两次，因为打断函数执行修改完后又会返回之前的地方继续执行修改数据。</p>
 </blockquote>
 <p><strong>信号处置函数如果需要修改全局数据，那么被修改的变量必须是volatile sig_atomic_t类型</strong>，否则被打断的进程在恢复执行后无法立刻看到信号处置函数改动后的数据，因为编译器可能假定该变量不会被他处修改从而优化了内存访问。并且<strong>使用sig_atomic_t变量唯一能做的是在信号处置函数中设置，在主程序中进行检查，反之也可。</strong></p>
 <p>编写信号处置函数有如下两种选择:</p>
@@ -293,6 +294,7 @@ Cancel
 <blockquote>
 <p>如果使用同一处置函数来处理不同信号或者调用sigaction()时设置了SA_NODEFER标志，那么处置函数可能会中断自己。因此，处置函数如果更新了全局或局部静态变量，即使主程序不使用这些变量，该函数依然是不可重入的。</p>
 </blockquote>
+<p>综上所述，<strong>可重入函数如果要修改全局或局部共享变量，则该变量必须是volatile sig_atomic_t类型，否则该函数是不可重入函数</strong>。</p>
 <h3 id=异步信号安全函数>异步信号安全函数</h3>
 <p><strong>异步信号安全函数指的是某一函数是可重入或者信号处置函数无法将其中断的函数</strong>。对于系统函数有如下:</p>
 <table>
@@ -485,7 +487,7 @@ Cancel
 </span><span class=cp></span><span class=c1>// 例子
 </span><span class=c1></span><span class=n>TEMP_FAILURE_RETRY</span><span class=p>(</span><span class=n>cnt</span> <span class=o>=</span> <span class=n>read</span><span class=p>(</span><span class=n>fd</span><span class=p>,</span> <span class=n>buf</span><span class=p>,</span> <span class=n>BUF_SIZZE</span><span class=p>));</span>
 <span class=k>if</span> <span class=p>(</span><span class=n>cnt</span> <span class=o>==</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span>
-  <span class=n>errExit</span><span class=p>(</span><span class=s>&#34;read);</span>
+  <span class=n>errExit</span><span class=p>(</span><span class=s>&#34;read&#34;</span><span class=p>);</span>
 </code></pre></div><p>另外的一种方式是在sigaction()创建信号处置函数时，设置<code>SA_RESTART</code>标志，从而针对该信号触发的信号处置函数执行完毕后会自动重启被中断的阻塞系统调用。不幸的是，并非所有的阻塞系统调用都可以通过指定该标志位进行重启。在Linux上以下阻塞系统调用以及构建于其上的库函数即使指定该标志也不会自动重启:</p>
 <ul>
 <li>poll()、ppoll()、select()和 pselect()这些 I/O 多路复用调用。(SUSv3 明文规定，无论设置 SA_RESTART 标志与否，都不对select()和pselect()遭处理器函数中断时的行为进行定义)</li>
@@ -529,7 +531,8 @@ Cancel
 <span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
 </section>
 </div>
-<div class=post-nav><a href=/posts/the_linux_programming_interface_thread/ class=prev rel=prev title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】</a></div>
+<div class=post-nav><a href=/posts/the_linux_programming_interface_thread/ class=prev rel=prev title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】</a>
+<a href=/posts/v4l2_learning_1/ class=next rel=next title="v4l2 api基本使用流程 - V4l2学习笔记">v4l2 api基本使用流程 - V4l2学习笔记<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div>
 </div>
 <div id=comments><div id=giscus class=comment></div><noscript>
 Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
