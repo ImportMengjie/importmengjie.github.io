@@ -18,7 +18,7 @@
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/the_linux_programming_interface_process/><link rel=prev href=https://importmengjie.github.io/posts/voice_player_system_programming/><link rel=next href=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_process\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":6823,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_process\/","datePublished":"2024-07-02T20:18:43+08:00","dateModified":"2024-07-02T20:18:43+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_process\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":6825,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_process\/","datePublished":"2024-07-02T20:18:43+08:00","dateModified":"2024-07-02T20:18:43+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -83,7 +83,7 @@ Cancel
 <div class="toc-content always-active" id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】</h1><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/><i class="far fa-folder fa-fw" aria-hidden=true></i>《Linux/UNIX系统编程手册》读书笔记</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-02>2024-07-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;6823 words&nbsp;
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-02>2024-07-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;6825 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;14 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
@@ -139,8 +139,8 @@ Cancel
 <p>fork系统调用创建新进程(child)几乎为调用进程(parent)的翻版。</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
 </span><span class=cp></span><span class=n>pid_t</span> <span class=nf>fork</span><span class=p>();</span>
-</code></pre></div><p><strong>程序代码可通过返回值来区分父/子进程。在父进程将返回子进程的pid，父进程可以通过子进程的pid管理子进程</strong>。而子进程将返回0，在子进程中可以通过<code>getpid</code>和<code>getppid</code>分别获取子进程和父进程的pid。但创建失败时则会返回-1，一般的原因是进程数量超过了系统的限制。</p>
-<p><strong>不应该对fork后父子进程执行顺序有任何假设</strong>，如果需要确保一定的顺序需要进程间同步。在<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e4%bd%bf%e7%94%a8%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%ae%9e%e7%8e%b0kill%e4%bf%a1%e5%8f%b7%e5%90%8c%e6%97%b6%e5%8f%91%e7%bb%99%e5%ad%90%e8%bf%9b%e7%a8%8b%e5%92%8c%e5%85%b6%e4%ba%a7%e7%94%9f%e7%9a%84%e5%ad%90%e8%bf%9b%e7%a8%8b rel>从音频播放c++类的实现学习Linux系统子进程管理</a>中就通过父子进程在fork后都调用相同的作用的系统调用来设置子进程的进程组id，从而保证在任何调用顺序下，父子进程后续的执行都能确保进程组设置成功。</p>
+</code></pre></div><p><strong>程序代码可通过返回值来区分父/子进程。在父进程将返回子进程的PID，父进程可以通过子进程的PID管理子进程</strong>。而子进程将返回0，在子进程中可以通过<code>getpid</code>和<code>getppid</code>分别获取子进程和父进程的PID。但创建失败时则会返回-1，一般的原因是进程数量超过了系统的限制。</p>
+<p><strong>不应该对fork后父子进程执行顺序有任何假设</strong>，如果需要确保一定的顺序则需要进程间同步。在<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e4%bd%bf%e7%94%a8%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%ae%9e%e7%8e%b0kill%e4%bf%a1%e5%8f%b7%e5%90%8c%e6%97%b6%e5%8f%91%e7%bb%99%e5%ad%90%e8%bf%9b%e7%a8%8b%e5%92%8c%e5%85%b6%e4%ba%a7%e7%94%9f%e7%9a%84%e5%ad%90%e8%bf%9b%e7%a8%8b rel>从音频播放c++类的实现学习Linux系统子进程管理</a>中就通过父子进程在fork之后都调用相同作用的系统调用来设置子进程的进程组ID，从而保证在任何调用顺序下，父子进程后续的执行都能确保进程组设置成功。</p>
 <h3 id=fork的内存语义>fork的内存语义</h3>
 <p><strong>执行fork后子进程会和父进程拥有一模一样的内存空间</strong>，现代UNIX实现都是采用写时复制(copy-on-write)技术来节省物理内存消耗，即：父子进程在fork之后共享物理内存，在二者对内存页面有修改是才将要修改的内存页面拷贝，将子进程对应的表项修改，之后父子进程就可以分别修改各自的页拷贝。在书中提到利用这个特性，可以在已知某个func会导致内存泄漏或是过渡内存碎片，可以使用子进程执行该函数，就不会影响主进程的内存占用，最后通过进程间通信来获取结果。</p>
 <p>在fork后父子进程内存是一模一样的，打开的文件fd中存储的系统级打开文件表引用是一样的，故其当前文件的偏移量、打开文件的状态标志等都是共享的，参考<a href=/posts/shell-redirection/#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6%e5%92%8c%e6%89%93%e5%bc%80%e6%96%87%e4%bb%b6%e4%b9%8b%e9%97%b4%e7%9a%84%e5%85%b3%e7%b3%bb rel>从文件描述符和打开文件之间的关系重新理解shell重定向</a>。利用这个特性可以通过<code>pipe</code>等进行父子进程之间通信。</p>
@@ -156,7 +156,7 @@ Cancel
 <p>fork之后，对于子进程除了当前的线程之外，其他线程都消失了，会导致一个危险的局面。其他线程可能正持有某个锁，fork之后对于子进程来说其他线程已经没有了再也没有机会解锁，如果试图再对该mutex加锁就会立刻死锁。所以fork()后只能调用可重入函数。对于诸如<code>malloc</code>、<code>printf</code>函数都不可使用，所以对于多线程程序来说调用fork唯一安全的做法就是fork后立即调用exec()执行另一个程序，彻底断绝子进程和父进程的关系。</p>
 <blockquote>
 <p>SUSv3对可重入函数定义: 函数由多条线程调用时，即便交叉执行，其效果也与各线程任意顺序依次调用一致。</p>
-<p>我的理解是“在执行过程中可以被中断，并且在中断后能够被安全地再次调用的函数“，更新全局变量(不是sig_atomic_t类型)或静态变量的函数都不是可重入的函数。所以诸如<code>malloc</code>函数由于涉及到全局状态的修改是不可重入函数。</p>
+<p>我的理解是“在执行过程中可以被中断，并且在中断后能够安全地再次调用(重入)函数“，更新全局变量(不是sig_atomic_t类型)或静态变量的函数都不是可重入的函数。所以诸如<code>malloc</code>函数由于涉及到全局状态的修改是不可重入函数。</p>
 </blockquote>
 <h2 id=执行新程序-execve>执行新程序: execve()</h2>
 <p>系统调用execve()将新程序加载到某一进程的内存空间，进程的内存空间会被新程序所取代，在执行了各种初始化代码会从新程序的main()函数开始执行。</p>
@@ -333,8 +333,8 @@ Cancel
 <p>通过<code>pid_t getsid(pid_t pid)</code>和<code>pid_t setsid()</code>来获取进程的sid和设置当前进程为新会话的首进程和<strong>该会话中的新进程组的首进程</strong>。</p>
 <p>注意：已经是进程组的首进程就不能调用setsid()设置自己为新会话的首进程。原因是如果可以的话，调用后进程组中原有的其他成员还属于原来的会话中，就会出现该进程组的成员不属于同一个会话中。</p>
 <h3 id=关闭终端-sighup信号>关闭终端: SIGHUP信号</h3>
-<p>当控制进程(bash)失去与其终端的连接后，内核会向控制进程发送SIGHUP信号；当控制进程结束时，内核会向该控制进程关联的终端前台进程组发送SIGHUP信号。SIGHUP信号默认的行为是终止进程。bash进程设置了SIGHUP信号处理函数，在退出前将SIGHUP信号发送给由它创建的各个进程组。</p>
-<p>所以我们在ssh断开连接或者关闭终端时，还在运行的任务会被结束。常用的nohup(1)命令就是在执行的命令时将SIGHUP信号设置为SIG_IGN，这样在终端退出时执行的命令不会结束。</p>
+<p>当控制进程(bash)失去与其终端的连接后，内核会向控制进程发送SIGHUP信号；当控制进程结束时，内核会向该控制进程关联的终端前台进程组发送SIGHUP信号。SIGHUP信号默认的行为是终止进程。bash进程设置了SIGHUP信号的处置函数，在退出前将SIGHUP信号发送给由它创建的所有进程组。</p>
+<p>所以我们在ssh断开连接或者关闭终端时，仍在运行的任务会被结束。常用的nohup(1)命令在执行的命令时将SIGHUP信号设置为SIG_IGN，这样在终端退出时执行的命令不会结束。</p>
 <h2 id=作业控制>作业控制</h2>
 <p>作业控制用来支持一个shell用户同时执行多个命令，其中最多一个命令在前台执行，其余命令在后台运行。命令可以被停止和恢复以及在前后台之间移动。</p>
 <h3 id=在shell中使用作业控制>在shell中使用作业控制</h3>
@@ -348,7 +348,7 @@ $ <span class=nb>jobs</span>
 <span class=o>[</span>1<span class=o>]</span>-  Running                 sleep <span class=m>60</span> <span class=p>&amp;</span>
 <span class=o>[</span>2<span class=o>]</span>+  Stopped                 sleep <span class=m>600</span>
 </code></pre></div><p>使用%num可以引用作业，num为作业号。省略%num则默认指在前台最新被放入后台的作业。</p>
-<p>产生后台作业的方式有<strong>使用ctrl+z向前台进程组发送SIGSTP(和SIGKILL一样不可修改信号默认处理函数)暂停进程并且放入后台</strong>，或者<strong>在命令执行时加上&符号，该命令会立即在后台执行，不会暂停</strong>。可以使用fg %num命令在前台恢复作业号num的任务，也可以使用bg %num命令发送SIGCONT信号来恢复被暂停的作业。通过kill -STOP %num也可以将后台作业暂停。</p>
+<p>产生后台作业的方式有<strong>使用ctrl+z向前台进程组发送SIGSTP(和SIGKILL一样不可修改信号默认处理函数)暂停进程并且放入后台</strong>，或者<strong>在命令执行时加上&符号，该命令会立即在后台执行，不会暂停</strong>。可以使用<code>fg %num</code>命令在前台恢复作业号num的任务，也可以使用<code>bg %num</code>命令发送SIGCONT信号来恢复被暂停的作业。通过<code>kill -STOP %num</code>也可以将后台作业暂停。</p>
 <p>在后台的作业尝试从读取标准输入，就会受到SIGTTIN信号，默认动作就是停止作业。默认情况下，后台作业是可以写入标准输出打印在终端中的。如果终端设置了TOSTOP标志，那么但后台作业尝试输出到终端时会受到SIGTTOU信号，默认动作也时停止作业。</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>$ stty tostop
 $ date <span class=p>&amp;</span>

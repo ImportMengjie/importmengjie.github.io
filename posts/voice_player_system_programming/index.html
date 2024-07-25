@@ -18,7 +18,7 @@
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/voice_player_system_programming/><link rel=prev href=https://importmengjie.github.io/posts/reading_202312-202406/><link rel=next href=https://importmengjie.github.io/posts/the_linux_programming_interface_process/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从音频播放c++类的实现学习Linux系统子进程管理","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/"},"genre":"posts","keywords":"c\u002b\u002b, shell, 系统编程","wordcount":3535,"url":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/","datePublished":"2024-06-25T20:06:55+08:00","dateModified":"2024-06-25T20:06:55+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"从音频播放c++类的实现学习Linux系统子进程管理","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/"},"genre":"posts","keywords":"c\u002b\u002b, shell, 系统编程","wordcount":3555,"url":"https:\/\/importmengjie.github.io\/posts\/voice_player_system_programming\/","datePublished":"2024-06-25T20:06:55+08:00","dateModified":"2024-06-25T20:06:55+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -83,7 +83,7 @@ Cancel
 <div class="toc-content always-active" id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">从音频播放c++类的实现学习Linux系统子进程管理</h1><h2 class=single-subtitle>为了实现一个可以及时停止的音频播放类，学习使用fork、execl、setpgid、waitpid和进程组概念</h2><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/%E5%AE%9E%E8%B7%B5%E5%88%B0%E7%90%86%E8%AE%BA/><i class="far fa-folder fa-fw" aria-hidden=true></i>实践到理论</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-06-25>2024-06-25</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3535 words&nbsp;
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-06-25>2024-06-25</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3555 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;8 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
@@ -109,20 +109,20 @@ Cancel
 </nav></div>
 </div><div class=content id=content><p>为了实现一个可以及时停止的音频播放类，学习使用fork、execl、setpgid、waitpid和进程组概念。</p>
 <h2 id=需求>需求</h2>
-<p>之前车端软件播放音频文件都是在代码中使用popen、system等库函数执行shell命令aplay播放完整的短音频，不需要被打断。而这次的需求需要声音被及时打断，使用popen等库函数皆不能优雅的提前终止，所以有了此次造轮子。其实boost库中有process模块，也能提前终止进程，但是看其示例感觉比较复杂容易使用不当，其中spawn、group等用法让人不看源代码不学习底层原理不敢使用。权衡了一下，总之都要学习一下进程管理，不如自己造个轮子，也能实操加深理解。</p>
+<p>之前车端软件播放音频文件都是在代码中使用popen、system等库函数执行shell命令<code>aplay</code>播放完整的短音频，不需要被打断。而这次的需求需要声音被及时打断，使用popen等库函数皆不能优雅的提前终止，所以有了此次造轮子的行为。其实boost库中有process模块，也能提前终止进程，但是看其示例感觉比较复杂容易使用不当，其中spawn、group等用法让人不看源代码、不学习底层原理，就不敢轻易使用。权衡了一下，总之都要学习一下进程管理，不如自己造个轮子，也能实操加深理解。</p>
 <h2 id=代码分析>代码分析</h2>
 <p>代码的地址在<a href=https://github.com/ImportMengjie/recipes/blob/main/test/popen/shell_process.cc target=_blank rel="noopener noreffer">这里</a></p>
 <h3 id=打断播放的音频进程组的应用>打断播放的音频：进程组的应用</h3>
 <p>在遇到另一篇文章中<a href=/posts/troubleshooting_guide_1/#popen%e5%90%8e%e5%8f%b0%e7%ac%a6%e5%8f%b7%e5%af%bc%e8%87%b4%e5%83%b5%e5%b0%b8%e8%bf%9b%e7%a8%8b rel>问题诊断: 小手册系列「1」</a>的“popen后台符号&导致僵尸进程”问题时，我就观察到用<code>popen</code>执行非内建命令时会至少两个进程，一个是<code>/bin/sh</code>，另一个才是输入命令的进程，并且如果执行<code>kill</code>命令杀死<code>/bin/sh</code>进程并不会导致输入命令的进程退出。原因是<code>popen</code>内部先创建shell进程将用户命令作为参数传给shell进程执行，shell进程会创建子进程执行实际的命令，而kill父进程的pid不会将信号发给子进程。</p>
-<p>对于本需求需要主动结束播放音频进程，如果使用<code>popen</code>则难以获取播放音频进程的pid；如果使用<code>fork</code>、<code>exec*</code>系统调用创建子进程可以拿到子进程id，当然可以直接<code>exec*</code>创建播放音频进程并且拿到其pid，通过kill函数可以提前终止。而播放音频命令<code>aplay</code>不支持循环播放，这种做法需要在外部进行循环调用并不优雅，而且假设播放音频命令也创建子进程，kill命令不能结束子进程，可能会造成资源的泄漏。所以打算和<code>popen</code>一样执行shell命令，可以使用<code>while</code>等命令实现循环调用，使用<strong>进程组使得可以将结束信号发给shell进程和其子进程</strong>。</p>
+<p>对于本需求需要主动结束播放音频进程，如果使用<code>popen</code>则难以获取播放音频进程的pid；如果使用<code>fork</code>和<code>exec*</code>系统调用创建子进程可以拿到子进程id，当然可以直接<code>exec*</code>创建播放音频进程并且拿到其pid，通过kill函数可以提前终止。而播放音频命令<code>aplay</code>不支持循环播放，这种做法需要在外部进行循环调用并不优雅，而且假设播放音频命令也创建子进程，kill命令不能结束子进程，可能会造成资源的泄漏。所以打算和<code>popen</code>一样执行shell命令，可以使用<code>while</code>等命令实现循环调用，使用<strong>进程组就可以将结束信号发给shell进程和其子进程</strong>。</p>
 <p>下面主要介绍下进程组概念，进程组和会话主要用于shell作业控制。</p>
-<p>进程组由一个或多个共享同一进程组标识符（PGID）的进程组成，进程组标识符（PGID）等于首次创建进程组的进程pid，其生命周期为创建时刻到最后一个进程退出进程组，在其生命周期不会有和PGID相同的pid分配给新进程。<strong>子进程会继承父进程的进程组</strong>。</p>
+<p>进程组由一个或多个共享同一进程组标识符（PGID）的进程组成，进程组标识符（PGID）等于首次创建进程组的进程pid，其生命周期为创建时刻开始，持续到最后一个进程退出进程组，在其生命周期不会有和PGID相同的pid分配给新进程。<strong>子进程会继承父进程的进程组</strong>。</p>
 <p>会话则是一组进程组的集合。进程的会话成员关系是由其会话标识符（SID）确定的，会话标识符也是会话创建进程的pid。下图来自<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>，表示了进程组和会话之间的关系。</p>
 <p><figure><a class=lightgallery href=/images/voice_player_system_programming/process_group.png title=进程组、会话和控制终端之间的关系进程组 data-thumbnail=/images/voice_player_system_programming/process_group.png data-sub-html="<h2>进程组、会话和控制终端之间的关系进程组</h2><p>进程组、会话和控制终端之间的关系进程组</p>">
 <img class=lazyload src=/svg/loading.min.svg data-src=/images/voice_player_system_programming/process_group.png data-srcset="/images/voice_player_system_programming/process_group.png, /images/voice_player_system_programming/process_group.png 1.5x, /images/voice_player_system_programming/process_group.png 2x" data-sizes=auto alt=/images/voice_player_system_programming/process_group.png>
 </a><figcaption class=image-caption>进程组、会话和控制终端之间的关系进程组</figcaption>
 </figure></p>
-<p>上图可以看到像<code>sort &lt; file | uniq -c</code>带有管道的命令会创建两个进程且在同一进程组，这样我们在前台执行ctrl+c时的终端会通过<code>killpg</code>将信号发送给进程组中的每个进程，从而结束这条命令。利用这个特点，我们可以<code>fork</code>后的子进程设置其为进程组的首进程，在父进程就可以通过<code>killpg</code>杀死子进程和其产生的子进程，从而达到目的。</p>
+<p>上图可以看到像<code>sort &lt; file | uniq -c</code>带有管道的命令会创建两个进程且在同一进程组，这样我们在前台执行ctrl+c时的终端会通过<code>killpg</code>将信号发送给进程组中的每个进程，从而结束这条命令。利用这个特点，我们可以<code>fork</code>后的子进程设置其为进程组的首进程，在父进程就可以通过<code>killpg</code>发送信号，杀死子进程和其产生的子进程，从而达到目的。</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=n>pid_t</span> <span class=nf>exec</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>cmd</span><span class=p>)</span> <span class=p>{</span>
     <span class=n>LogStringStream</span> <span class=n>log_ss</span><span class=p>;</span>
     <span class=n>log_ss</span> <span class=o>&lt;&lt;</span> <span class=n>__PRETTY_FUNCTION__</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, cmd: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>cmd</span><span class=p>;</span>
@@ -144,13 +144,13 @@ Cancel
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
 </span><span class=cp></span>
 <span class=kt>int</span> <span class=nf>setpgid</span><span class=p>(</span><span class=n>pid_t</span> <span class=n>pid</span><span class=p>,</span> <span class=n>pid_t</span> <span class=n>pgid</span><span class=p>);</span>
-</code></pre></div><p>如果将pid的值设置为0，那么就是设置调用进程的进程组。如果将pgid的值设置为0，那么设置的进程组pgid等于调用进程的pid。所以在<code>fork</code>后的子进程中可以直接调用<code>::setpgid(0, 0);</code>将自己设置为进程组的首进程，即其pid==pgid，从而使得其创建的子进程都继承其进程组id。父进程即可通过<code>killpg(pid, sig)</code>向/bin/sh进程和其产生的子进程发送sig信号。一个进程在其子进程已经执行exec()后就无法修改该子进程的进程组pgid了。</p>
-<p>需要特别注意的是在父进程也调用了<code>::setpgid(pid, pid)</code>，重复设置子进程的进程组id。这是进程安全的做法，由于<code>fork</code>后子进程和父进程执行顺序不确定，如果不在父进程设置，则可能出现子进程还没设置线程组，而父进程就对线程组调用诸如<code>killpg</code>等命令造成并发问题。所以在父进程调用是很有必要的。</p>
+</code></pre></div><p>如果将pid的值设置为0，那么就会设置调用进程的进程组。如果将pgid的值设置为0，那么设置的进程组pgid等于调用进程的pid。所以在<code>fork</code>后的子进程中可以直接调用<code>::setpgid(0, 0);</code>将自己设置为进程组的首进程，即其pid==pgid，从而使得其创建的子进程都继承其进程组id。父进程即可通过<code>killpg(pid, sig)</code>向/bin/sh进程和其产生的子进程发送sig信号。一个进程在其子进程已经执行exec()后就无法修改该子进程的进程组pgid了。</p>
+<p>需要特别注意的是在父进程也调用了<code>::setpgid(pid, pid)</code>，重复设置子进程的进程组id。这是进程安全的做法，由于<code>fork</code>后子进程和父进程执行顺序不确定，如果只在子进程设置，可能出现子进程还没设置其线程组，而父进程就对线程组调用诸如<code>killpg</code>等命令造成并发问题。所以在父进程调用是很有必要的。</p>
 <blockquote>
 <p>-c选项shell会直接执行该命令，而不是创建一个子shell进程。</p>
 </blockquote>
 <h3 id=程序崩溃时音频自动停止>程序崩溃时音频自动停止</h3>
-<p>在循环播放音频时，父进程崩溃则不会影响到子进程继续执行，此时声音就会一直被播放，这是不能被接受的。所以考虑在循环执行播放命令时做判断其父进程是否存在。</p>
+<p>在循环播放音频时，如果父进程崩溃，并不会影响到子进程继续执行，此时声音就会一直被播放，这是不能被接受的。所以考虑在循环执行播放命令时做判断其父进程是否存在。</p>
 <p>我的实现如下，通过持续判断当前进程的父进程(/proc/$$/stat文件中动态更新)是否等于进程创建时的父进程id($PPID)来判断父进程是否活着，如果父进程崩溃了，该子进程会被系统进程收养，其父进程id会改变。之所以没有直接判断$PPID进程是否还存在是因为在$PPID可能被其它进程分配到，此时虽然主进程已经崩溃，但是$PPID却还存在。</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=k>while</span> <span class=o>[</span> <span class=nv>$PPID</span> -eq <span class=k>$(</span>cut -d <span class=s1>&#39; &#39;</span> -f <span class=m>4</span> /proc/<span class=nv>$$</span>/stat<span class=k>)</span> <span class=o>]</span><span class=p>;</span> <span class=k>do</span> 
     aplay voice_path

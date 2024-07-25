@@ -18,7 +18,7 @@
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/><link rel=prev href=https://importmengjie.github.io/posts/the_linux_programming_interface_process/><link rel=next href=https://importmengjie.github.io/posts/v4l2_learning_1/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
 <noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":8146,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/","datePublished":"2024-07-11T22:34:45+08:00","dateModified":"2024-07-11T22:34:45+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":8157,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_signal\/","datePublished":"2024-07-11T22:34:45+08:00","dateModified":"2024-07-11T22:34:45+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
 <body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
 <div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
 <div class=header-wrapper>
@@ -83,7 +83,7 @@ Cancel
 <div class="toc-content always-active" id=toc-content-auto></div>
 </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】</h1><div class=post-meta>
 <div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/><i class="far fa-folder fa-fw" aria-hidden=true></i>《Linux/UNIX系统编程手册》读书笔记</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-11>2024-07-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;8146 words&nbsp;
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-11>2024-07-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;8157 words&nbsp;
 <i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;17 minutes&nbsp;
 <span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
 <span id=busuanzi_value_page_pv></span>&nbsp;views</span>
@@ -142,9 +142,9 @@ Cancel
 <ul>
 <li>SIGABRT(6): 但进程主动调用abort()函数时，系统向进程发送该信号。默认情况下会终止进程并且产生coredump文件。</li>
 <li>SIGALRAM(14): 调用alram()或setitimer()设置的定时器到期，内核将产生该信号，默认行为是终止进程。</li>
-<li><strong>硬件异常产生的信号:以下信号不可被忽略或阻塞或从信号处置函数中正常返回，否则会产生未定义的行为。</strong>
+<li>**硬件异常产生的信号不可被忽略、阻塞或从信号处置函数中正常返回，否则会产生未定义的行为。**以下是硬件异常产生的信号。
 <ul>
-<li>SIGBUG( 7): 总线错误，对内存地址的引用不合法。</li>
+<li>SIGBUS( 7): 总线错误，对内存地址的引用不合法。</li>
 <li>SIGSEGV(11): 对内存地址的引用不合法。</li>
 <li>SIGFPE( 8): 算术错误，比如除以0。</li>
 <li>SIGILL( 4): 进程试图执行非法(格式不正确)的机器语言指令。</li>
@@ -184,7 +184,7 @@ Cancel
 <p>在《Linux多线程服务端编程：使用muduo C++网络库》<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>中给出了多线程使用信号的建议，包括:</p>
 <ul>
 <li>不要用signal作为IPC手段，包括不要使用SIGUSR1等信号来触发服务端的行为。</li>
-<li>不要使用基于signal实现的定时函数，包括alarm/ualram/setitimer/timer_create/sleep/usleep等等。</li>
+<li>不要使用基于signal实现的定时函数，包括alarm/ualarm/setitimer/timer_create/sleep/usleep等等。</li>
 <li>不主动处理各种异常信号，只用默认语义: 结束进程。除了一个例外SIGPIPE，服务器程序通常忽略此信号。</li>
 <li>在没有别的替代方法的情况下，比方说需要处理SIGCHLD信号，可以把异步信号转换成同步的文件描述符事件。传统做法是在signal_handler里往特定的pipe(2)写一个字节，主进程从中读取事件，从而将其纳入到统一的IO事件处理框架之中。现代的Linux增加了signalfd(2)把信号直接转换曾文件描述符事件，从而从根本上避免使用signal_handler。</li>
 </ul>
@@ -201,7 +201,7 @@ Cancel
 </ul>
 <p>可以通过kill()检查另一个进程是否存在，将参数sig指定为0，则不会发送信号影响另一个进程。若调用失败且errno为ESRCH表明进程不存在。若调用失败且errno为EPERM，表明进存在但调用进程无权向目标进程发送信号，或者调用成功，都表示进程存在。</p>
 <h4 id=向自身发送信号-raise>向自身发送信号: raise</h4>
-<p>进程向自身发送信号可以调用raise()函数，其定义如下:</p>
+<p>进程可以调用raise()函数向自身发送信号，其定义如下:</p>
 <div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;signal.h&gt;</span><span class=cp>
 </span><span class=cp></span><span class=kt>int</span> <span class=nf>raise</span><span class=p>(</span><span class=kt>int</span> <span class=n>sig</span><span class=p>);</span>
 </code></pre></div><p>在单线程程序中，调用raise()相当于调用kill(getpid(), sig)。而对于多线程程序，则相当于pthread_kill(pthread_self(), sig)意味着<strong>将信号传递给调用raise()的线程，而不是kill(getpid(), sig)会传递给任意线程。</strong></p>
@@ -221,7 +221,7 @@ Cancel
 </a><figcaption class=image-caption>对多个解除信号的传递</figcaption>
 </figure></p>
 <h2 id=设置信号处置函数>设置信号处置函数</h2>
-<p>UNIX系统提供了两种方法改变信号处置函数: signal()和sigaction()。signal()系统调用时设置信号处置的原始API，比sigaction()简单。当然sigaction()提供了signal()所不具备的功能。signal()在不同的UNIX实现之间存在差异，所以对于可移植性有追求的程序应该使用sigaction()。</p>
+<p>UNIX系统对改变信号处置函数提供了两种方法: signal()和sigaction()。signal()系统调用时设置信号处置的原始API，比sigaction()简单。当然sigaction()提供了signal()所不具备的功能。signal()在不同的UNIX实现之间存在差异，所以对于可移植性有追求的程序应该使用sigaction()。</p>
 <h3 id=signal>signal()</h3>
 <blockquote>
 <p>signal()函数虽然记录在Linux手册页的第2部分，但实际被实现为基于sigaction()系统调用的glibc库函数。</p>
@@ -498,7 +498,7 @@ Cancel
 <li>用于将进程挂起指定时间的系统调用和库函数：sleep()、nanosleep()和clock_nanosleep()。</li>
 <li>特意设计用来等待某一信号到达的系统调用：pause()、sigsuspend()、sigtimedwait()和sigwaitinfo()。</li>
 </ul>
-<p>在Linux上进程因为信号(SIGSTOP、SIGSTP等)而停止后又受到SIGCONT信号而继续执行时，也会使得某些系统调用产生EINTR错误。以下的系统调用和函数存在这一行为: epoll_pwait()、epoll_wait()、对 inotify 文件描述符执行的read()调用、semop()、semtimedop()、sigtimedwait()和 sigwaitinfo()。故在使用这些函数时需要添加代码来重新启动这些系统调用，即使程序未设置信号处置函数。</p>
+<p>在Linux上进程因为信号(SIGSTOP、SIGSTP等)而停止后又受到SIGCONT信号继续执行时，也会使得某些系统调用产生EINTR错误。以下系统调用和函数存在这一行为: epoll_pwait()、epoll_wait()、对 inotify 文件描述符执行的read()调用、semop()、semtimedop()、sigtimedwait()和 sigwaitinfo()。故在使用这些函数时需要添加代码来重新启动这些系统调用，即使程序未设置信号处置函数。</p>
 <hr>
 <h2 id=参考>参考</h2>
 <section class=footnotes role=doc-endnotes>
