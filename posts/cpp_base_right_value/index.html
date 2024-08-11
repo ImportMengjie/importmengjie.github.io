@@ -1,0 +1,322 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>右值、右值引用、万能引用与完美转发 - c++基础 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="右值、右值引用、万能引用与完美转发 - c++基础">
+<meta property="og:description" content="右值引用是c++11标准提出的非常重要概念，正确使用可以提升执行效率。此前已经系统看过很多遍，可惜看一遍忘一遍。此次系统学习记录下来，供日后回忆。主要参考《现代C++语言核心特性解析》和《Effective Modern C++》。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/cpp_base_right_value/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2024-08-11T10:38:25+08:00">
+<meta property="article:modified_time" content="2024-08-11T10:38:25+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="右值、右值引用、万能引用与完美转发 - c++基础">
+<meta name=twitter:description content="右值引用是c++11标准提出的非常重要概念，正确使用可以提升执行效率。此前已经系统看过很多遍，可惜看一遍忘一遍。此次系统学习记录下来，供日后回忆。主要参考《现代C++语言核心特性解析》和《Effective Modern C++》。">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/cpp_base_right_value/><link rel=prev href=https://importmengjie.github.io/posts/design_patterns_1/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"右值、右值引用、万能引用与完美转发 - c++基础","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/cpp_base_right_value\/"},"genre":"posts","keywords":"c\u002b\u002b","wordcount":3050,"url":"https:\/\/importmengjie.github.io\/posts\/cpp_base_right_value\/","datePublished":"2024-08-11T10:38:25+08:00","dateModified":"2024-08-11T10:38:25+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class="toc-content always-active" id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">右值、右值引用、万能引用与完美转发 - c++基础</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/c++%E5%9F%BA%E7%A1%80/><i class="far fa-folder fa-fw" aria-hidden=true></i>c++基础</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-08-11>2024-08-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3050 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;7 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#左值和右值>左值和右值</a>
+<ul>
+<li><a href=#值类别>值类别</a></li>
+</ul>
+</li>
+<li><a href=#左值引用和右值引用>左值引用和右值引用</a>
+<ul>
+<li><a href=#左值引用>左值引用</a></li>
+<li><a href=#右值引用>右值引用</a></li>
+</ul>
+</li>
+<li><a href=#万能引用与完美转发>万能引用与完美转发</a>
+<ul>
+<li><a href=#万能引用>万能引用</a></li>
+<li><a href=#完美转发>完美转发</a></li>
+</ul>
+</li>
+<li><a href=#参考>参考</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><p>右值引用是c++11标准提出的非常重要概念，正确使用可以提升执行效率。此前已经系统看过很多遍，可惜看一遍忘一遍。此次系统学习记录下来，供日后回忆。主要参考《现代C++语言核心特性解析》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>和《Effective Modern C++》<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>。</p>
+<h2 id=左值和右值>左值和右值</h2>
+<p>在c语言或者早期的c++可以从字面理解，在等式左边的值为左值，等式右边的值为右值。一个变量作为左值时，表示对变量地址的引用，即可以修改变量的值；一个变量作为右值时，表示变量的内容，即可以将变量的值赋给等号左边的左值。</p>
+<p>而在现代c++11中，对左右值进行重新定义: <strong>左值一般是指一个指向特定内存的具有名称的值（具名对象），它有一个相对稳定的内存地址，并且有一段较长的生命周期。而右值则是不指向稳定内存地址的匿名值（不具名对象），它的生命周期很短，通常是暂时性的</strong>。可以通过能否用取地址符&来区分左值和右值。</p>
+<p>有一些情况下左右值的判断可能会反直觉。</p>
+<ol>
+<li>
+<p>在<a href=/posts/dont-even-know-that_1/#i%e5%92%8ci%e7%9a%84%e5%b7%a6%e5%8f%b3%e5%80%bc%e9%97%ae%e9%a2%98 rel>另一篇</a>文章讨论的++i和i++的左右值问题: <code>++i</code>则是左值，直接对i进行递增后返回自身。如果对它们进行取地址操作，可以发现<code>++i</code>的取地址编译通过，而<code>i++</code>不可以。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+<span class=kt>int</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=o>&amp;</span><span class=n>i</span><span class=o>++</span><span class=p>;</span> <span class=c1>// 编译失败
+</span><span class=c1></span><span class=kt>int</span> <span class=o>*</span><span class=n>q</span> <span class=o>=</span> <span class=o>&amp;++</span><span class=n>i</span><span class=p>;</span> <span class=c1>// 编译成功
+</span></code></pre></div></li>
+<li>
+<p>通常字面量都是右值，<strong>但是字符字面量却是左值</strong>。编译器会将字符字面量放入程序的.rodata只读数据段中，程序加载时会放入内存空间中，并且和程序有一样的生命周期，故可以用&取地址，字符字面量也算左值。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>auto</span> <span class=n>p</span> <span class=o>=</span> <span class=o>&amp;</span><span class=s>&#34;hello world&#34;</span><span class=p>;</span>
+</code></pre></div></li>
+<li>
+<p><strong>右值引用其本身是左值</strong>。右值引用可以被取地址，进一步说右值引用绑定右值会延长右值的生命周期。</p>
+</li>
+<li>
+<p><strong>使用类型转换将左值转换为该类型的右值引用，该值将会被转换成右值</strong>。如下的例子，<strong>std::move和static_cast(Type&&)是一样的作用</strong>。会在后边的值类别详细介绍。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>int</span> <span class=n>a</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+<span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=o>&amp;</span><span class=n>a</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+<span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=o>&amp;</span><span class=k>static_cast</span><span class=p>(</span><span class=kt>int</span><span class=o>&amp;&amp;</span><span class=p>)(</span><span class=n>a</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span> <span class=c1>// 编译错误，右值不能取地址
+</span><span class=c1></span><span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=o>&amp;</span><span class=n>std</span><span class=o>::</span><span class=n>move</span><span class=p>(</span><span class=n>a</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>          <span class=c1>// 编译错误，右值不能取地址，std::move同上作用一样
+</span></code></pre></div></li>
+</ol>
+<h3 id=值类别>值类别</h3>
+<p>左值右值的分类在c++17标准中进行了清晰的定义，如下图，引入了多种值类别。这些类别概念比较偏学术，我们只需有个简单认识: 左值(lvalue)即上述我们所讨论的左值；右值(rvlaue)也是上述讨论的右值，但其又分为两种类别: 1. 纯右值(prvalue)即通常意义我们理解的右值，如字面量、临时变量等。2. 将亡值(xvalue)的新概念，下面详细讲述。</p>
+<p><figure><a class=lightgallery href=/images/cpp_right_value/l_x_pr_value.jpeg title=值类别 data-thumbnail=/images/cpp_right_value/l_x_pr_value.jpeg data-sub-html="<h2>值类别</h2><p>值类别</p>">
+<img class=lazyload src=/svg/loading.min.svg data-src=/images/cpp_right_value/l_x_pr_value.jpeg data-srcset="/images/cpp_right_value/l_x_pr_value.jpeg, /images/cpp_right_value/l_x_pr_value.jpeg 1.5x, /images/cpp_right_value/l_x_pr_value.jpeg 2x" data-sizes=auto alt=/images/cpp_right_value/l_x_pr_value.jpeg>
+</a><figcaption class=image-caption>值类别</figcaption>
+</figure></p>
+<p>将亡值是右值的一种类型，产生将亡值有如下两种。</p>
+<ol>
+<li>
+<p><strong>使用类型转换将值转换成该类型的右值引用，将产生将亡值(右值)</strong>。即上述第4点使用std::move和static_cast(Type&&)可以将左值转换成将亡值即右值。</p>
+</li>
+<li>
+<p>在c++17标准中引入，又称为临时量实质化，<strong>每当纯右值出现在一个需要泛左值的地方时，临时量实质化都会发生</strong>。例如，如下代码。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>struct</span> <span class=nc>X</span> <span class=p>{</span>
+  <span class=kt>int</span> <span class=n>a</span><span class=p>;</span>
+<span class=p>};</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>X</span><span class=p>().</span><span class=n>a</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p>由于X()是一个纯右值，访问其成员变量a需要一个泛左值，所以这里发生临时量实质化，将X()转化成将亡值，然后再访问其成员变量a。标准定义的该方式产生的将亡值，感觉是为了标准定义的统一，对于实际开发并无影响。</p>
+</li>
+</ol>
+<h2 id=左值引用和右值引用>左值引用和右值引用</h2>
+<p>引用是c++中引入的新概念，c语言中没有。不同于指针，引用在初始化时必须绑定对象，绑定后也无法绑定其它对象。c++中的引用语义是<strong>对象的别名</strong>，而java等语言的引用的语义更像是指针。</p>
+<h3 id=左值引用>左值引用</h3>
+<p>左值引用只能引用左值，而常量的左值引用不仅可以引用左值，也能引用右值，并且延长右值的生命周期，比如:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>int</span> <span class=o>&amp;</span><span class=n>x</span> <span class=o>=</span> <span class=mi>7</span><span class=p>;</span> <span class=c1>// 编译失败，左值引用不能引用右值
+</span><span class=c1></span><span class=k>const</span> <span class=kt>int</span> <span class=o>&amp;</span><span class=n>y</span> <span class=o>=</span> <span class=mi>11</span><span class=p>;</span> <span class=c1>// 编译成功，常量的左值引用可以引用右值，并且延长其生命周期
+</span></code></pre></div><p>声明一个函数的入参时，拷贝开销大则应该声明为常量的左值引用，比如:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>void</span> <span class=nf>handle</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>str</span><span class=p>);</span>
+
+<span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>s</span><span class=p>{</span><span class=s>&#34;hello&#34;</span><span class=p>};</span>
+<span class=n>handle</span><span class=p>(</span><span class=n>s</span><span class=p>);</span> <span class=c1>// 绑定左值
+</span><span class=c1></span><span class=n>handle</span><span class=p>(</span><span class=s>&#34;world&#34;</span><span class=p>);</span> <span class=c1>// 绑定右值
+</span></code></pre></div><p>而<strong>对于拷贝开销小于实现引用的开销，声明函数应该使用值拷贝而不是引用</strong>，此时使用引用会造成性能的下降而不是提高，比如:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>void</span> <span class=nf>handle</span><span class=p>(</span><span class=kt>int</span> <span class=n>str</span><span class=p>);</span>
+
+<span class=kt>int</span> <span class=n>a</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+<span class=n>handle</span><span class=p>(</span><span class=n>a</span><span class=p>);</span> <span class=c1>// 复制左值
+</span><span class=c1></span><span class=n>handle</span><span class=p>(</span><span class=mi>2</span><span class=p>);</span> <span class=c1>// 复制右值
+</span></code></pre></div><h3 id=右值引用>右值引用</h3>
+<p><strong>右值引用只能引用右值，并且可以延长右值的生命周期</strong>。相比于常量的左值引用没有常量的限制。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>int</span> <span class=n>val</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+<span class=kt>int</span> <span class=o>&amp;&amp;</span><span class=n>i</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>              <span class=c1>// 编译成功，字面量1是右值
+</span><span class=c1></span><span class=kt>int</span> <span class=o>&amp;&amp;</span><span class=n>j</span> <span class=o>=</span> <span class=n>val</span><span class=p>;</span>            <span class=c1>// 编译失败，右值引用不可引用左值
+</span><span class=c1></span><span class=kt>int</span> <span class=o>&amp;&amp;</span><span class=n>k</span> <span class=o>=</span> <span class=n>std</span><span class=o>::</span><span class=n>move</span><span class=p>(</span><span class=n>val</span><span class=p>);</span> <span class=c1>// 编译成功，std::move(val)是左值
+</span><span class=c1></span><span class=kt>int</span> <span class=o>&amp;&amp;</span><span class=n>l</span> <span class=o>=</span> <span class=n>i</span><span class=p>;</span>              <span class=c1>// 编译失败，i为右值引用是左值
+</span></code></pre></div><p><strong>结合上边的值类别讨论和右值引用，会带来非常反直觉的地方，当使用右值引用变量调用函数时，并不会选择入参类型为右值引用的重载函数，因为右值引用本身为左值而右值引用只能绑定右值</strong>。如下代码示例。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>void</span> <span class=nf>func</span><span class=p>(</span><span class=kt>int</span> <span class=o>&amp;&amp;</span><span class=n>x</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;int &amp;&amp;x: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>x</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+<span class=p>}</span>
+
+<span class=kt>void</span> <span class=nf>func</span><span class=p>(</span><span class=kt>int</span> <span class=o>&amp;</span><span class=n>x</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;int &amp;x: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>x</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=kt>int</span> <span class=n>val</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+  <span class=kt>int</span> <span class=o>&amp;</span><span class=n>left_ref</span> <span class=o>=</span> <span class=n>val</span><span class=p>;</span>
+  <span class=kt>int</span> <span class=o>&amp;&amp;</span><span class=n>right_ref</span> <span class=o>=</span> <span class=mi>2</span><span class=p>;</span>
+  <span class=n>func</span><span class=p>(</span><span class=n>left_ref</span><span class=p>);</span>             <span class=c1>// int &amp;x: 1
+</span><span class=c1></span>  <span class=n>func</span><span class=p>(</span><span class=n>right_ref</span><span class=p>);</span>            <span class=c1>// int &amp;x: 2
+</span><span class=c1></span>  <span class=n>func</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>move</span><span class=p>(</span><span class=n>left_ref</span><span class=p>));</span>  <span class=c1>// int &amp;&amp;x: 1
+</span><span class=c1></span>  <span class=n>func</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>move</span><span class=p>(</span><span class=n>right_ref</span><span class=p>));</span> <span class=c1>// int &amp;&amp;x: 2
+</span><span class=c1></span>  <span class=n>func</span><span class=p>(</span><span class=mi>3</span><span class=p>);</span>                    <span class=c1>// int &amp;&amp;x: 3
+</span><span class=c1></span><span class=p>}</span>
+</code></pre></div><h2 id=万能引用与完美转发>万能引用与完美转发</h2>
+<h3 id=万能引用>万能引用</h3>
+<p>左值引用只能绑定左值，右值引用只能绑定右值，常量左值引用可以绑定左值和右值，但其常量性有一定的限制。<strong>万能引用既可以绑定左值也可以绑定右值，也可绑定含有const和volatile属性的值</strong>。</p>
+<p>万能引用<strong>只有如下两种形式</strong>:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=c1>// 1. param是个万能引用
+</span><span class=c1></span><span class=k>template</span><span class=o>&lt;</span><span class=k>typename</span> <span class=n>T</span><span class=o>&gt;</span>
+<span class=kt>void</span> <span class=n>f</span><span class=p>(</span><span class=n>T</span><span class=o>&amp;&amp;</span> <span class=n>param</span><span class=p>);</span>
+
+<span class=c1>// 2. var是个万能引用
+</span><span class=c1></span><span class=k>auto</span><span class=o>&amp;&amp;</span> <span class=n>var</span> <span class=o>=</span> <span class=n>var1</span><span class=p>;</span>
+</code></pre></div><p>如下都<strong>不是万能引用</strong>:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>template</span><span class=o>&lt;</span><span class=k>typename</span> <span class=n>T</span><span class=o>&gt;</span>
+<span class=kt>void</span> <span class=n>f</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;&amp;&amp;</span> <span class=n>param</span><span class=p>);</span> <span class=c1>// param不是万能引用
+</span><span class=c1></span>
+<span class=k>template</span><span class=o>&lt;</span><span class=k>typename</span> <span class=n>T</span><span class=o>&gt;</span>
+<span class=kt>void</span> <span class=n>f</span><span class=p>(</span><span class=k>const</span> <span class=n>T</span><span class=o>&amp;&amp;</span> <span class=n>param</span><span class=p>);</span> <span class=c1>// param不是万能引用
+</span><span class=c1></span>
+<span class=k>template</span><span class=o>&lt;</span><span class=k>typename</span> <span class=n>T</span><span class=o>&gt;</span>
+<span class=k>class</span> <span class=nc>X</span> <span class=p>{</span>
+  <span class=kt>void</span> <span class=nf>f</span><span class=p>(</span><span class=n>T</span><span class=o>&amp;&amp;</span> <span class=n>param</span><span class=p>);</span> <span class=c1>// param不是万能引用, 类型推导在类实例化时确定，而不在函数调用处实例化
+</span><span class=c1></span><span class=p>}</span>
+
+</code></pre></div><h4 id=万能引用推导>万能引用推导</h4>
+<p>下面叙述如何万能引用如何推导达到既可以绑定左值也可以绑定右值。</p>
+<p>首先需要了解<strong>引用折叠</strong>概念，简单来讲只要有左值引用参与，最后推导结果就是左值引用类型，否则被推导成右值引用类型。下面看下参数为万能引用的f函数，传入不同的int值类型的推导过程。</p>
+<p>当左值传递给万能引用时，模版类型T被推导成该类型的左值引用。如下，则T被推导成int&类型，根据引用折叠规则，最终的参数param类型为int&类型。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>template</span><span class=o>&lt;</span><span class=k>typename</span> <span class=n>T</span><span class=o>&gt;</span>
+<span class=kt>void</span> <span class=n>f</span><span class=p>(</span><span class=n>T</span><span class=o>&amp;&amp;</span> <span class=n>param</span><span class=p>);</span>
+
+<span class=c1>// T被推导为int&amp;
+</span><span class=c1></span><span class=kt>void</span> <span class=nf>f</span><span class=p>(</span><span class=kt>int</span><span class=o>&amp;</span> <span class=o>&amp;&amp;</span> <span class=n>param</span><span class=p>);</span> <span class=c1>// 根据引用折叠被最终的函数签名为void f(int&amp; param)
+</span></code></pre></div><p>同上边的反直觉地方，这里传入右值引用也会被当做左值来处理，故如下几种情况都是左值传递，推导过程如上。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>int</span> <span class=n>val</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+<span class=kt>int</span><span class=o>&amp;</span> <span class=n>left_ref</span> <span class=o>=</span> <span class=n>val</span><span class=p>;</span>
+<span class=kt>int</span><span class=o>&amp;&amp;</span> <span class=n>right_ref</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+
+<span class=n>f</span><span class=p>(</span><span class=n>left_ref</span><span class=p>);</span> <span class=c1>// 最终param的类型为左值引用
+</span><span class=c1></span><span class=n>f</span><span class=p>(</span><span class=n>right_ref</span><span class=p>);</span><span class=c1>// 最终param的类型为左值引用
+</span></code></pre></div><p>而当右值传递给万能引用时，模版类型T被推导成该类型的非引用类型。如下，则T被推导成int类型，最终的参数param的类型为int&&类型，即右值引用类型。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>template</span><span class=o>&lt;</span><span class=k>typename</span> <span class=n>T</span><span class=o>&gt;</span>
+<span class=kt>void</span> <span class=n>f</span><span class=p>(</span><span class=n>T</span><span class=o>&amp;&amp;</span> <span class=n>param</span><span class=p>);</span>
+
+<span class=c1>// T被推导成int
+</span><span class=c1></span><span class=kt>void</span> <span class=nf>f</span><span class=p>(</span><span class=kt>int</span><span class=o>&amp;&amp;</span> <span class=n>param</span><span class=p>);</span>
+</code></pre></div><h3 id=完美转发>完美转发</h3>
+<p>std::move是无条件将传入的值转换成右值(将亡值)，而std::forward则根据传入的参数类型决定是否转换成右值(将亡值)，具体来讲就是右值转换成右值(将亡值)，左值转换成左值。</p>
+<p>std::forward也是一种转换，运行期不执行任何操作。如下，std::forward如同调用<code>static_cast&lt;T&&></code>转换。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=k>template</span><span class=o>&lt;</span><span class=k>typename</span> <span class=n>T</span><span class=o>&gt;</span>
+<span class=kt>void</span> <span class=n>forward_func</span><span class=p>(</span><span class=n>T</span><span class=o>&amp;&amp;</span> <span class=n>v</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>func</span><span class=p>(</span><span class=k>static_cast</span><span class=o>&lt;</span><span class=n>T</span><span class=o>&amp;&amp;&gt;</span><span class=p>(</span><span class=n>v</span><span class=p>));</span> <span class=c1>// 和func(std::forward&lt;T&gt;(v)); 效果一样
+</span><span class=c1></span><span class=p>}</span>
+</code></pre></div><p><code>static_cast&lt;T&&></code>当传入的参数为左值时，T被推导为左值引用，根据引用折叠最终为<code>static_cast&lt;T&></code>；而当传入参数为右值时，T被推导成非引用的T类型，最终为<code>static_cast&lt;T&&></code>。</p>
+<hr>
+<h2 id=参考>参考</h2>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/35602582/ target=_blank rel="noopener noreffer">《现代C++语言核心特性解析》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:2 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/30178902/ target=_blank rel="noopener noreffer">《Effective Modern C++》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2024-08-11</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/cpp_base_right_value/ data-title="右值、右值引用、万能引用与完美转发 - c++基础" data-hashtags=c++><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/cpp_base_right_value/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/cpp_base_right_value/ data-title="右值、右值引用、万能引用与完美转发 - c++基础"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/cpp_base_right_value/ data-title="右值、右值引用、万能引用与完美转发 - c++基础"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/cpp_base_right_value/ data-title="右值、右值引用、万能引用与完美转发 - c++基础"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c++/>c++</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/design_patterns_1/ class=prev rel=prev title="设计模式基础 - 《设计模式的艺术》读书笔记【1】"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>设计模式基础 - 《设计模式的艺术》读书笔记【1】</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.485ce22971162ae594e2f22468d97519fb9c08a7112e3a012e8684cfe098b474.js integrity="sha256-SFziKXEWKuWU4vIkaNl1GfucCKcRLjoBLoaEz+CYtHQ="></script></body>
+</html>
