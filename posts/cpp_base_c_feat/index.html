@@ -1,0 +1,450 @@
+<!doctype html><html lang=zh-cn>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=robots content="noodp">
+<title>一些c++从c语言继承的好用特性 - c++基础 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="一些c++从c语言继承的好用特性 - c++基础">
+<meta property="og:description" content="阅读《嵌入式C语言自我修养 - 从芯片、编译器到操作系统》这本书时学习到了很多C语言中的有用特性，让人不禁感慨C语言也在与时俱进。这些特性在C++中也完全可以使用，学了也不白学，在工作上有用武之地。另外对于宏定义这种功能可以生成代码增加键盘寿命，相较于C++模版晦涩难懂，宏更直观。这次也一并系统的学习宏并且记录成本文。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://importmengjie.github.io/posts/cpp_base_c_feat/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2024-08-13T23:24:27+08:00">
+<meta property="article:modified_time" content="2024-07-31T19:37:27+08:00"><meta property="og:site_name" content="ImportMengjie">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
+<meta name=twitter:title content="一些c++从c语言继承的好用特性 - c++基础">
+<meta name=twitter:description content="阅读《嵌入式C语言自我修养 - 从芯片、编译器到操作系统》这本书时学习到了很多C语言中的有用特性，让人不禁感慨C语言也在与时俱进。这些特性在C++中也完全可以使用，学了也不白学，在工作上有用武之地。另外对于宏定义这种功能可以生成代码增加键盘寿命，相较于C++模版晦涩难懂，宏更直观。这次也一并系统的学习宏并且记录成本文。">
+<meta name=application-name content="ImportMengjie's Blog">
+<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/cpp_base_c_feat/><link rel=prev href=https://importmengjie.github.io/posts/cpp_base_right_value/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
+<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"一些c++从c语言继承的好用特性 - c++基础","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/cpp_base_c_feat\/"},"genre":"posts","keywords":"c, c\u002b\u002b","wordcount":5235,"url":"https:\/\/importmengjie.github.io\/posts\/cpp_base_c_feat\/","datePublished":"2024-08-13T23:24:27+08:00","dateModified":"2024-07-31T19:37:27+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
+<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
+<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu>
+<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-desktop>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</div>
+</header><header class=mobile id=header-mobile>
+<div class=header-container>
+<div class=header-wrapper>
+<div class=header-title>
+<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
+</div>
+<div class=menu-toggle id=menu-toggle-mobile>
+<span></span><span></span><span></span>
+</div>
+</div>
+<div class=menu id=menu-mobile><div class=search-wrapper>
+<div class="search mobile" id=search-mobile>
+<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
+<i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
+<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a>
+<span class="search-button search-loading" id=search-loading-mobile>
+<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span>
+</div>
+<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
+Cancel
+</a>
+</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
+</a></div>
+</div>
+</header><div class="search-dropdown desktop">
+<div id=search-dropdown-desktop></div>
+</div>
+<div class="search-dropdown mobile">
+<div id=search-dropdown-mobile></div>
+</div><main class=main>
+<div class=container><div class=toc id=toc-auto>
+<h2 class=toc-title>Contents</h2>
+<div class="toc-content always-active" id=toc-content-auto></div>
+</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">一些c++从c语言继承的好用特性 - c++基础</h1><div class=post-meta>
+<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/c++%E5%9F%BA%E7%A1%80/><i class="far fa-folder fa-fw" aria-hidden=true></i>c++基础</a></span></div>
+<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-08-13>2024-08-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;5235 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;11 minutes&nbsp;
+<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
+</div>
+</div><div class="details toc" id=toc-static data-kept>
+<div class="details-summary toc-title">
+<span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
+</div>
+<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
+<ul>
+<li><a href=#c语言标准>C语言标准</a></li>
+<li><a href=#编译器扩展特性>编译器扩展特性</a>
+<ul>
+<li><a href=#语句表达式>语句表达式</a></li>
+<li><a href=#指定初始化>指定初始化</a></li>
+<li><a href=#零长数组与灵活数组>零长数组与灵活数组</a></li>
+<li><a href=#clang编译器对c11标准的扩展>Clang编译器对C11标准的扩展</a></li>
+</ul>
+</li>
+<li><a href=#宏定义>宏定义</a>
+<ul>
+<li><a href=#基本使用>基本使用</a></li>
+<li><a href=#预处理操作符的使用>预处理操作符#的使用</a></li>
+<li><a href=#预处理操作符的使用-1>预处理操作符##的使用</a></li>
+<li><a href=#宏的替换顺序>宏的替换顺序</a></li>
+<li><a href=#dowhile和>do{}while和{}</a></li>
+<li><a href=#可变参数宏>可变参数宏</a></li>
+</ul>
+</li>
+<li><a href=#参考>参考</a></li>
+</ul>
+</nav></div>
+</div><div class=content id=content><p>阅读《嵌入式C语言自我修养 - 从芯片、编译器到操作系统》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>这本书时学习到了很多C语言中的有用特性，让人不禁感慨C语言也在与时俱进。这些特性在C++中也完全可以使用，学了也不白学，在工作上有用武之地。另外对于宏定义这种功能可以生成代码增加键盘寿命，相较于C++模版晦涩难懂，宏更直观。这次也一并系统的学习宏并且记录成本文。</p>
+<h2 id=c语言标准>C语言标准</h2>
+<p>c语言的标准发展经历了如下4个阶段。</p>
+<ul>
+<li>K&R C: C语言的作者Dennis M.Ritchie和Brian W.Kernighan合作的《C程序设计语言》中所定义的标准。</li>
+<li>ANSI C: 美国国家标准协会(American National Stardards Institude，ANSI)在K&R C基础上统一了各大编译器厂商的不同标准，一般也叫做C89/C90标准。</li>
+<li>C99标准: ANSI在1999年基于C89标准扩充，包括支持<strong>变量可以声明在代码块的任何地方</strong>、支持//单行注释、<strong>栈上可变长数组</strong>等。(ps: 大学老师的教授让我在很久以来都认为栈上数组的长度只能在编译期确定)。目前，很少有C语言编译器能完整支持C99，主流的GCC和Clang能支持90%以上，而微软的Visual studio 2015中只能支持70%左右<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>。</li>
+<li>C11标准: ANSI在2011年基于C99标准扩充，包括支持多线程、增加gets_s()等线程安全的标准库函数等。</li>
+</ul>
+<p><strong>GCC(GNU C Compiler)编译器也对C语言标准进行了扩展</strong>，后边会介绍这些有用的扩展。</p>
+<h2 id=编译器扩展特性>编译器扩展特性</h2>
+<h3 id=语句表达式>语句表达式</h3>
+<p>语句表达式是GNU C对C语言标准作了扩展，类似于Scala中的<a href=https://docs.scala-lang.org/zh-cn/tour/basics.html#%E4%BB%A3%E7%A0%81%E5%9D%97blocks target=_blank rel="noopener noreffer">代码块</a>。如下例子，可以将0~100加和的结果赋值给sum。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>int</span> <span class=n>sum</span> <span class=o>=</span> <span class=p>({</span>
+    <span class=kt>int</span> <span class=n>s</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+    <span class=k>for</span> <span class=p>(</span><span class=n>size_t</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=mi>100</span><span class=p>;</span> <span class=o>++</span><span class=n>i</span><span class=p>)</span> <span class=n>s</span> <span class=o>+=</span> <span class=n>i</span><span class=p>;</span>
+    <span class=n>s</span><span class=p>;</span>
+<span class=p>});</span>
+</code></pre></div><p>语句表达式允许在表达式中放入代码块，表达式最终的值等于最后一个表达式的值，格式如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=p>({</span>
+  <span class=c1>// 任意表达式;
+</span><span class=c1></span>  <span class=c1>// 表达式最终的值等于最后一个表达式的值
+</span><span class=c1></span><span class=p>})</span>
+</code></pre></div><p>如上，语句表达式就是一种<strong>语法糖</strong>，可以避免声明函数的麻烦和调用函数的开销，并且在其内部定义的局部变量不会“污染外部”。在一些特定的场景中，可以使代码更加优雅。<strong>它的另一个更重要的功能就是可以让宏定义方便的返回值给调用者</strong>，将在下面介绍。</p>
+<h3 id=指定初始化>指定初始化</h3>
+<h4 id=结构体指定初始化>结构体指定初始化</h4>
+<p>在GNU C可以使用指定字段名来初始化结构体，如下例子。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=c1>// 顺序初始化
+</span><span class=c1></span><span class=n>student</span> <span class=n>t1</span> <span class=o>=</span> <span class=n>student</span><span class=p>{</span><span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=mi>28</span><span class=p>};</span>
+<span class=n>student</span> <span class=n>t2</span> <span class=o>=</span> <span class=p>{</span><span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=mi>28</span><span class=p>};</span>
+<span class=n>student</span> <span class=n>t3</span><span class=p>{</span><span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=mi>28</span><span class=p>};</span>
+<span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>student</span><span class=o>&gt;</span> <span class=n>v1</span><span class=p>{</span><span class=n>student</span><span class=p>{</span><span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=mi>28</span><span class=p>},</span> <span class=p>{</span><span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=mi>28</span><span class=p>},</span> <span class=p>};</span>
+<span class=c1>// 指定初始化
+</span><span class=c1></span><span class=n>student</span> <span class=n>t4</span> <span class=o>=</span> <span class=n>student</span><span class=p>{.</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=p>.</span><span class=n>age</span> <span class=o>=</span> <span class=mi>28</span><span class=p>};</span>
+<span class=n>student</span> <span class=n>t5</span> <span class=o>=</span> <span class=p>{.</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=p>.</span><span class=n>age</span> <span class=o>=</span> <span class=mi>28</span><span class=p>};</span>
+<span class=n>student</span> <span class=n>t6</span><span class=p>{.</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=p>.</span><span class=n>age</span> <span class=o>=</span> <span class=mi>28</span><span class=p>};</span>
+<span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>student</span><span class=o>&gt;</span> <span class=n>v2</span><span class=p>{</span><span class=n>student</span><span class=p>{.</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=p>.</span><span class=n>age</span> <span class=o>=</span> <span class=mi>28</span><span class=p>},</span> <span class=p>{.</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;mengjie&#34;</span><span class=p>,</span> <span class=p>.</span><span class=n>age</span> <span class=o>=</span> <span class=mi>28</span><span class=p>},</span> <span class=p>};</span>
+</code></pre></div><p><strong>未指定的字段会被默认初始化</strong>。</p>
+<p>指定初始化相较于顺序初始化对字段的初始值可以有一个更直观的表述，而不依赖与其声明顺序。在结构体调整字段顺序、增加字段等操作时，使用指定初始化将不会被影响。当然在c++中只适用于不自定义构造函数的类或结构体才可以使用指定初始化。</p>
+<h4 id=数组指定初始化>数组指定初始化</h4>
+<p>c99标准支持的数组指定初始化，如下例子。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=c1>// 编译器会给a[6]~a[9]默认初始化为0
+</span><span class=c1></span><span class=kt>int</span> <span class=n>a</span><span class=p>[</span><span class=mi>10</span><span class=p>]</span> <span class=o>=</span> <span class=p>{</span><span class=mi>0</span><span class=p>,</span> <span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>,</span> <span class=mi>3</span><span class=p>,</span> <span class=mi>4</span><span class=p>,</span> <span class=mi>5</span><span class=p>};</span>
+
+<span class=c1>// 编译器会给索引为10和30的赋值，其它值默认初始化为0
+</span><span class=c1></span><span class=kt>int</span> <span class=n>b</span><span class=p>[</span><span class=mi>100</span><span class=p>]</span> <span class=o>=</span> <span class=p>{</span> <span class=p>[</span><span class=mi>10</span><span class=p>]</span> <span class=o>=</span> <span class=mi>1</span><span class=p>,</span> <span class=p>[</span><span class=mi>30</span><span class=p>]</span> <span class=o>=</span> <span class=mi>2</span><span class=p>};</span>
+</code></pre></div><p>GNU C还支持范围数组指定初始化，如下例子。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=c1>// 索引范围a[10]~a[30]21个元素初始化为1, a[10]和a[20]都是包含的; a[50]~a[60]初始化为2
+</span><span class=c1></span><span class=kt>int</span> <span class=n>c</span><span class=p>[</span><span class=mi>100</span><span class=p>]</span> <span class=o>=</span> <span class=p>{</span> <span class=p>[</span><span class=mi>10</span> <span class=p>...</span> <span class=mi>30</span><span class=p>]</span> <span class=o>=</span> <span class=mi>1</span><span class=p>,</span> <span class=p>[</span><span class=mi>50</span> <span class=p>...</span> <span class=mi>60</span><span class=p>]</span> <span class=o>=</span> <span class=mi>2</span><span class=p>};</span>
+</code></pre></div><p>并且&mldr;范围扩展不仅可以用在数组初始化，还可以用在switch-case语句中，例如。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>20</span><span class=p>;</span>
+<span class=k>switch</span><span class=p>(</span><span class=n>i</span><span class=p>)</span> <span class=p>{</span>
+  <span class=k>case</span> <span class=mi>0</span> <span class=p>...</span> <span class=mi>10</span><span class=o>:</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;0 ... 10&#34;</span><span class=p>;</span>
+    <span class=k>break</span><span class=p>;</span>
+  <span class=p>}</span>
+  <span class=k>case</span> <span class=mi>11</span> <span class=p>...</span> <span class=mi>20</span><span class=o>:</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;11 ... 20&#34;</span><span class=p>;</span>
+    <span class=k>break</span><span class=p>;</span>
+  <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>其中<code>case 11 ... 20:</code>就可以匹配[11, 20]之间的数，包含11和20。</p>
+<h3 id=零长数组与灵活数组>零长数组与灵活数组</h3>
+<p>零长数组是GNU C标准的扩展，顾名思义可以定义长度为0的数组，其不占用内存存储空间。其一般作为结构体的最后一个成员，从而构成一个变长的结构体。如下例子:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=k>struct</span> <span class=n>buffer</span> <span class=p>{</span>
+    <span class=kt>int</span> <span class=n>len</span><span class=p>;</span>
+    <span class=kt>char</span> <span class=n>a</span><span class=p>[</span><span class=mi>0</span><span class=p>];</span>
+<span class=p>};</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>buffer</span><span class=o>*</span> <span class=n>buf</span> <span class=o>=</span> <span class=p>(</span><span class=n>buffer</span><span class=o>*</span><span class=p>)</span><span class=n>malloc</span><span class=p>(</span><span class=k>sizeof</span><span class=p>(</span><span class=n>buffer</span><span class=p>)</span> <span class=o>+</span> <span class=mi>10</span><span class=p>);</span>
+    <span class=n>buf</span><span class=o>-&gt;</span><span class=n>len</span> <span class=o>=</span> <span class=mi>10</span><span class=p>;</span>
+    <span class=n>strcpy</span><span class=p>(</span><span class=n>buf</span><span class=o>-&gt;</span><span class=n>a</span><span class=p>,</span> <span class=s>&#34;hello&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>当然也可以在结构体直接放入指针，但是指针类型本身会占用内存，而不定长数组不需要额外占用内存。<strong>其实完全可以用指针+偏移量<code>buf+sizeof(buffer)</code>访问到buffer中多分配的内存，所以零长数组本质上也算是一种语法糖</strong>。</p>
+<p>在C99标准中引入了灵活数组，也是干类似的事情，语法如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=k>struct</span> <span class=n>flexible_array</span><span class=p>{</span>
+    <span class=kt>int</span> <span class=n>len</span><span class=p>;</span>
+    <span class=kt>char</span> <span class=n>a</span><span class=p>[];</span>
+<span class=p>};</span>
+</code></pre></div><p>但是其相比于零长数组来说有如下限制:</p>
+<ol>
+<li>灵活数组是不完整类型，不可以使用sizeof操作符操作；零长数组可以使用sizeof，并且计算结果为0.</li>
+<li>灵活数组作为结构体成员时，结构体必须至少拥有一个命名的非空成员对象；零长数组没有该限制。</li>
+<li>含有灵活数组的结构体不能作为另一个结构体的成员或数组的某个元素；零长数组没有该限制。</li>
+</ol>
+<h3 id=clang编译器对c11标准的扩展>Clang编译器对C11标准的扩展</h3>
+<p>Clang编译器是LLVM项目的一个子项目，作为C、C++和Objective-C编程语言的编译器前端。其采用BSD许可证，比GCC的GPL许可证更为宽松。</p>
+<blockquote>
+<p>Google也是从NDK 9开始起大力推广LLVM Clang编译工具链。而且在NDK 11中就有官方声明，GCC编译器只升级到4.9，后续将处于维护状态，然后NDK 13版本将直接被丢弃，而只使用LLVM Clang编译工具链。再看看ARM, ARM官方的编译工具链ARM Studio 6也开始基于Clang。而像AMD则是把Clang直接用于自己的OpenCL编译器上。到了2017年，微软也将Clang集成在Visual Studio开发环境中，作为可选的C语言编译器前端，而后端仍然采用MSVC的目标代码生成器以及运行时。<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup></p>
+</blockquote>
+<p>Clang也对C标准做了自己的扩展，这里介绍下几个有意思的扩展。</p>
+<ul>
+<li>
+<p>函数重载: 众所周知C语言并不支持函数重载，在Clang中可以使用__attribute__((overloadable))标记函数为可重载的，并且需要在每个重载函数都需要加上，否则编译器会报错。</p>
+</li>
+<li>
+<p>Lambda表达式: 在Clang中支持Blocks语法来定义一个闭包Lambda函数，语法类似下例。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=kt>void</span> <span class=p>(</span><span class=o>^</span><span class=n>refBlock</span><span class=p>)(</span><span class=kt>int</span><span class=p>)</span> <span class=o>=</span> <span class=o>^</span><span class=kt>void</span><span class=p>(</span><span class=kt>int</span> <span class=n>i</span><span class=p>)</span> <span class=p>{</span> <span class=n>printf</span><span class=p>(</span><span class=s>&#34;a + i = %d</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>a</span> <span class=o>+</span> <span class=n>i</span><span class=p>);</span> <span class=p>};</span>
+</code></pre></div><p>在书<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>中所讲，该特性可以捕获局部变量的引用，并且延长局部变量的生命周期。比起C++11中的Lambda表达式更加满足标准的闭包。</p>
+</li>
+</ul>
+<h2 id=宏定义>宏定义</h2>
+<p>宏定义(macro definition)是一种预处理指令，在编译器的预处理中进行文本的替换，从而修改即将编译的源代码。其和C++模版都是属于元编程(Metaprogramming)，即编写程序来生成或操作其他程序代码，甚至操作自身代码的编程技术。我觉得其功能相较于C++模版来说更加简单容易理解，在一些场景下非它不可。</p>
+<p>宏的基本的形式如下，其中替换列表可以省略:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define 标识符 替换列表 换行符
+</span><span class=cp>#define 标识符(参数1, 参数2) 替换列表 换行符
+</span></code></pre></div><p>宏定义必须写在函数外，<strong>宏的作用范围为定义处到当前文件结束，不受函数作用域等影响</strong>，因为宏的预处理部分与C源代码部分采用完全不同的文法体系，而且预处理器是独立于编译器存在的。</p>
+<h3 id=基本使用>基本使用</h3>
+<p>无参数宏的基本使用如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define PI 3.14
+</span><span class=cp>#define PATH &#34;/home/&#34;
+</span><span class=cp>#define DOCUMENTS_PATH PATH &#34;Documents/&#34;
+</span><span class=cp>#define LONG_STR \
+</span><span class=cp>    &#34;There is a long string you must deal with it \
+</span><span class=cp>as two line of sentence \n&#34;
+</span><span class=cp></span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>printf</span><span class=p>(</span><span class=s>&#34;PI = %f</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>PI</span><span class=p>);</span>
+    <span class=n>printf</span><span class=p>(</span><span class=s>&#34;/home/&#34;</span> <span class=s>&#34;Documents/</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>);</span> <span class=c1>// 替换后的这种语法是可以的
+</span><span class=c1></span>    <span class=n>printf</span><span class=p>(</span><span class=n>DOCUMENTS_PATH</span> <span class=s>&#34;</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>);</span>
+    <span class=n>printf</span><span class=p>(</span><span class=n>LONG_STR</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>上边的例子需要注意的点:</p>
+<ul>
+<li>宏名被双引号括起来时不做宏替换，例如<code>"PI = %f\n"</code>中的PI不会被替换成3.14。</li>
+<li>宏定义允许嵌套使用，例如<code>DOCUMENTS_PATH</code>就使用了前面定义的<code>PATH</code>宏。</li>
+<li>字符串字面量是可以拼接的，两个拼接的字符串字面量中间可以有0个或多个空格。例如<code>"/home/" "Documents/\n"</code>。</li>
+<li>宏的替换列表如果过长的话可以使用<code>\</code>换行。</li>
+</ul>
+<p>有参数的宏的使用注意，参考<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>中的例子。实现一个简单的MAX宏用于取两个数的最大值，最简单的写法如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define MAX(x, y) x &gt; y ? x : y
+</span><span class=cp></span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=n>MAX</span><span class=p>(</span><span class=mi>1</span> <span class=o>!=</span> <span class=mi>1</span><span class=p>,</span> <span class=mi>1</span> <span class=o>!=</span> <span class=mi>2</span><span class=p>))</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span> <span class=c1>// 预期为1，实际为0
+</span><span class=c1></span>    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=p>(</span><span class=mi>3</span> <span class=o>+</span> <span class=n>MAX</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>))</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span> <span class=c1>// 预期为5，实际为1
+</span><span class=c1></span><span class=p>}</span>
+</code></pre></div><p>上述简单的写法，有展开后的运算优先级问题:</p>
+<ul>
+<li><code>MAX(1 != 1, 1 != 2)</code>展开后为<code>1 != 1>1 != 2 ? 1 != 1 : 1 != 2</code>，其中运算法>的优先级大于!=，所以运算顺序不符合预期，导致意外的结果。</li>
+<li><code>3 + MAX(1, 2)</code>展开后为<code>3 + 1 > 2 ? 1 : 2</code>，又因为运算符+的优先级大于运算>，实际变为<code>4 > 2? 1: 2</code>不符合预期。</li>
+</ul>
+<p>所以需要将参数用括号包起来，从而保证符合预期的运算优先级，如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define MAX1(x, y) ((x) &gt; (y) ? (x) : (y))
+</span></code></pre></div><p>不过，上述宏定义还存在一个问题，当使用自增运算符的变量作为参数时，如<code>MAX1(i++, ++j)</code>就会在展开的宏中多次执行自增运算符，变量的值就改为非预期的值，这也不太能接受。所以有了如下究极体。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#define MAX2(x, y)          \
+</span><span class=cp>    ({                      \
+</span><span class=cp>        auto&amp;&amp; _x = x;      \
+</span><span class=cp>        auto&amp;&amp; _y = y;      \
+</span><span class=cp>        (void)(&amp;_x == &amp;_y); \
+</span><span class=cp>        _x &gt; _y ? _x : _y;  \
+</span><span class=cp>    })
+</span></code></pre></div><p>上述究极体MAX宏定义有如下几个需要注意的地方。</p>
+<ul>
+<li>
+<p>使用万能引用引用变量，从而避免自增运算符被多次执行。参考<a href=/posts/cpp_base_right_value/ rel>右值、右值引用、万能引用与完美转发 - c++基础</a>中的万能引用介绍。</p>
+<p>原书中使用的是GNU扩展关键字<code>typeof</code>来获取数据类型，从而拷贝x,y参数，如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=n>typeof</span><span class=p>(</span><span class=n>x</span><span class=p>)</span> <span class=n>_x</span> <span class=o>=</span> <span class=n>x</span><span class=p>;</span>
+<span class=n>typeof</span><span class=p>(</span><span class=n>y</span><span class=p>)</span> <span class=n>_y</span> <span class=o>=</span> <span class=n>y</span><span class=p>;</span>
+</code></pre></div><p>这里会造成变量的拷贝，而用万能引用的方式则不会。<a href=https://stackoverflow.com/questions/37660862/keyword-typeof-in-c11 target=_blank rel="noopener noreffer">typeof</a>关键字类似C++中的<code>decltype</code>移除引用属性的操作。</p>
+</li>
+<li>
+<p><code>(void)(&_x == &_y);</code>用来在x和y类型不同时增加编译器警告。由于运算的结果没有用到加上<code>(void)</code>后就可以消除编译器运算结果未使用的警告。<code>void</code>表示不存在的值类型，如果表达式的计算结果为void则其值和表示的标识符都会被丢弃。</p>
+</li>
+<li>
+<p>使用了上述的语句表达式，最后一句<code>_x > _y ? _x : _y;</code>为表达式最终的值。</p>
+</li>
+</ul>
+<h3 id=预处理操作符的使用>预处理操作符#的使用</h3>
+<p>宏定义替换列表中#后边跟参数名可以将实参内容以字符串字面量形式表示。例如:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define AREA(x, y) std::cout &lt;&lt; &#34;x: &#34; &lt;&lt; #x &lt;&lt; &#34;, y: &#34; #y &lt;&lt; &#34;, area: &#34; &lt;&lt; x * y &lt;&lt; std::endl;
+</span><span class=cp></span><span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>AREA</span><span class=p>(</span><span class=mi>3</span><span class=p>,</span> <span class=mi>4</span><span class=p>)</span> <span class=c1>// x: 3, y: 4, area: 12
+</span><span class=c1></span><span class=p>}</span>
+</code></pre></div><p>其中，<code>#x</code>和<code>#y</code>就被替换成字符字面量，替换是在编译器替换，不会有运行期损耗。</p>
+<p>另外当使用宏函数时没有传入参数，则替换的参数字面量为空，例如AREA(,4)或者AREA(3,)。</p>
+<h3 id=预处理操作符的使用-1>预处理操作符##的使用</h3>
+<p>宏定义替换列表中##可以将前后两个预处理符号拼接在一起，##是个二元的操作，#一元的操作。##的使用例子如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define A(x) a##x
+</span><span class=cp></span>
+<span class=kt>int</span> <span class=nf>A</span><span class=p>()</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>   <span class=c1>// int a = 0;
+</span><span class=c1></span><span class=kt>int</span> <span class=nf>A</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>  <span class=c1>// int a1 = 1;
+</span><span class=c1></span><span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>a</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;, &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>a1</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+</code></pre></div><p>如上例子，##可以拼接两个预处理符号，并且最终的结果并不是字符字面量。</p>
+<h3 id=宏的替换顺序>宏的替换顺序</h3>
+<p>宏函数的替换顺序是<strong>先处理替换列表中出现的#与##操作符</strong>，然后对替换列表中所出现的宏进行展开替换；接着检查实参是否引用了宏，如果引用了则先对所有引用了宏的实参进行完全的宏替换；最后才将替换列表中出现的形参替换为宏扩展后的实参对应的预处理符号。</p>
+<p>如下例子，宏先进行##的替换，然后再进行替换列表的宏展开替换B1和B2。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define B1 1
+</span><span class=cp>#define B2 2
+</span><span class=cp></span>
+<span class=cp>#define B(x) B##x
+</span><span class=cp></span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>B</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span> <span class=c1>// 相当于引用B1
+</span><span class=c1></span>    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>B</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span> <span class=c1>// 相当于引用B2
+</span><span class=c1></span><span class=p>}</span>
+</code></pre></div><p>目前对这个替换顺序的理解不太深入，感觉上在写一些复杂的宏时必须得理解这个顺序，后边需要的时候再去深入理解。</p>
+<h3 id=dowhile和>do{}while和{}</h3>
+<p>在写程序时对于if、else语句，在只执行一行时，一般省略括号。但是如果执行的一行是宏的话，就要非常小心了。例如:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define LOG_LEVEL 0
+</span><span class=cp>#define DEBUG_LOG \
+</span><span class=cp>    if (LOG_LEVEL &gt;= 1) printf(&#34;debug!\n&#34;);
+</span><span class=cp></span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=k>if</span> <span class=p>(</span><span class=nb>true</span><span class=p>)</span>
+        <span class=n>DEBUG_LOG</span>
+    <span class=k>else</span>
+        <span class=n>printf</span><span class=p>(</span><span class=s>&#34;else&#34;</span><span class=p>);</span>
+    <span class=c1>// 展开后的if/else为
+</span><span class=c1></span>    <span class=k>if</span><span class=p>(</span><span class=nb>true</span><span class=p>)</span>
+    <span class=k>if</span><span class=p>(</span><span class=nb>false</span><span class=p>)</span> <span class=n>printf</span><span class=p>(</span><span class=s>&#34;debug!</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>);</span>
+    <span class=k>else</span>
+        <span class=n>printf</span><span class=p>(</span><span class=s>&#34;else&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>这样的结果肯定是不符合预期的。<strong>所以在if/else只执行一行宏语句时，一定要加上{}，否则就等着踩坑吧</strong>。</p>
+<p>而对于写宏定义时，应当通过<code>do{...}while(0)</code>或<code>{}</code>避免这种情况。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define LOG_LEVEL 0
+</span><span class=cp></span>
+<span class=cp>#define DEBUG_LOG1                              \
+</span><span class=cp>    {                                           \
+</span><span class=cp>        if (LOG_LEVEL &gt;= 1) printf(&#34;debug!\n&#34;); \
+</span><span class=cp>    }
+</span><span class=cp></span>
+<span class=cp>#define DEBUG_LOG2                              \
+</span><span class=cp>    do {                                        \
+</span><span class=cp>        if (LOG_LEVEL &gt;= 1) printf(&#34;debug!\n&#34;); \
+</span><span class=cp>    } while (0)
+</span><span class=cp></span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=k>if</span> <span class=p>(</span><span class=nb>true</span><span class=p>)</span>
+        <span class=n>DEBUG_LOG1</span> <span class=c1>// {}不能加;结束
+</span><span class=c1></span>    <span class=k>else</span>
+        <span class=n>printf</span><span class=p>(</span><span class=s>&#34;else&#34;</span><span class=p>);</span>
+
+    <span class=k>if</span> <span class=p>(</span><span class=nb>true</span><span class=p>)</span>
+        <span class=n>DEBUG_LOG2</span><span class=p>;</span> <span class=c1>// do while需要加;结束
+</span><span class=c1></span>    <span class=k>else</span>
+        <span class=n>printf</span><span class=p>(</span><span class=s>&#34;else&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p><strong>如上<code>do{...}while(0)</code>和<code>{}</code>的区别在于使用宏时需要加;和不能加;分号结束符</strong>。一般加;才更符合使用习惯，所以只推荐使用<code>do{...}while(0)</code>的形式。</p>
+<h3 id=可变参数宏>可变参数宏</h3>
+<p>从C99标准起，C语言的宏支持不定个数的参数，与可变参数的函数类似，例如:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#define LOG(fmt, ...) printf(fmt, __VA_ARGS__)  </span><span class=c1>// C99标准
+</span><span class=c1></span><span class=cp>#define LOG2(fmt, ...) printf(fmt, ##__VA_ARGS__)
+</span><span class=cp>#define LOG3(fmt, myargs...) printf(fmt, ##myargs)  </span><span class=c1>// GNU C扩展
+</span><span class=c1></span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>LOG</span><span class=p>(</span><span class=s>&#34;hello %s</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=s>&#34;world&#34;</span><span class=p>);</span>
+    <span class=c1>// LOG(&#34;hello\n&#34;); // 不能编译
+</span><span class=c1></span>    <span class=n>LOG2</span><span class=p>(</span><span class=s>&#34;hello %s</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=s>&#34;world&#34;</span><span class=p>);</span>
+    <span class=n>LOG2</span><span class=p>(</span><span class=s>&#34;hello</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>);</span>
+    <span class=n>LOG3</span><span class=p>(</span><span class=s>&#34;hello %s</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=s>&#34;world&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>上述例子有如下需要注意的点。</p>
+<ul>
+<li><code>__VA_ARGS__</code>会将参数列表展开并且以逗号间隔，如果没有参数则为空。</li>
+<li>在C99标准需要使用标识符__VA_ARGS__来引用可变参数列表，GNU C扩展了可以自定义名字的方式<code>LOG3(fmt, myargs...)</code>。</li>
+<li><code>printf(fmt, __VA_ARGS__)</code>在调用参数列表为空时，展开为<code>printf(fmt,)</code>多了逗号不可编译。故<code>LOG("hello\n");</code>不可编译。</li>
+<li><code>printf(fmt, ##__VA_ARGS__)</code>扩展了##操作符的语义，使其可以做到在列表为空时将前面的逗号删除，不为空时则使用正常的<code>__VA_ARGS__</code>语义以逗号为间隔进行参数列表展开。此为GNU C的扩展。</li>
+</ul>
+<p>利用可变参数宏，曾经实现过函数调用前打印函数名称和其参数列表，如下:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#define PRINT_CALL(func, args...)                                           \
+</span><span class=cp>    ({                                                                      \
+</span><span class=cp>        std::cout &lt;&lt; &#34;func: &#34; &lt;&lt; #func &lt;&lt; &#34;, args: &#34; &lt;&lt; #args &lt;&lt; std::endl; \
+</span><span class=cp>        func(args);                                                         \
+</span><span class=cp>    })
+</span><span class=cp></span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;test1: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>PRINT_CALL</span><span class=p>(</span><span class=n>twoSum</span><span class=p>,</span> <span class=p>{</span><span class=mi>2</span><span class=p>,</span> <span class=mi>7</span><span class=p>,</span> <span class=mi>11</span><span class=p>,</span> <span class=mi>15</span><span class=p>},</span> <span class=mi>22</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;test2: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>PRINT_CALL</span><span class=p>(</span><span class=n>twoSum</span><span class=p>,</span> <span class=p>{</span><span class=mi>2</span><span class=p>,</span> <span class=mi>7</span><span class=p>,</span> <span class=mi>11</span><span class=p>,</span> <span class=mi>15</span><span class=p>},</span> <span class=mi>13</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;test3: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>PRINT_CALL</span><span class=p>(</span><span class=n>twoSum</span><span class=p>,</span> <span class=p>{</span><span class=mi>2</span><span class=p>,</span> <span class=mi>7</span><span class=p>,</span> <span class=mi>11</span><span class=p>,</span> <span class=mi>15</span><span class=p>},</span> <span class=mi>1</span><span class=p>)</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><hr>
+<h2 id=参考>参考</h2>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/35446929/ target=_blank rel="noopener noreffer">《嵌入式C语言自我修养 - 从芯片、编译器到操作系统》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:2 role=doc-endnote>
+<p><a href=https://book.douban.com/subject/27104080/ target=_blank rel="noopener noreffer">《C语言编程魔法书 - 基于C11标准》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</div><div class=post-footer id=post-footer>
+<div class=post-info>
+<div class=post-info-line>
+<div class=post-info-mod>
+<span>Updated on 2024-07-31</span>
+</div></div>
+<div class=post-info-line>
+<div class=post-info-md></div>
+<div class=post-info-share>
+<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/cpp_base_c_feat/ data-title="一些c++从c语言继承的好用特性 - c++基础" data-hashtags=c,c++><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/cpp_base_c_feat/ data-hashtag=c><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/cpp_base_c_feat/ data-title="一些c++从c语言继承的好用特性 - c++基础"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/cpp_base_c_feat/ data-title="一些c++从c语言继承的好用特性 - c++基础"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/cpp_base_c_feat/ data-title="一些c++从c语言继承的好用特性 - c++基础"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
+</div>
+</div>
+</div>
+<div class=post-info-more>
+<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c/>c</a>,&nbsp;<a href=/tags/c++/>c++</a></section>
+<section>
+<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
+</section>
+</div>
+<div class=post-nav><a href=/posts/cpp_base_right_value/ class=prev rel=prev title="右值、右值引用、万能引用与完美转发 - c++基础"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>右值、右值引用、万能引用与完美转发 - c++基础</a></div>
+</div>
+<div id=comments><div id=giscus class=comment></div><noscript>
+Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
+</noscript></div></article></div>
+</main><footer class=footer>
+<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
+</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<section>
+<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
+<span id=busuanzi_value_site_pv></span>
+</span>
+&nbsp;|&nbsp;
+<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
+<span id=busuanzi_value_site_uv></span>
+</span>
+</section>
+</div>
+</footer></div>
+<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
+<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments">
+<i class="fas fa-comment fa-fw" aria-hidden=true></i>
+</a>
+</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:50}}</script><script type=text/javascript src=/js/theme.min.485ce22971162ae594e2f22468d97519fb9c08a7112e3a012e8684cfe098b474.js integrity="sha256-SFziKXEWKuWU4vIkaNl1GfucCKcRLjoBLoaEz+CYtHQ="></script></body>
+</html>
