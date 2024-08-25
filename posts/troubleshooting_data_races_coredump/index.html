@@ -1,399 +1,321 @@
-<!doctype html><html lang=zh-cn>
-<head>
-<meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<meta name=robots content="noodp">
-<title>记一次数据竞争导致内存损坏的coredump - 问题诊断 - ImportMengjie's Blog</title><meta name=Description content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"><meta property="og:title" content="记一次数据竞争导致内存损坏的coredump - 问题诊断">
-<meta property="og:description" content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。">
-<meta property="og:type" content="article">
-<meta property="og:url" content="https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
-<meta property="article:published_time" content="2024-05-12T14:53:51+08:00">
-<meta property="article:modified_time" content="2024-05-12T14:53:51+08:00"><meta property="og:site_name" content="ImportMengjie">
-<meta name=twitter:card content="summary_large_image">
-<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
-<meta name=twitter:title content="记一次数据竞争导致内存损坏的coredump - 问题诊断">
-<meta name=twitter:description content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。">
-<meta name=application-name content="ImportMengjie's Blog">
-<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
-<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
-<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/><link rel=prev href=https://importmengjie.github.io/posts/dont-even-know-that_1/><link rel=next href=https://importmengjie.github.io/posts/reading_202312-202406/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"记一次数据竞争导致内存损坏的coredump - 问题诊断","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_data_races_coredump\/"},"genre":"posts","keywords":"c\u002b\u002b, data races, memory corruption","wordcount":6188,"url":"https:\/\/importmengjie.github.io\/posts\/troubleshooting_data_races_coredump\/","datePublished":"2024-05-12T14:53:51+08:00","dateModified":"2024-05-12T14:53:51+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":"此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"}</script></head>
-<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
-<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
-<div class=header-wrapper>
-<div class=header-title>
-<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
-</div>
-<div class=menu>
-<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>记一次数据竞争导致内存损坏的coredump - 问题诊断 - ImportMengjie's Blog</title><meta name=Description content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"><meta property="og:url" content="https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/">
+<meta property="og:site_name" content="ImportMengjie's Blog"><meta property="og:title" content="记一次数据竞争导致内存损坏的coredump - 问题诊断"><meta property="og:description" content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-05-12T14:53:51+08:00"><meta property="article:modified_time" content="2024-05-12T14:53:51+08:00"><meta property="article:tag" content="C++"><meta property="article:tag" content="Data Races"><meta property="article:tag" content="Memory Corruption"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://importmengjie.github.io/logo.png"><meta name=twitter:title content="记一次数据竞争导致内存损坏的coredump - 问题诊断"><meta name=twitter:description content="此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"><meta name=application-name content="ImportMengjie's Blog"><meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#f8f8f8"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=canonical href=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/><link rel=prev href=https://importmengjie.github.io/posts/dont-even-know-that_1/><link rel=next href=https://importmengjie.github.io/posts/reading_202312-202406/><link rel=stylesheet href=/css/main.min.css><link rel=stylesheet href=/css/style.min.css><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"记一次数据竞争导致内存损坏的coredump - 问题诊断","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/"},"genre":"posts","keywords":["c++","data races","memory corruption"],"wordcount":6121,"url":"https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/","datePublished":"2024-05-12T14:53:51+08:00","dateModified":"2024-05-12T14:53:51+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie","url":"/"},"description":"此次coredump断断续续查了约两个月才查明原因，迄今为止遇到最棘手的问题，深刻的体会到debug c/c++内存损坏是多么痛苦。为了debug还写了两个内存检测工具，可惜最终还是通过注释代码和代码人肉检查找到了问题根因。"}</script></head><body data-instant-intensity=viewport><script type=text/javascript>function setTheme(e){document.body.setAttribute("theme",e),document.documentElement.className=e,document.documentElement.style.setProperty("color-scheme",e==="light"?"light":"dark"),e==="light"?document.documentElement.classList.remove("tw-dark"):document.documentElement.classList.add("tw-dark"),window.theme=e,window.isDark=window.theme!=="light"}function saveTheme(e){window.localStorage&&localStorage.setItem("theme",e)}function getMeta(e){const t=document.getElementsByTagName("meta");for(let n=0;n<t.length;n++)if(t[n].getAttribute("name")===e)return t[n];return""}if(window.localStorage&&localStorage.getItem("theme")){let e=localStorage.getItem("theme");e==="light"||e==="dark"?setTheme(e):setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}else"auto"==="light"||"auto"==="dark"?(setTheme("auto"),saveTheme("auto")):(saveTheme("auto"),setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));let metaColors={light:"#f8f8f8",dark:"#161b22"};getMeta("theme-color").content=metaColors[document.body.getAttribute("theme")],window.switchThemeEventSet=new Set</script><div id=back-to-top></div><div id=mask></div><div class=wrapper><header class="desktop print:!tw-hidden" id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title="ImportMengjie's Blog"><img class="tw-inline tw-align-text-bottom tw-mr-1" src=/images/avatar.jpg height=32 width=32>ImportMengjie</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/>首页 </a><a class=menu-item href=/posts/ title=posts>文章 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/categories/>分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
 <input type=text placeholder="Search titles or contents..." id=search-input-desktop>
-<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
-<i class="fas fa-search fa-fw" aria-hidden=true></i>
-</a>
-<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
-<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
-</a>
-<span class="search-button search-loading" id=search-loading-desktop>
-<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
-</span>
-</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
-<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
-</a></div>
-</div>
-</div>
-</header><header class=mobile id=header-mobile>
-<div class=header-container>
-<div class=header-wrapper>
-<div class=header-title>
-<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
-</div>
-<div class=menu-toggle id=menu-toggle-mobile>
-<span></span><span></span><span></span>
-</div>
-</div>
-<div class=menu id=menu-mobile><div class=search-wrapper>
-<div class="search mobile" id=search-mobile>
-<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
-<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
-<i class="fas fa-search fa-fw" aria-hidden=true></i>
-</a>
-<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
-<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
-</a>
-<span class="search-button search-loading" id=search-loading-mobile>
-<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
-</span>
-</div>
-<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
-Cancel
-</a>
-</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
-<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
-</a></div>
-</div>
-</header><div class="search-dropdown desktop">
-<div id=search-dropdown-desktop></div>
-</div>
-<div class="search-dropdown mobile">
-<div id=search-dropdown-mobile></div>
-</div><main class=main>
-<div class=container><div class=toc id=toc-auto>
-<h2 class=toc-title>Contents</h2>
-<div class="toc-content always-active" id=toc-content-auto></div>
-</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">记一次数据竞争导致内存损坏的coredump - 问题诊断</h1><div class=post-meta>
-<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/troubleshooting/><i class="far fa-folder fa-fw" aria-hidden=true></i>troubleshooting</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-05-12>2024-05-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;6188 words&nbsp;
-<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;13 minutes&nbsp;
-<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
-<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
-</div>
-</div><div class="details toc" id=toc-static data-kept>
-<div class="details-summary toc-title">
-<span>Contents</span>
-<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
-</div>
-<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
-<ul>
-<li><a href=#前置知识>前置知识</a>
-<ul>
-<li><a href=#内存管理器>内存管理器</a></li>
-<li><a href=#内存损坏memory-corruption>内存损坏(memory corruption)</a></li>
-<li><a href=#内存调试工具>内存调试工具</a></li>
-</ul>
-</li>
-<li><a href=#问题排查>问题排查</a>
-<ul>
-<li><a href=#coredump分析>coredump分析</a></li>
-<li><a href=#分析过程>分析过程</a></li>
-<li><a href=#问题原因>问题原因</a></li>
-</ul>
-</li>
-<li><a href=#自制内存检查工具>自制内存检查工具</a>
-<ul>
-<li><a href=#代码注入方法总结>代码注入方法总结</a></li>
-<li><a href=#堆数据越界>堆数据越界</a></li>
-<li><a href=#堆数据释放后使用>堆数据释放后使用</a></li>
-</ul>
-</li>
-<li><a href=#参考>参考</a></li>
-</ul>
-</nav></div>
-</div><div class=content id=content><h2 id=前置知识>前置知识</h2>
-<h3 id=内存管理器>内存管理器</h3>
-<p>如果想要对内存损坏有一个深刻意识需要对内存分配器有一个初步的认识，接下来对其做基本概念介绍。</p>
-<p>堆内存（Heap Memory）是由内存管理器进行管理的，用户通过<code>void *malloc( size_t size )</code>申请堆内存块，通过<code>void free(void *)</code>将申请的内存块还给内存分配器。一般我们使用的内存管理器是glibc中的ptmalloc。</p>
-<p>在linux中内存管理器通过brk和mmap系统调用向操作系统申请一大块内存进行管理，用户申请的内存优先在申请的大块内存中分配，从而减少系统调用的次数。通过brk控制下图<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>中<code>狭义的Heap Segment</code>区域扩大或缩小，其作为<strong>主线程</strong>的堆内存由内存管理器管理。对于其它线程则是通过mmap在<code>Memory Mapping Segment</code>区域申请内存块使用，从而减少多线程共享内存块。所以内存管理器的难点就是合理化利用从操作系统申请的一大块内存，在用户<code>malloc</code>申请内存时能及时找到满足用户申请大小的内存返回给用户；在用户<code>free</code>释放内存能合理的管理这些被释放的内存块，比方说合并相连的内存块减少内存碎片。</p>
-<p><figure><a class=lightgallery href=/images/data_races_coredump/memory_layout.jpg title=内存布局 data-thumbnail=/images/data_races_coredump/memory_layout.jpg data-sub-html="<h2>Linux内存布局</h2><p>内存布局</p>">
-<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/memory_layout.jpg data-srcset="/images/data_races_coredump/memory_layout.jpg, /images/data_races_coredump/memory_layout.jpg 1.5x, /images/data_races_coredump/memory_layout.jpg 2x" data-sizes=auto alt=/images/data_races_coredump/memory_layout.jpg>
-</a><figcaption class=image-caption>Linux内存布局</figcaption>
-</figure></p>
-<p>对于ptmalloc有如下一些数据结构：</p>
-<ol>
-<li>
-<p>Arena</p>
-<p>用于管理向操作系统申请的内存块，分为主线程的main arena和线程的thread arena。main arena是通过<code>brk</code>系统调用在空间用尽时可以拓展，而thread arena无拓展能力，所以可能会管理多个内存块。内存块在ptmalloc中用<code>struct heap_info</code>作为header保存元信息。arena使用<code>struct malloc_state</code>作为header保存元信息。</p>
-<p>另外对于一些用户线程数量高于cpu核数，每个线程分配一个arena开销过大，所以thread arena其实是受限于cpu核数，总之不是一个线程就对应一个arena。</p>
-</li>
-<li>
-<p>Chunk</p>
-<p>用于管理分配给用户的内存块，主要有Allocated chunk已经分配给用户的内存块和Free chunk用户释放的内存块。其header数据结构称为<code>malloc_chunk</code>。</p>
-<ul>
-<li>
-<p>Allocated chunck已经分配给用户的内存块</p>
-<p><figure><a class=lightgallery href=/images/data_races_coredump/allocated_chunk.jpg title=allocated_chunk.jpg data-thumbnail=/images/data_races_coredump/allocated_chunk.jpg data-sub-html="<h2>Allocated chunk已经分配给用户的内存块</h2><p>allocated_chunk.jpg</p>">
-<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/allocated_chunk.jpg data-srcset="/images/data_races_coredump/allocated_chunk.jpg, /images/data_races_coredump/allocated_chunk.jpg 1.5x, /images/data_races_coredump/allocated_chunk.jpg 2x" data-sizes=auto alt=/images/data_races_coredump/allocated_chunk.jpg>
-</a><figcaption class=image-caption>Allocated chunk已经分配给用户的内存块</figcaption>
-</figure></p>
-<p>其中左方第一个箭头chunk表示起始地址，mem表示分配给用户的起始地址，next_chunk为下一个chunk的起始地址同时也是分配给用户的结束地址。This chunk size是分配的size大小，其有对齐的需求，所以后三位都为0,为了节省空间，将其利用放入三个标志位。N表示该chunk是否为thread chunk，M表示是否是mmap分配的chunk。P表示前一个chunk是否被分配。</p>
-</li>
-<li>
-<p>Free chunck</p>
-<p><figure><a class=lightgallery href=/images/data_races_coredump/free_chunk.jpg title=free_chunk.jpg data-thumbnail=/images/data_races_coredump/free_chunk.jpg data-sub-html="<h2>free chunk已经分配给用户的内存块</h2><p>free_chunk.jpg</p>">
-<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/free_chunk.jpg data-srcset="/images/data_races_coredump/free_chunk.jpg, /images/data_races_coredump/free_chunk.jpg 1.5x, /images/data_races_coredump/free_chunk.jpg 2x" data-sizes=auto alt=/images/data_races_coredump/free_chunk.jpg>
-</a><figcaption class=image-caption>free chunk已经分配给用户的内存块</figcaption>
-</figure></p>
-<p>比起Allocated chunck增加了两个指针，指向同一个bin中前后的free chunk。bin就是用来管理free chunk的数据结构。</p>
-<p>可以见得存储前一个chunk的是否分配和分配大小就是为了在释放时检查如果前后的chunk也是free chunk可以进行合并，减少内存碎片。</p>
-</li>
-</ul>
-</li>
-<li>
-<p>Bin</p>
-<p>bin就是用来管理free chunk的数据结构，其包含Fast bin、Unsorted bin、Small bin、Large bin等，已经释放的chunk会根据一些规则放入不同的bin中，设置多个bin主要是满足用户的不同分配内存大小，加快找到合适的free chunk分配给用户。</p>
-</li>
-</ol>
-<p>根据上述的介绍可以了解到，假设用户拿到分配的内存，不小心修改了不是所申请范围的内存，就可能修改到内存分配器存储的一些元信息，在之后的内存管理器执行时造成错误。这也是我们见到程序挂在malloc相关函数中一个可能的原因。</p>
-<h3 id=内存损坏memory-corruption>内存损坏(memory corruption)</h3>
-<p>内存损坏通常是对不是自己向内存管理器申请的内存块进行操作，而在大多数情况下对该内存操作对操作系统角度看却是合法的，因为访问的地址是内核分配给进程的空间，所以<strong>程序不会马上崩溃，数据被悄悄修改，最后可能会挂在不相关的地方</strong>。《高效c/c++调试》<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>书中写道:</p>
-<blockquote>
-<p>调试内存损坏的真正挑战在于，程序错误时并不能揭示导致错误的有缺陷的代码。通常，程序在有bug的代码做出错误的内存访问时，不会显示任何症状，但是程序中的某个变量意外地被改变为不正确的值。在一些文献中，这被叫作传染。随着程序继续运行，该变量会感染其他变量。这种错误传播最终会发展为严重的失败：程序要么崩溃，要么生成错误的结果。由于导致错误的原因和结果之间的距离很长，崩溃时的变量和执行代码与实际错误往往没有关联，而且在时间和位置方面可能会表现出很多随机性。</p>
-</blockquote>
-<p>所以如果程序崩溃在错误代码运行时，那问题就很好debug。对于更“高级”的语言像java/python有越界检查和垃圾回收gc机制基本可以做到程序崩溃的地方就是错误代码运行的地方，而对于c/c++就不一定了，当然也不用为越界检查和gc付出“代价”。参考《高效c/c++调试》堆内存损坏的常见几种类型，如下:</p>
-<ol>
-<li>
-<p>内存溢出和下溢</p>
-<p>用户代码访问超出内存管理器分配的内存(溢出)或者访问可用内存之前的内存块(下溢)。可能会损坏堆元数据结构，导致下一个块被释放或者分配时产生未定义行为。而且也不一定会内存损坏，因为内存块有最小块大小和对齐的要求，可能实际分配给用户的内存大于用户请求大小，破坏的可能是填充的内存，就不会有影响。</p>
-</li>
-<li>
-<p>操作已经释放的内存</p>
-<p>另一种情况是操作已经释放的内存，当用户操作空悬指针或引用时会造成内存损坏，同样症状因许多因素而异，例如，访问的内存已经还给内核，则程序因非法地址访问直接崩溃；释放的内存可能再一次分配给用户，从而导致数据对象被意外破坏；如果内存被内存管理器缓存，修改其可能会破坏堆元数据。</p>
-</li>
-<li>
-<p>使用未初始化的值</p>
-<p>对于未初始化的变量具有随机不可确定的值，如果是恰巧是以前变量留下的野指针，一旦使用也会造成内存损坏。不过此类问题通过代码静态检查一般就可以发现，很好避免。</p>
-</li>
-</ol>
-<h3 id=内存调试工具>内存调试工具</h3>
-<p>根据《高效c/c++调试》书中所写，内存调试工具的大致可以分为3中类型:</p>
-<ol>
-<li>
-<p>填充字节方法</p>
-<p>在每个分配的内存块开头和结尾添加额外的填充字节，内存溢出和下溢的代码就会修改填充字节，调试工具可以在内存分配api的入口(malloc和free函数)检查这些填充字节，如果发生填充字节被修改，就表示发生了内存损坏，报告错误的堆栈等信息。</p>
-</li>
-<li>
-<p>系统保护页方法</p>
-<p>在可能内存块前后设置不可访问的系统保护页，程序试图非法访问受保护的内存时，马上就会停止执行程序，因此可以找到具体越界的代码。但是，频繁地设置系统保护页会调用系统调用(linux下mprotect函数)有一定的时间消耗，有可能会改变程序的行为，使问题无法复现。</p>
-</li>
-<li>
-<p>影子内存方法</p>
-<p>在内部使用影子内存来跟踪程序的内存使用情况，每次内存访问都会更新影子内存，发生错误时，可以立即发现，但是对程序的性能影响较大。Valgrind的memcheck工具和asan都属于这一类型，平均性能损耗分别是10～20和2倍左右。</p>
-</li>
-</ol>
-<p>如下图，目前主流的内存检测工具对比。图来自《高效c/c++调试》，其中AccuTrak是该书作者开发的工具也加入了对比。</p>
-<p><figure><a class=lightgallery href=/images/data_races_coredump/memcheck_tools.png title=内存检测工具对比 data-thumbnail=/images/data_races_coredump/memcheck_tools.png data-sub-html="<h2>内存检测工具对比</h2><p>内存检测工具对比</p>">
-<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/memcheck_tools.png data-srcset="/images/data_races_coredump/memcheck_tools.png, /images/data_races_coredump/memcheck_tools.png 1.5x, /images/data_races_coredump/memcheck_tools.png 2x" data-sizes=auto alt=/images/data_races_coredump/memcheck_tools.png>
-</a><figcaption class=image-caption>内存检测工具对比</figcaption>
-</figure></p>
-<h2 id=问题排查>问题排查</h2>
-<p>软件是运行在arm板子有操作系统的车端状态机模块。该问题有稳定复现的方法，虽然需要几个小时才能复现。</p>
-<h3 id=coredump分析>coredump分析</h3>
-<p>此版本coredump的堆栈不固定，一般最后都挂在malloc_consolidate函数中。从最后一条指令看出x19寄存器存储的指针高4字节被修改为0xffffffff，通过堆上前后数据特征，可以确定真正合法的地址是0x7f<strong>2c000c40</strong>被篡改为0xffffffff <strong>2c000c40</strong>。</p>
-<p><figure><a class=lightgallery href=/images/data_races_coredump/coredump_bt.png title="coredump bt" data-thumbnail=/images/data_races_coredump/coredump_bt.png data-sub-html="<h2>coredump bt</h2><p>coredump bt</p>">
-<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/coredump_bt.png data-srcset="/images/data_races_coredump/coredump_bt.png, /images/data_races_coredump/coredump_bt.png 1.5x, /images/data_races_coredump/coredump_bt.png 2x" data-sizes=auto alt=/images/data_races_coredump/coredump_bt.png>
-</a><figcaption class=image-caption>coredump bt</figcaption>
-</figure></p>
-<p>而在之前的版本中，coredump多是在另一个地方，堆上对象虚表指针的高4位被修改为0xffffffff。</p>
-<p><figure><a class=lightgallery href=/images/data_races_coredump/pre_coredump_bt.png title="pre_coredump bt" data-thumbnail=/images/data_races_coredump/pre_coredump_bt.png data-sub-html="<h2>pre_coredump bt</h2><p>pre_coredump bt</p>">
-<img class=lazyload src=/svg/loading.min.svg data-src=/images/data_races_coredump/pre_coredump_bt.png data-srcset="/images/data_races_coredump/pre_coredump_bt.png, /images/data_races_coredump/pre_coredump_bt.png 1.5x, /images/data_races_coredump/pre_coredump_bt.png 2x" data-sizes=auto alt=/images/data_races_coredump/pre_coredump_bt.png>
-</a><figcaption class=image-caption>pre_coredump bt</figcaption>
-</figure></p>
-<p>debug之前的版本的coredump时，曾经在对象操作前后打印其虚表指针，明确看到其在执行完某个rpc操作后指针被篡改，当时一直怀疑的点是rpc操作中操作堆内存溢出，修改了虚表指针。在之前版本中着急发版没有找到根因，通过改写避开了coredump堆栈的代码。</p>
-<h3 id=分析过程>分析过程</h3>
-<p>最初通过coredump的分析主要猜测原因是内存溢出。分析多个coredump时，尽管对比了被篡改数据前后的内存值，并未发现多个coredump有明显一致性的值。使用了MALLOC_CHECK、Valgrind/Memcheck工具和自制的两个内存检测工具，但都未找到问题所在。由于在编译SDK不支持，未使用asan工具。为了进一步排查问题，采用了“笨”办法，一点点注释怀疑的代码并尝试复现。</p>
-<p>然而，最终通过自制的内存越界检测工具未能复现coredump的现象，因此认为不太可能是内存溢出修改导致的问题。经过一夜的思考，我想到了另一种可能性：多线程共享变量。如果一个线程在析构时，另一个线程还在使用这些变量，就可能导致coredump。最后，在注释了几个线程的启动后，通过代码review发现项目中存在这种竞态条件，导致操作已经释放的内存，并将其修改为-1（0xffffffff）。写了一个小demo模拟，可以复现这个问题。通过自制的堆数据释放后使用的内存检测工具也检测出了问题。</p>
-<p>通过修改此处的代码，经过两天的压测，问题未再复现。</p>
-<h3 id=问题原因>问题原因</h3>
-<p>原因简单讲就是对ros::Timer对象，在timer回调线程中调用其stop方法，另一个线程在某些条件下会销毁该对象。即</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=c1>// thread 1
-</span><span class=c1></span><span class=n>timer</span> <span class=o>=</span> <span class=n>n</span><span class=p>.</span><span class=n>createTimer</span><span class=p>(</span><span class=n>ros</span><span class=o>::</span><span class=n>Duration</span><span class=p>(</span><span class=mi>1</span><span class=p>),</span> <span class=n>std</span><span class=o>::</span><span class=n>bind</span><span class=p>(</span><span class=o>&amp;</span><span class=n>TimerTester</span><span class=o>::</span><span class=n>fun1</span><span class=p>,</span> <span class=k>this</span><span class=p>));</span>
-<span class=c1>// thread 2
-</span><span class=c1></span><span class=n>timer</span><span class=p>.</span><span class=n>stop</span><span class=p>();</span>
-</code></pre></div><p>在thread 1中对栈上timer重新赋值，会将之前的timer销毁。虽然timer是栈上变量，但其内部申请了堆内存。其stop函数实现如下，其中正好有赋值-1，并且也能看出stop函数并不是线程安全的。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=kt>void</span> <span class=n>Timer</span><span class=o>::</span><span class=n>Impl</span><span class=o>::</span><span class=n>stop</span><span class=p>()</span>
-<span class=p>{</span>
-  <span class=k>if</span> <span class=p>(</span><span class=n>started_</span><span class=p>)</span>
-  <span class=p>{</span>
-    <span class=n>started_</span> <span class=o>=</span> <span class=nb>false</span><span class=p>;</span>
-    <span class=n>TimerManager</span><span class=o>&lt;</span><span class=n>Time</span><span class=p>,</span> <span class=n>Duration</span><span class=p>,</span> <span class=n>TimerEvent</span><span class=o>&gt;::</span><span class=n>global</span><span class=p>().</span><span class=n>remove</span><span class=p>(</span><span class=n>timer_handle_</span><span class=p>);</span> <span class=c1>// line6
-</span><span class=c1></span>    <span class=n>timer_handle_</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
-  <span class=p>}</span>
-<span class=p>}</span>
-</code></pre></div><p>同事提出一个问题，即在timer销毁时也会调用stop函数，从代码和实际测试中能发现，stop函数在回调线程外部调用时如果回调函数正在执行会阻塞在line6等回调函数执行完毕。而stop函数在回调线程内部调用则不会阻塞等待(否则会产生死锁，ros内部通过tls线程局部存储变量判断是否在回调线程调用stop函数)。问题就是thread 1申请的内存释放前会调用stop函数，如果stop函数需要等待回调函数执行完成，则会等待thread 2执行完stop函数并且退出回调函数后才会释放内存，也就不会出现内存释放后使用的问题。</p>
-<p>答案也很简单，由于stop不是线程安全的，所以完全可能thread 2执行stop把started设置为false，之后thread 1释放内存前调用stop由于started为false跳过阻塞等待直接执行完毕释放内存。</p>
-<h2 id=自制内存检查工具>自制内存检查工具</h2>
-<p>本人在这次问题排查过程中，开发了两个内存检查工具，虽未用其查明根因，但在验证问题还是起到一定作用。两个内存检测工具都是通过<code>LD_PRELOAD</code>环境变量注入自己实现的malloc和free函数，在两个函数中进行一些检查，从而在用户使用有问题的地方能打印出堆栈提醒用户。并且工具实现较简单不会对程序有大幅影响，导致问题可能不复现。</p>
-<h3 id=代码注入方法总结>代码注入方法总结</h3>
-<p>对于代码注入在《高效c/c++调试》<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>介绍了如下几种方法：</p>
-<ol>
-<li>
-<p>链接时替换</p>
-<p>在生成可执行文件或共享库时，连接器发现如果存在多个实现与未定义的符号，会选择在搜索列表中最先找到的实现。所以可以将代理函数放在最前面，使链接器优先选择该函数。这种方式需要重新编译，对于未重新编译的第三方库来说注入就不会成功。</p>
-<p>例如将自己实现的malloc、free、realloc等函数编译到目标文件my_malloc.o中，然后链接时将其放入其他目标文件之前，执行类似如下的命令：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>g++ my_malloc.o other_object_files -o target
-</code></pre></div></li>
-<li>
-<p>预先加载函数</p>
-<p>在运行时，系统加载器将读取环境变量<code>LD_PRELOAD</code>预加载环境变量制定的动态链接库，但链接器尝试解析未定义的符号时，会优先使用库中的函数。该方法无需对程序重新编译。</p>
-</li>
-<li>
-<p>修改导入和导出表</p>
-<p>运行时需要动态链接的函数时通过程序链接表PLT进行路由的，会在第一次调用进行符号解析找到函数对应的GOT表项中的函数地址，设置PLT表项跳转指令为GOT表项中的函数地址。我们可以通过修改GOT表项为代理函数，从而注入检查代码。每个so模块都有自己的GOT表所以需要对每个模块都进行修补，也可以进行细粒度的控制选择某些模块修补。</p>
-</li>
-<li>
-<p>对目标函数进行手术改变</p>
-<p>还有一种更具有侵入性的方式，修改目标函数的代码，通常不是直接覆写原始代码(由于原始代码空间较短无足够的空间容纳新代码)，而是在函数开始时注入跳转指令，将其设置为代理函数的地址。该方法可以注入不是动态链接的函数。另外原始函数在.text段通常为可读的需要将内存保护模式从只读修改为科协，插入跳转指令后，再将函数的内存页面保护模式恢复成只读。</p>
-</li>
-</ol>
-<h3 id=堆数据越界>堆数据越界</h3>
-<ul>
-<li>
-<p>原理</p>
-<p><a href=https://github.com/ImportMengjie/memcheck/blob/main/memory_check_malloc_overflow.cc target=_blank rel="noopener noreffer">代码地址</a>: 通过自定义的malloc和free等函数，在申请内存时内存块上下多申请几个字节并且放入魔数，在free时对上下魔数进行校验，如果发现被修改，则说明该释放数据在使用时出现了溢出情况，同时打印释放时的堆栈，以便提醒用户检查释放数据在之前的使用时有溢出的发生。</p>
-</li>
-<li>
-<p>实例</p>
-<p>对如下错误代码可以有效检测出来。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#include</span> <span class=cpf>&lt;iostream&gt;</span><span class=cp>
-</span><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>std</span><span class=p>;</span>
-
-<span class=kt>int</span> <span class=nf>main</span><span class=p>(){</span>
-    <span class=kt>int</span> <span class=o>*</span><span class=n>a</span> <span class=o>=</span> <span class=k>new</span><span class=p>(</span><span class=kt>int</span><span class=p>);</span>
-    <span class=n>a</span><span class=p>[</span><span class=mi>2</span><span class=p>]</span> <span class=o>=</span> <span class=mi>10</span><span class=p>;</span>
-    <span class=k>delete</span> <span class=n>a</span><span class=p>;</span>
-<span class=p>}</span>
-</code></pre></div></li>
-<li>
-<p>缺点</p>
-<ol>
-<li>由于只在释放时才会进行检查，所以对于一直运行的程序在其整个生命周期都存在的堆数据，只能使用ctrl+c提前结束程序才能触发检测。</li>
-<li>使用mmap真实分配内存。所以分配内存的性能不如原始的ptmalloc，这一点可以进行优化。</li>
-</ol>
-</li>
-</ul>
-<h3 id=堆数据释放后使用>堆数据释放后使用</h3>
-<ul>
-<li>
-<p>原理</p>
-<p><a href=https://github.com/ImportMengjie/memcheck/blob/main/memory_check_malloc_usefree.cc target=_blank rel="noopener noreffer">代码地址</a>: 通过对用户调用free释放的内存块进行魔数填充，在一段时间后在去检查该魔数是否被修改，再还给操作系统。以此来检测是否用户存在释放后的内存块还在修改其内容。实现细节如下：</p>
-<ol>
-<li>使用<code>__attribute__((constructor))</code>在该工具so被加载时执行一些准备工作</li>
-<li>使用<code>dlsym(RTLD_NEXT, "malloc")</code>找到原始的malloc函数，内存实际的分配其实是转发给原始的malloc函数。</li>
-<li>在用户调用malloc时保存其调用堆栈放入队列中，用户free时将内存块填充为魔数，并且检查队列是否满了，如果满了就取队头进行魔数校验，然后调用原始的free释放。如果魔数被修改则打印之前保存的申请时堆栈，调用terminate()生成coredump。</li>
-</ol>
-<p>工具在检测到魔数被修改时，会打印申请内存块时的堆栈。</p>
-</li>
-<li>
-<p>实例</p>
-<p>对如下错误代码可以有效检测出来。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=cp>#include</span> <span class=cpf>&lt;iostream&gt;</span><span class=cp>
-</span><span class=cp>#include</span> <span class=cpf>&lt;thread&gt;</span><span class=cp>
-</span><span class=cp>#include</span> <span class=cpf>&lt;chrono&gt;</span><span class=cp>
-</span><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>std</span><span class=p>;</span>
-
-<span class=kt>void</span> <span class=nf>func</span><span class=p>()</span> <span class=p>{</span>
-    <span class=n>uint</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
-    <span class=k>while</span> <span class=p>(</span><span class=nb>true</span><span class=p>)</span> <span class=p>{</span>
-        <span class=kt>int</span> <span class=o>*</span><span class=n>a</span> <span class=o>=</span> <span class=k>new</span> <span class=p>(</span><span class=kt>int</span><span class=p>);</span>
-        <span class=n>a</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
-        <span class=k>delete</span> <span class=n>a</span><span class=p>;</span>
-        <span class=k>if</span> <span class=p>(</span><span class=n>i</span> <span class=o>==</span> <span class=mi>10</span><span class=p>)</span> <span class=p>{</span>
-            <span class=n>a</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=n>i</span><span class=p>;</span>
-        <span class=p>}</span>
-        <span class=o>++</span><span class=n>i</span><span class=p>;</span>
-    <span class=p>}</span>
-<span class=p>}</span>
-
-<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
-    <span class=n>std</span><span class=o>::</span><span class=kr>thread</span> <span class=n>t1</span><span class=p>(</span><span class=n>func</span><span class=p>);</span>
-    <span class=n>t1</span><span class=p>.</span><span class=n>join</span><span class=p>();</span>
-<span class=p>}</span>
-</code></pre></div></li>
-<li>
-<p>缺点</p>
-<ol>
-<li>由于<code>__attribute__((constructor))</code>会在so被加载时执行，如果用户程序含有popen、system等新建进程时也会在该进程中执行一遍，所以可能会打印多次初始化的日志。</li>
-<li>虽然对性能影响很小，但是也可能导致某些多线程原因导致释放后修改触发的概率减小。</li>
-</ol>
-</li>
-</ul>
-<hr>
-<h2 id=参考>参考</h2>
-<section class=footnotes role=doc-endnotes>
-<hr>
-<ol>
-<li id=fn:1 role=doc-endnote>
-<p><a href=https://blog.csdn.net/maokelong95/article/details/51989081 target=_blank rel="noopener noreffer">理解 glibc malloc：主流用户态内存分配器实现原理</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-<li id=fn:2 role=doc-endnote>
-<p><a href=https://book.douban.com/subject/36693242/ target=_blank rel="noopener noreffer">《高效c/c++调试》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-</ol>
-</section>
-</div><div class=post-footer id=post-footer>
-<div class=post-info>
-<div class=post-info-line>
-<div class=post-info-mod>
-<span>Updated on 2024-05-12</span>
-</div></div>
-<div class=post-info-line>
-<div class=post-info-md></div>
-<div class=post-info-share>
-<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="记一次数据竞争导致内存损坏的coredump - 问题诊断" data-hashtags="c++,data races,memory corruption"><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-hashtag=c++><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="记一次数据竞争导致内存损坏的coredump - 问题诊断"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="记一次数据竞争导致内存损坏的coredump - 问题诊断"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="记一次数据竞争导致内存损坏的coredump - 问题诊断"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
-</div>
-</div>
-</div>
-<div class=post-info-more>
-<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/c++/>c++</a>,&nbsp;<a href=/tags/data-races/>data races</a>,&nbsp;<a href=/tags/memory-corruption/>memory corruption</a></section>
-<section>
-<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
-</section>
-</div>
-<div class=post-nav><a href=/posts/dont-even-know-that_1/ class=prev rel=prev title="一些我竟然不知道的计算机相关知识 - 这都不知道「1」"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>一些我竟然不知道的计算机相关知识 - 这都不知道「1」</a>
-<a href=/posts/reading_202312-202406/ class=next rel=next title="书单盘点: 2023年12月～2024年05月">书单盘点: 2023年12月～2024年05月<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div>
-</div>
-<div id=comments><div id=giscus class=comment></div><noscript>
-Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
-</noscript></div></article></div>
-</main><footer class=footer>
-<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
-</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
-<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
-<section>
-<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
-<span id=busuanzi_value_site_pv></span>
-</span>
-&nbsp;|&nbsp;
-<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
-<span id=busuanzi_value_site_uv></span>
-</span>
-</section>
-</div>
-</footer></div>
-<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
-<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
-</a><a href=# id=view-comments class=fixed-button title="View Comments">
-<i class="fas fa-comment fa-fw" aria-hidden=true></i>
-</a>
-</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.485ce22971162ae594e2f22468d97519fb9c08a7112e3a012e8684cfe098b474.js integrity="sha256-SFziKXEWKuWU4vIkaNl1GfucCKcRLjoBLoaEz+CYtHQ="></script></body>
-</html>
+<button class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<svg class="icon" viewBox="0 0 512 512"><path d="M505 442.7 405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9.0 208 0S0 93.1.0 208s93.1 208 208 208c48.3.0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9.0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7.0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7.0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+</button>
+<button class="search-button search-clear" id=search-clear-desktop title=Clear>
+<svg class="icon" viewBox="0 0 512 512"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3.0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3.0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3.0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3.0 17L312 256l65.6 65.1z"/></svg>
+</button>
+<span class="search-button search-loading tw-animate-spin" id=search-loading-desktop><svg class="icon" viewBox="0 0 512 512"><path d="M304 48c0 26.51-21.49 48-48 48s-48-21.49-48-48 21.49-48 48-48 48 21.49 48 48zm-48 368c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm208-208c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zM96 256c0-26.51-21.49-48-48-48S0 229.49.0 256s21.49 48 48 48 48-21.49 48-48zm12.922 99.078c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.491-48-48-48zm294.156.0c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.49-48-48-48zM108.922 60.922c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.491-48-48-48z"/></svg>
+</span></span><button class="menu-item theme-switch" aria-label="Switch Theme"><svg class="icon" viewBox="0 0 512 512"><path d="M8 256c0 136.966 111.033 248 248 248s248-111.034 248-248S392.966 8 256 8 8 119.033 8 256zm248 184V72c101.705.0 184 82.311 184 184 0 101.705-82.311 184-184 184z"/></svg></button></div></div></div></header><header class="mobile print:!tw-hidden" id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title="ImportMengjie's Blog"><img class="tw-inline tw-align-text-bottom tw-mr-1" src=/images/avatar.jpg height=32 width=32>ImportMengjie</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<button class="search-button search-toggle tw-h-10" id=search-toggle-mobile title=Search>
+<svg class="icon" viewBox="0 0 512 512"><path d="M505 442.7 405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9.0 208 0S0 93.1.0 208s93.1 208 208 208c48.3.0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9.0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7.0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7.0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+</button>
+<button class="search-button search-clear" id=search-clear-mobile title=Clear>
+<svg class="icon" viewBox="0 0 512 512"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3.0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3.0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3.0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3.0 17L312 256l65.6 65.1z"/></svg>
+</button>
+<span class="search-button search-loading tw-animate-spin" id=search-loading-mobile><svg class="icon" viewBox="0 0 512 512"><path d="M304 48c0 26.51-21.49 48-48 48s-48-21.49-48-48 21.49-48 48-48 48 21.49 48 48zm-48 368c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm208-208c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zM96 256c0-26.51-21.49-48-48-48S0 229.49.0 256s21.49 48 48 48 48-21.49 48-48zm12.922 99.078c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.491-48-48-48zm294.156.0c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.49-48-48-48zM108.922 60.922c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.491-48-48-48z"/></svg></span></div><button class=search-cancel id=search-cancel-mobile>
+Cancel</button></div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><button class="menu-item theme-switch tw-w-full" aria-label="Switch Theme"><svg class="icon" viewBox="0 0 512 512"><path d="M8 256c0 136.966 111.033 248 248 248s248-111.034 248-248S392.966 8 256 8 8 119.033 8 256zm248 184V72c101.705.0 184 82.311 184 184 0 101.705-82.311 184-184 184z"/></svg></button></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class="toc print:!tw-hidden" id=toc-auto><h2 class=toc-title>Contents</h2><div class="toc-content always-active" id=toc-content-auto><nav id=TableOfContents><ul><li><a href=#前置知识>前置知识</a><ul><li><a href=#内存管理器>内存管理器</a></li><li><a href=#内存损坏memory-corruption>内存损坏(memory corruption)</a></li><li><a href=#内存调试工具>内存调试工具</a></li></ul></li><li><a href=#问题排查>问题排查</a><ul><li><a href=#coredump分析>coredump分析</a></li><li><a href=#分析过程>分析过程</a></li><li><a href=#问题原因>问题原因</a></li></ul></li><li><a href=#自制内存检查工具>自制内存检查工具</a><ul><li><a href=#代码注入方法总结>代码注入方法总结</a></li><li><a href=#堆数据越界>堆数据越界</a></li><li><a href=#堆数据释放后使用>堆数据释放后使用</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav></div></div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC","true")</script><article class="page single print:!tw-w-full print:!tw-max-w-none print:!tw-m-0 print:!tw-p-0"><h1 class=single-title>记一次数据竞争导致内存损坏的coredump - 问题诊断</h1><div class=post-meta><div class=post-meta-line><span class=post-author><svg class="icon" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 96c48.6.0 88 39.4 88 88s-39.4 88-88 88-88-39.4-88-88 39.4-88 88-88zm0 344c-58.7.0-111.3-26.6-146.5-68.2 18.8-35.4 55.6-59.8 98.5-59.8 2.4.0 4.8.4 7.1 1.1 13 4.2 26.6 6.9 40.9 6.9s28-2.7 40.9-6.9c2.3-.7 4.7-1.1 7.1-1.1 42.9.0 79.7 24.4 98.5 59.8C359.3 421.4 306.7 448 248 448z"/></svg><a href=/ title=Author rel=author class=author>mengjie</a>
+</span>&nbsp;<span class=post-category>included in </span>&nbsp;<span class=post-category>category <a href=/categories/troubleshooting/><svg class="icon" viewBox="0 0 512 512"><path d="M464 128H272l-54.63-54.63c-6-6-14.14-9.37-22.63-9.37H48C21.49 64 0 85.49.0 112v288c0 26.51 21.49 48 48 48h416c26.51.0 48-21.49 48-48V176c0-26.51-21.49-48-48-48zm0 272H48V112h140.12l54.63 54.63c6 6 14.14 9.37 22.63 9.37H464v224z"/></svg>Troubleshooting</a></span></div><div class=post-meta-line><svg class="icon" viewBox="0 0 448 512"><path d="M148 288h-40c-6.6.0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6.0 12 5.4 12 12v40c0 6.6-5.4 12-12 12zm108-12v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm96 0v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm-96 96v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm-96 0v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm192 0v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm96-260v352c0 26.5-21.5 48-48 48H48c-26.5.0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h48V12c0-6.6 5.4-12 12-12h40c6.6.0 12 5.4 12 12v52h128V12c0-6.6 5.4-12 12-12h40c6.6.0 12 5.4 12 12v52h48c26.5.0 48 21.5 48 48zm-48 346V160H48v298c0 3.3 2.7 6 6 6h340c3.3.0 6-2.7 6-6z"/></svg>&nbsp;<time datetime=2024-05-12>2024-05-12</time>&nbsp;<svg class="icon" viewBox="0 0 576 512"><path d="M402.3 344.9l32-32c5-5 13.7-1.5 13.7 5.7V464c0 26.5-21.5 48-48 48H48c-26.5.0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h273.5c7.1.0 10.7 8.6 5.7 13.7l-32 32c-1.5 1.5-3.5 2.3-5.7 2.3H48v352h352V350.5c0-2.1.8-4.1 2.3-5.6zm156.6-201.8L296.3 405.7l-90.4 10c-26.2 2.9-48.5-19.2-45.6-45.6l10-90.4L432.9 17.1c22.9-22.9 59.9-22.9 82.7.0l43.2 43.2c22.9 22.9 22.9 60 .1 82.8zM460.1 174 402 115.9 216.2 301.8l-7.3 65.3 65.3-7.3L460.1 174zm64.8-79.7-43.2-43.2c-4.1-4.1-10.8-4.1-14.8.0L436 82l58.1 58.1 30.9-30.9c4-4.2 4-10.8-.1-14.9z"/></svg>&nbsp;<time datetime=2024-05-12>2024-05-12</time>&nbsp;<svg class="icon" viewBox="0 0 512 512"><path d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3.0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9.0l60.1 60.1c18.8 18.7 18.8 49.1.0 67.9zM284.2 99.8 21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3.0-17l-111-111c-4.8-4.7-12.4-4.7-17.1.0zM124.1 339.9c-5.5-5.5-5.5-14.3.0-19.8l154-154c5.5-5.5 14.3-5.5 19.8.0s5.5 14.3.0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8.0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"/></svg>&nbsp;6121 words&nbsp;<svg class="icon" viewBox="0 0 512 512"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 448c-110.5.0-2e2-89.5-2e2-2e2S145.5 56 256 56s2e2 89.5 2e2 2e2-89.5 2e2-2e2 2e2zm61.8-104.4-84.9-61.7c-3.1-2.3-4.9-5.9-4.9-9.7V116c0-6.6 5.4-12 12-12h32c6.6.0 12 5.4 12 12v141.7l66.8 48.6c5.4 3.9 6.5 11.4 2.6 16.8L334.6 349c-3.9 5.3-11.4 6.5-16.8 2.6z"/></svg>&nbsp;13 minutes&nbsp;</div></div><div class="details toc print:!tw-block" id=toc-static kept><div class="details-summary toc-title"><span>Contents</span>
+<span class=details-icon><svg class="icon" viewBox="0 0 256 512"><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9.0l-22.6-22.6c-9.4-9.4-9.4-24.6.0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6.0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9.0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#前置知识>前置知识</a><ul><li><a href=#内存管理器>内存管理器</a></li><li><a href=#内存损坏memory-corruption>内存损坏(memory corruption)</a></li><li><a href=#内存调试工具>内存调试工具</a></li></ul></li><li><a href=#问题排查>问题排查</a><ul><li><a href=#coredump分析>coredump分析</a></li><li><a href=#分析过程>分析过程</a></li><li><a href=#问题原因>问题原因</a></li></ul></li><li><a href=#自制内存检查工具>自制内存检查工具</a><ul><li><a href=#代码注入方法总结>代码注入方法总结</a></li><li><a href=#堆数据越界>堆数据越界</a></li><li><a href=#堆数据释放后使用>堆数据释放后使用</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav></div></div><div class=content id=content><h2 id=前置知识 class=headerLink><a href=#%e5%89%8d%e7%bd%ae%e7%9f%a5%e8%af%86 class=header-mark aria-label="Header mark for '前置知识'"></a>前置知识</h2><h3 id=内存管理器 class=headerLink><a href=#%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%e5%99%a8 class=header-mark aria-label="Header mark for '内存管理器'"></a>内存管理器</h3><p>如果想要对内存损坏有一个深刻意识需要对内存分配器有一个初步的认识，接下来对其做基本概念介绍。</p><p>堆内存（Heap Memory）是由内存管理器进行管理的，用户通过<code>void *malloc( size_t size )</code>申请堆内存块，通过<code>void free(void *)</code>将申请的内存块还给内存分配器。一般我们使用的内存管理器是glibc中的ptmalloc。</p><p>在linux中内存管理器通过brk和mmap系统调用向操作系统申请一大块内存进行管理，用户申请的内存优先在申请的大块内存中分配，从而减少系统调用的次数。通过brk控制下图<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>中<code>狭义的Heap Segment</code>区域扩大或缩小，其作为<strong>主线程</strong>的堆内存由内存管理器管理。对于其它线程则是通过mmap在<code>Memory Mapping Segment</code>区域申请内存块使用，从而减少多线程共享内存块。所以内存管理器的难点就是合理化利用从操作系统申请的一大块内存，在用户<code>malloc</code>申请内存时能及时找到满足用户申请大小的内存返回给用户；在用户<code>free</code>释放内存能合理的管理这些被释放的内存块，比方说合并相连的内存块减少内存碎片。</p><p><figure><a class=lightgallery href=/images/data_races_coredump/memory_layout.jpg title=内存布局 data-thumbnail=/images/data_races_coredump/memory_layout.jpg data-sub-html="<h2>Linux内存布局</h2><p>内存布局</p>"><img loading=lazy src=/images/data_races_coredump/memory_layout.jpg alt=内存布局></a><figcaption class=image-caption>Linux内存布局</figcaption></figure></p><p>对于ptmalloc有如下一些数据结构：</p><ol><li><p>Arena</p><p>用于管理向操作系统申请的内存块，分为主线程的main arena和线程的thread arena。main arena是通过<code>brk</code>系统调用在空间用尽时可以拓展，而thread arena无拓展能力，所以可能会管理多个内存块。内存块在ptmalloc中用<code>struct heap_info</code>作为header保存元信息。arena使用<code>struct malloc_state</code>作为header保存元信息。</p><p>另外对于一些用户线程数量高于cpu核数，每个线程分配一个arena开销过大，所以thread arena其实是受限于cpu核数，总之不是一个线程就对应一个arena。</p></li><li><p>Chunk</p><p>用于管理分配给用户的内存块，主要有Allocated chunk已经分配给用户的内存块和Free chunk用户释放的内存块。其header数据结构称为<code>malloc_chunk</code>。</p><ul><li><p>Allocated chunck已经分配给用户的内存块</p><p><figure><a class=lightgallery href=/images/data_races_coredump/allocated_chunk.jpg title=allocated_chunk.jpg data-thumbnail=/images/data_races_coredump/allocated_chunk.jpg data-sub-html="<h2>Allocated chunk已经分配给用户的内存块</h2><p>allocated_chunk.jpg</p>"><img loading=lazy src=/images/data_races_coredump/allocated_chunk.jpg alt=allocated_chunk.jpg></a><figcaption class=image-caption>Allocated chunk已经分配给用户的内存块</figcaption></figure></p><p>其中左方第一个箭头chunk表示起始地址，mem表示分配给用户的起始地址，next_chunk为下一个chunk的起始地址同时也是分配给用户的结束地址。This chunk size是分配的size大小，其有对齐的需求，所以后三位都为0,为了节省空间，将其利用放入三个标志位。N表示该chunk是否为thread chunk，M表示是否是mmap分配的chunk。P表示前一个chunk是否被分配。</p></li><li><p>Free chunck</p><p><figure><a class=lightgallery href=/images/data_races_coredump/free_chunk.jpg title=free_chunk.jpg data-thumbnail=/images/data_races_coredump/free_chunk.jpg data-sub-html="<h2>free chunk已经分配给用户的内存块</h2><p>free_chunk.jpg</p>"><img loading=lazy src=/images/data_races_coredump/free_chunk.jpg alt=free_chunk.jpg></a><figcaption class=image-caption>free chunk已经分配给用户的内存块</figcaption></figure></p><p>比起Allocated chunck增加了两个指针，指向同一个bin中前后的free chunk。bin就是用来管理free chunk的数据结构。</p><p>可以见得存储前一个chunk的是否分配和分配大小就是为了在释放时检查如果前后的chunk也是free chunk可以进行合并，减少内存碎片。</p></li></ul></li><li><p>Bin</p><p>bin就是用来管理free chunk的数据结构，其包含Fast bin、Unsorted bin、Small bin、Large bin等，已经释放的chunk会根据一些规则放入不同的bin中，设置多个bin主要是满足用户的不同分配内存大小，加快找到合适的free chunk分配给用户。</p></li></ol><p>根据上述的介绍可以了解到，假设用户拿到分配的内存，不小心修改了不是所申请范围的内存，就可能修改到内存分配器存储的一些元信息，在之后的内存管理器执行时造成错误。这也是我们见到程序挂在malloc相关函数中一个可能的原因。</p><h3 id=内存损坏memory-corruption class=headerLink><a href=#%e5%86%85%e5%ad%98%e6%8d%9f%e5%9d%8fmemory-corruption class=header-mark aria-label="Header mark for '内存损坏(memory corruption)'"></a>内存损坏(memory corruption)</h3><p>内存损坏通常是对不是自己向内存管理器申请的内存块进行操作，而在大多数情况下对该内存操作对操作系统角度看却是合法的，因为访问的地址是内核分配给进程的空间，所以<strong>程序不会马上崩溃，数据被悄悄修改，最后可能会挂在不相关的地方</strong>。《高效c/c++调试》<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>书中写道:</p><blockquote><p>调试内存损坏的真正挑战在于，程序错误时并不能揭示导致错误的有缺陷的代码。通常，程序在有bug的代码做出错误的内存访问时，不会显示任何症状，但是程序中的某个变量意外地被改变为不正确的值。在一些文献中，这被叫作传染。随着程序继续运行，该变量会感染其他变量。这种错误传播最终会发展为严重的失败：程序要么崩溃，要么生成错误的结果。由于导致错误的原因和结果之间的距离很长，崩溃时的变量和执行代码与实际错误往往没有关联，而且在时间和位置方面可能会表现出很多随机性。</p></blockquote><p>所以如果程序崩溃在错误代码运行时，那问题就很好debug。对于更“高级”的语言像java/python有越界检查和垃圾回收gc机制基本可以做到程序崩溃的地方就是错误代码运行的地方，而对于c/c++就不一定了，当然也不用为越界检查和gc付出“代价”。参考《高效c/c++调试》堆内存损坏的常见几种类型，如下:</p><ol><li><p>内存溢出和下溢</p><p>用户代码访问超出内存管理器分配的内存(溢出)或者访问可用内存之前的内存块(下溢)。可能会损坏堆元数据结构，导致下一个块被释放或者分配时产生未定义行为。而且也不一定会内存损坏，因为内存块有最小块大小和对齐的要求，可能实际分配给用户的内存大于用户请求大小，破坏的可能是填充的内存，就不会有影响。</p></li><li><p>操作已经释放的内存</p><p>另一种情况是操作已经释放的内存，当用户操作空悬指针或引用时会造成内存损坏，同样症状因许多因素而异，例如，访问的内存已经还给内核，则程序因非法地址访问直接崩溃；释放的内存可能再一次分配给用户，从而导致数据对象被意外破坏；如果内存被内存管理器缓存，修改其可能会破坏堆元数据。</p></li><li><p>使用未初始化的值</p><p>对于未初始化的变量具有随机不可确定的值，如果是恰巧是以前变量留下的野指针，一旦使用也会造成内存损坏。不过此类问题通过代码静态检查一般就可以发现，很好避免。</p></li></ol><h3 id=内存调试工具 class=headerLink><a href=#%e5%86%85%e5%ad%98%e8%b0%83%e8%af%95%e5%b7%a5%e5%85%b7 class=header-mark aria-label="Header mark for '内存调试工具'"></a>内存调试工具</h3><p>根据《高效c/c++调试》书中所写，内存调试工具的大致可以分为3中类型:</p><ol><li><p>填充字节方法</p><p>在每个分配的内存块开头和结尾添加额外的填充字节，内存溢出和下溢的代码就会修改填充字节，调试工具可以在内存分配api的入口(malloc和free函数)检查这些填充字节，如果发生填充字节被修改，就表示发生了内存损坏，报告错误的堆栈等信息。</p></li><li><p>系统保护页方法</p><p>在可能内存块前后设置不可访问的系统保护页，程序试图非法访问受保护的内存时，马上就会停止执行程序，因此可以找到具体越界的代码。但是，频繁地设置系统保护页会调用系统调用(linux下mprotect函数)有一定的时间消耗，有可能会改变程序的行为，使问题无法复现。</p></li><li><p>影子内存方法</p><p>在内部使用影子内存来跟踪程序的内存使用情况，每次内存访问都会更新影子内存，发生错误时，可以立即发现，但是对程序的性能影响较大。Valgrind的memcheck工具和asan都属于这一类型，平均性能损耗分别是10～20和2倍左右。</p></li></ol><p>如下图，目前主流的内存检测工具对比。图来自《高效c/c++调试》，其中AccuTrak是该书作者开发的工具也加入了对比。</p><p><figure><a class=lightgallery href=/images/data_races_coredump/memcheck_tools.png title=内存检测工具对比 data-thumbnail=/images/data_races_coredump/memcheck_tools.png data-sub-html="<h2>内存检测工具对比</h2><p>内存检测工具对比</p>"><img loading=lazy src=/images/data_races_coredump/memcheck_tools.png alt=内存检测工具对比></a><figcaption class=image-caption>内存检测工具对比</figcaption></figure></p><h2 id=问题排查 class=headerLink><a href=#%e9%97%ae%e9%a2%98%e6%8e%92%e6%9f%a5 class=header-mark aria-label="Header mark for '问题排查'"></a>问题排查</h2><p>软件是运行在arm板子有操作系统的车端状态机模块。该问题有稳定复现的方法，虽然需要几个小时才能复现。</p><h3 id=coredump分析 class=headerLink><a href=#coredump%e5%88%86%e6%9e%90 class=header-mark aria-label="Header mark for 'coredump分析'"></a>coredump分析</h3><p>此版本coredump的堆栈不固定，一般最后都挂在malloc_consolidate函数中。从最后一条指令看出x19寄存器存储的指针高4字节被修改为0xffffffff，通过堆上前后数据特征，可以确定真正合法的地址是0x7f<strong>2c000c40</strong>被篡改为0xffffffff <strong>2c000c40</strong>。</p><p><figure><a class=lightgallery href=/images/data_races_coredump/coredump_bt.png title="coredump bt" data-thumbnail=/images/data_races_coredump/coredump_bt.png data-sub-html="<h2>coredump bt</h2><p>coredump bt</p>"><img loading=lazy src=/images/data_races_coredump/coredump_bt.png alt="coredump bt"></a><figcaption class=image-caption>coredump bt</figcaption></figure></p><p>而在之前的版本中，coredump多是在另一个地方，堆上对象虚表指针的高4位被修改为0xffffffff。</p><p><figure><a class=lightgallery href=/images/data_races_coredump/pre_coredump_bt.png title="pre_coredump bt" data-thumbnail=/images/data_races_coredump/pre_coredump_bt.png data-sub-html="<h2>pre_coredump bt</h2><p>pre_coredump bt</p>"><img loading=lazy src=/images/data_races_coredump/pre_coredump_bt.png alt="pre_coredump bt"></a><figcaption class=image-caption>pre_coredump bt</figcaption></figure></p><p>debug之前的版本的coredump时，曾经在对象操作前后打印其虚表指针，明确看到其在执行完某个rpc操作后指针被篡改，当时一直怀疑的点是rpc操作中操作堆内存溢出，修改了虚表指针。在之前版本中着急发版没有找到根因，通过改写避开了coredump堆栈的代码。</p><h3 id=分析过程 class=headerLink><a href=#%e5%88%86%e6%9e%90%e8%bf%87%e7%a8%8b class=header-mark aria-label="Header mark for '分析过程'"></a>分析过程</h3><p>最初通过coredump的分析主要猜测原因是内存溢出。分析多个coredump时，尽管对比了被篡改数据前后的内存值，并未发现多个coredump有明显一致性的值。使用了MALLOC_CHECK、Valgrind/Memcheck工具和自制的两个内存检测工具，但都未找到问题所在。由于在编译SDK不支持，未使用asan工具。为了进一步排查问题，采用了“笨”办法，一点点注释怀疑的代码并尝试复现。</p><p>然而，最终通过自制的内存越界检测工具未能复现coredump的现象，因此认为不太可能是内存溢出修改导致的问题。经过一夜的思考，我想到了另一种可能性：多线程共享变量。如果一个线程在析构时，另一个线程还在使用这些变量，就可能导致coredump。最后，在注释了几个线程的启动后，通过代码review发现项目中存在这种竞态条件，导致操作已经释放的内存，并将其修改为-1（0xffffffff）。写了一个小demo模拟，可以复现这个问题。通过自制的堆数据释放后使用的内存检测工具也检测出了问题。</p><p>通过修改此处的代码，经过两天的压测，问题未再复现。</p><h3 id=问题原因 class=headerLink><a href=#%e9%97%ae%e9%a2%98%e5%8e%9f%e5%9b%a0 class=header-mark aria-label="Header mark for '问题原因'"></a>问题原因</h3><p>原因简单讲就是对ros::Timer对象，在timer回调线程中调用其stop方法，另一个线程在某些条件下会销毁该对象。即</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c++</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-1 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=c1>// thread 1
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>timer</span> <span class=o>=</span> <span class=n>n</span><span class=p>.</span><span class=n>createTimer</span><span class=p>(</span><span class=n>ros</span><span class=o>::</span><span class=n>Duration</span><span class=p>(</span><span class=mi>1</span><span class=p>),</span> <span class=n>std</span><span class=o>::</span><span class=n>bind</span><span class=p>(</span><span class=o>&amp;</span><span class=n>TimerTester</span><span class=o>::</span><span class=n>fun1</span><span class=p>,</span> <span class=k>this</span><span class=p>));</span>
+</span></span><span class=line><span class=cl><span class=c1>// thread 2
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>timer</span><span class=p>.</span><span class=n>stop</span><span class=p>();</span></span></span></code></pre></div><p>在thread 1中对栈上timer重新赋值，会将之前的timer销毁。虽然timer是栈上变量，但其内部申请了堆内存。其stop函数实现如下，其中正好有赋值-1，并且也能看出stop函数并不是线程安全的。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c++</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-2 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=kt>void</span> <span class=n>Timer</span><span class=o>::</span><span class=n>Impl</span><span class=o>::</span><span class=n>stop</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>started_</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>  <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>started_</span> <span class=o>=</span> <span class=nb>false</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>TimerManager</span><span class=o>&lt;</span><span class=n>Time</span><span class=p>,</span> <span class=n>Duration</span><span class=p>,</span> <span class=n>TimerEvent</span><span class=o>&gt;::</span><span class=n>global</span><span class=p>().</span><span class=n>remove</span><span class=p>(</span><span class=n>timer_handle_</span><span class=p>);</span> <span class=c1>// line6
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>timer_handle_</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></div><p>同事提出一个问题，即在timer销毁时也会调用stop函数，从代码和实际测试中能发现，stop函数在回调线程外部调用时如果回调函数正在执行会阻塞在line6等回调函数执行完毕。而stop函数在回调线程内部调用则不会阻塞等待(否则会产生死锁，ros内部通过tls线程局部存储变量判断是否在回调线程调用stop函数)。问题就是thread 1申请的内存释放前会调用stop函数，如果stop函数需要等待回调函数执行完成，则会等待thread 2执行完stop函数并且退出回调函数后才会释放内存，也就不会出现内存释放后使用的问题。</p><p>答案也很简单，由于stop不是线程安全的，所以完全可能thread 2执行stop把started设置为false，之后thread 1释放内存前调用stop由于started为false跳过阻塞等待直接执行完毕释放内存。</p><h2 id=自制内存检查工具 class=headerLink><a href=#%e8%87%aa%e5%88%b6%e5%86%85%e5%ad%98%e6%a3%80%e6%9f%a5%e5%b7%a5%e5%85%b7 class=header-mark aria-label="Header mark for '自制内存检查工具'"></a>自制内存检查工具</h2><p>本人在这次问题排查过程中，开发了两个内存检查工具，虽未用其查明根因，但在验证问题还是起到一定作用。两个内存检测工具都是通过<code>LD_PRELOAD</code>环境变量注入自己实现的malloc和free函数，在两个函数中进行一些检查，从而在用户使用有问题的地方能打印出堆栈提醒用户。并且工具实现较简单不会对程序有大幅影响，导致问题可能不复现。</p><h3 id=代码注入方法总结 class=headerLink><a href=#%e4%bb%a3%e7%a0%81%e6%b3%a8%e5%85%a5%e6%96%b9%e6%b3%95%e6%80%bb%e7%bb%93 class=header-mark aria-label="Header mark for '代码注入方法总结'"></a>代码注入方法总结</h3><p>对于代码注入在《高效c/c++调试》<sup id=fnref1:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>介绍了如下几种方法：</p><ol><li><p>链接时替换</p><p>在生成可执行文件或共享库时，连接器发现如果存在多个实现与未定义的符号，会选择在搜索列表中最先找到的实现。所以可以将代理函数放在最前面，使链接器优先选择该函数。这种方式需要重新编译，对于未重新编译的第三方库来说注入就不会成功。</p><p>例如将自己实现的malloc、free、realloc等函数编译到目标文件my_malloc.o中，然后链接时将其放入其他目标文件之前，执行类似如下的命令：</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">shell</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-3 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl>g++ my_malloc.o other_object_files -o target</span></span></code></pre></div></li><li><p>预先加载函数</p><p>在运行时，系统加载器将读取环境变量<code>LD_PRELOAD</code>预加载环境变量制定的动态链接库，但链接器尝试解析未定义的符号时，会优先使用库中的函数。该方法无需对程序重新编译。</p></li><li><p>修改导入和导出表</p><p>运行时需要动态链接的函数时通过程序链接表PLT进行路由的，会在第一次调用进行符号解析找到函数对应的GOT表项中的函数地址，设置PLT表项跳转指令为GOT表项中的函数地址。我们可以通过修改GOT表项为代理函数，从而注入检查代码。每个so模块都有自己的GOT表所以需要对每个模块都进行修补，也可以进行细粒度的控制选择某些模块修补。</p></li><li><p>对目标函数进行手术改变</p><p>还有一种更具有侵入性的方式，修改目标函数的代码，通常不是直接覆写原始代码(由于原始代码空间较短无足够的空间容纳新代码)，而是在函数开始时注入跳转指令，将其设置为代理函数的地址。该方法可以注入不是动态链接的函数。另外原始函数在.text段通常为可读的需要将内存保护模式从只读修改为科协，插入跳转指令后，再将函数的内存页面保护模式恢复成只读。</p></li></ol><h3 id=堆数据越界 class=headerLink><a href=#%e5%a0%86%e6%95%b0%e6%8d%ae%e8%b6%8a%e7%95%8c class=header-mark aria-label="Header mark for '堆数据越界'"></a>堆数据越界</h3><ul><li><p>原理</p><p><a href=https://github.com/ImportMengjie/memcheck/blob/main/memory_check_malloc_overflow.cc target=_blank rel="noopener noreferrer">代码地址</a>: 通过自定义的malloc和free等函数，在申请内存时内存块上下多申请几个字节并且放入魔数，在free时对上下魔数进行校验，如果发现被修改，则说明该释放数据在使用时出现了溢出情况，同时打印释放时的堆栈，以便提醒用户检查释放数据在之前的使用时有溢出的发生。</p></li><li><p>实例</p><p>对如下错误代码可以有效检测出来。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c++</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-4 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;iostream&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>std</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>main</span><span class=p>(){</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=o>*</span><span class=n>a</span> <span class=o>=</span> <span class=k>new</span><span class=p>(</span><span class=kt>int</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>a</span><span class=p>[</span><span class=mi>2</span><span class=p>]</span> <span class=o>=</span> <span class=mi>10</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>delete</span> <span class=n>a</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></div></li><li><p>缺点</p><ol><li>由于只在释放时才会进行检查，所以对于一直运行的程序在其整个生命周期都存在的堆数据，只能使用ctrl+c提前结束程序才能触发检测。</li><li>使用mmap真实分配内存。所以分配内存的性能不如原始的ptmalloc，这一点可以进行优化。</li></ol></li></ul><h3 id=堆数据释放后使用 class=headerLink><a href=#%e5%a0%86%e6%95%b0%e6%8d%ae%e9%87%8a%e6%94%be%e5%90%8e%e4%bd%bf%e7%94%a8 class=header-mark aria-label="Header mark for '堆数据释放后使用'"></a>堆数据释放后使用</h3><ul><li><p>原理</p><p><a href=https://github.com/ImportMengjie/memcheck/blob/main/memory_check_malloc_usefree.cc target=_blank rel="noopener noreferrer">代码地址</a>: 通过对用户调用free释放的内存块进行魔数填充，在一段时间后在去检查该魔数是否被修改，再还给操作系统。以此来检测是否用户存在释放后的内存块还在修改其内容。实现细节如下：</p><ol><li>使用<code>__attribute__((constructor))</code>在该工具so被加载时执行一些准备工作</li><li>使用<code>dlsym(RTLD_NEXT, "malloc")</code>找到原始的malloc函数，内存实际的分配其实是转发给原始的malloc函数。</li><li>在用户调用malloc时保存其调用堆栈放入队列中，用户free时将内存块填充为魔数，并且检查队列是否满了，如果满了就取队头进行魔数校验，然后调用原始的free释放。如果魔数被修改则打印之前保存的申请时堆栈，调用terminate()生成coredump。</li></ol><p>工具在检测到魔数被修改时，会打印申请内存块时的堆栈。</p></li><li><p>实例</p><p>对如下错误代码可以有效检测出来。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c++</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-5 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;iostream&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;thread&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;chrono&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>std</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>func</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>uint</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=nb>true</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kt>int</span> <span class=o>*</span><span class=n>a</span> <span class=o>=</span> <span class=k>new</span> <span class=p>(</span><span class=kt>int</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>a</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>delete</span> <span class=n>a</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>i</span> <span class=o>==</span> <span class=mi>10</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>a</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=n>i</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=o>++</span><span class=n>i</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>std</span><span class=o>::</span><span class=kr>thread</span> <span class=n>t1</span><span class=p>(</span><span class=n>func</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>t1</span><span class=p>.</span><span class=n>join</span><span class=p>();</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></div></li><li><p>缺点</p><ol><li>由于<code>__attribute__((constructor))</code>会在so被加载时执行，如果用户程序含有popen、system等新建进程时也会在该进程中执行一遍，所以可能会打印多次初始化的日志。</li><li>虽然对性能影响很小，但是也可能导致某些多线程原因导致释放后修改触发的概率减小。</li></ol></li></ul><hr><h2 id=参考 class=headerLink><a href=#%e5%8f%82%e8%80%83 class=header-mark aria-label="Header mark for '参考'"></a>参考</h2><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p><a href=https://blog.csdn.net/maokelong95/article/details/51989081 target=_blank rel="noopener noreferrer">理解 glibc malloc：主流用户态内存分配器实现原理</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2><p><a href=https://book.douban.com/subject/36693242/ target=_blank rel="noopener noreferrer">《高效c/c++调试》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a>&#160;<a href=#fnref1:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2024-05-12</span></div><div class=post-info-license></div></div><div class="post-info-line print:!tw-hidden"><div class=post-info-md></div><div class=post-info-share><button title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="记一次数据竞争导致内存损坏的coredump - 问题诊断" data-hashtags="c++,data races,memory corruption"><svg class="icon" viewBox="0 0 512 512"><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645.0 138.72-105.583 298.558-298.558 298.558-59.452.0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055.0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421.0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391.0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04.0-57.828 46.782-104.934 104.934-104.934 30.213.0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg></button><button title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-hashtag=c++><svg class="icon" viewBox="0 0 512 512"><path d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14.0 55.52 4.84 55.52 4.84v61h-31.28c-30.8.0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"/></svg></button><button title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="记一次数据竞争导致内存损坏的coredump - 问题诊断"><svg class="icon" viewBox="0 0 448 512"><path d="M0 32v448h448V32H0zm21.2 197.2H21c.1-.1.2-.3.3-.4.0.1.0.3-.1.4zm218 53.9V384h-31.4V281.3L128 128h37.3c52.5 98.3 49.2 101.2 59.3 125.6 12.3-27 5.8-24.4 60.6-125.6H320l-80.8 155.1z"/></svg></button><button title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="记一次数据竞争导致内存损坏的coredump - 问题诊断"><svg class="icon" role="img" viewBox="0 0 24 24"><title>LINE</title><path d="M19.365 9.863c.349.0.63.285.63.631.0.345-.281.63-.63.63H17.61v1.125h1.755c.349.0.63.283.63.63.0.344-.281.629-.63.629h-2.386c-.345.0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346.0.627.285.627.63.0.349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211.0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346.0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195.0.375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345.0.63.285.63.63v4.771zm-5.741.0c0 .344-.282.629-.631.629-.345.0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346.0.628.285.628.63v4.771zm-2.466.629H4.917c-.345.0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348.0.63.285.63.63v4.141h1.756c.348.0.629.283.629.63.0.344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943.0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg></button><button title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/troubleshooting_data_races_coredump/ data-title="记一次数据竞争导致内存损坏的coredump - 问题诊断"><svg class="icon" viewBox="0 0 512 512"><path d="M407 177.6c7.6-24-13.4-46.8-37.4-41.7-22 4.8-28.8-28.1-7.1-32.8 50.1-10.9 92.3 37.1 76.5 84.8-6.8 21.2-38.8 10.8-32-10.3zM214.8 446.7C108.5 446.7.0 395.3.0 310.4c0-44.3 28-95.4 76.3-143.7C176 67 279.5 65.8 249.9 161c-4 13.1 12.3 5.7 12.3 6 79.5-33.6 140.5-16.8 114 51.4-3.7 9.4 1.1 10.9 8.3 13.1 135.7 42.3 34.8 215.2-169.7 215.2zm143.7-146.3c-5.4-55.7-78.5-94-163.4-85.7-84.8 8.6-148.8 60.3-143.4 116s78.5 94 163.4 85.7c84.8-8.6 148.8-60.3 143.4-116zM347.9 35.1c-25.9 5.6-16.8 43.7 8.3 38.3 72.3-15.2 134.8 52.8 111.7 124-7.4 24.2 29.1 37 37.4 12 31.9-99.8-55.1-195.9-157.4-174.3zm-78.5 311c-17.1 38.8-66.8 60-109.1 46.3-40.8-13.1-58-53.4-40.3-89.7 17.7-35.4 63.1-55.4 103.4-45.1 42 10.8 63.1 50.2 46 88.5zm-86.3-30c-12.9-5.4-30 .3-38 12.9-8.3 12.9-4.3 28 8.6 34 13.1 6 30.8.3 39.1-12.9 8-13.1 3.7-28.3-9.7-34zm32.6-13.4c-5.1-1.7-11.4.6-14.3 5.4-2.9 5.1-1.4 10.6 3.7 12.9 5.1 2 11.7-.3 14.6-5.4 2.8-5.2 1.1-10.9-4-12.9z"/></svg></button></div></div></div><div class=post-info-more><section class=post-tags><svg class="icon" viewBox="0 0 640 512"><path d="M497.941 225.941 286.059 14.059A48 48 0 00252.118.0H48C21.49.0.0 21.49.0 48v204.118a48 48 0 0014.059 33.941l211.882 211.882c18.744 18.745 49.136 18.746 67.882.0l204.118-204.118c18.745-18.745 18.745-49.137.0-67.882zM112 160c-26.51.0-48-21.49-48-48s21.49-48 48-48 48 21.49 48 48-21.49 48-48 48zm513.941 133.823L421.823 497.941c-18.745 18.745-49.137 18.745-67.882.0l-.36-.36L527.64 323.522c16.999-16.999 26.36-39.6 26.36-63.64s-9.362-46.641-26.36-63.64L331.397.0h48.721a48 48 0 0133.941 14.059l211.882 211.882c18.745 18.745 18.745 49.137.0 67.882z"/></svg>&nbsp;<a href=/tags/c++/>C++</a>,&nbsp;<a href></a>,&nbsp;<a href></a></section><section class=print:!tw-hidden><span><button class="tw-text-fgColor-link-muted hover:tw-text-fgColor-link-muted-hover" onclick=window.history.back()>Back</button></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class="post-nav print:tw-hidden"><a href=/posts/dont-even-know-that_1/ class=prev rel=prev title="一些我竟然不知道的计算机相关知识 - 这都不知道「1」"><svg class="icon" viewBox="0 0 256 512"><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9.0l22.6 22.6c9.4 9.4 9.4 24.6.0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6.0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9.0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>一些我竟然不知道的计算机相关知识 - 这都不知道「1」</a>
+<a href=/posts/reading_202312-202406/ class=next rel=next title="书单盘点: 2023年12月～2024年05月">书单盘点: 2023年12月～2024年05月<svg class="icon" viewBox="0 0 256 512"><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9.0l-22.6-22.6c-9.4-9.4-9.4-24.6.0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6.0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9.0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg></a></div></div><div id=comments class="print:!tw-hidden tw-pt-32 tw-pb-8"><div id=giscus></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://giscus.app/>giscus</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreferrer" title="Hugo 0.133.0">Hugo</a>&nbsp;|&nbsp;Theme - <a href=https://github.com/HEIGE-PCloud/DoIt target=_blank rel="noopener noreferrer" title="DoIt 0.4.0"><svg class="icon" viewBox="0 0 576 512"><path d="M402.3 344.9l32-32c5-5 13.7-1.5 13.7 5.7V464c0 26.5-21.5 48-48 48H48c-26.5.0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h273.5c7.1.0 10.7 8.6 5.7 13.7l-32 32c-1.5 1.5-3.5 2.3-5.7 2.3H48v352h352V350.5c0-2.1.8-4.1 2.3-5.6zm156.6-201.8L296.3 405.7l-90.4 10c-26.2 2.9-48.5-19.2-45.6-45.6l10-90.4L432.9 17.1c22.9-22.9 59.9-22.9 82.7.0l43.2 43.2c22.9 22.9 22.9 60 .1 82.8zM460.1 174 402 115.9 216.2 301.8l-7.3 65.3 65.3-7.3L460.1 174zm64.8-79.7-43.2-43.2c-4.1-4.1-10.8-4.1-14.8.0L436 82l58.1 58.1 30.9-30.9c4-4.2 4-10.8-.1-14.9z"/></svg> DoIt</a></div><div class=footer-line><svg class="icon" viewBox="0 0 512 512"><path d="M256 8C119.033 8 8 119.033 8 256s111.033 248 248 248 248-111.033 248-248S392.967 8 256 8zm0 448c-110.532.0-2e2-89.451-2e2-2e2.0-110.531 89.451-2e2 2e2-2e2 110.532.0 2e2 89.451 2e2 2e2.0 110.532-89.451 2e2-2e2 2e2zm107.351-101.064c-9.614 9.712-45.53 41.396-104.065 41.396-82.43.0-140.484-61.425-140.484-141.567.0-79.152 60.275-139.401 139.762-139.401 55.531.0 88.738 26.62 97.593 34.779a11.965 11.965.0 011.936 15.322l-18.155 28.113c-3.841 5.95-11.966 7.282-17.499 2.921-8.595-6.776-31.814-22.538-61.708-22.538-48.303.0-77.916 35.33-77.916 80.082.0 41.589 26.888 83.692 78.277 83.692 32.657.0 56.843-19.039 65.726-27.225 5.27-4.857 13.596-4.039 17.82 1.738l19.865 27.17a11.947 11.947.0 01-1.152 15.518z"/></svg>2019 - 2024<span class=author>&nbsp;<a href=/ target=_blank rel="noopener noreferrer">mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div><div class=footer-line></div><div class=footer-line></div></div></footer></div><div id=fixed-buttons class=print:!tw-hidden><a href=#back-to-top id=back-to-top-button class="fixed-button tw-transition-opacity tw-opacity-0" title="Back to Top"><svg class="icon" viewBox="0 0 448 512"><path d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6.0-33.9L207 39c9.4-9.4 24.6-9.4 33.9.0l194.3 194.3c9.4 9.4 9.4 24.6.0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3.0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"/></svg>
+</a><a href=#comments id=view-comments class=fixed-button title="View Comments"><svg class="icon" viewBox="0 0 512 512"><path d="M256 32C114.6 32 0 125.1.0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3.0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4.0 256-93.1 256-208S397.4 32 256 32z"/></svg></a></div><link rel=stylesheet href=/lib/lightgallery/lightgallery.min.b38ee65d6456beb2d034bf554505f4ca47e421548b7cd26e8a7805fd2673b6c3.css integrity="sha256-s47mXWRWvrLQNL9VRQX0ykfkIVSLfNJuingF/SZztsM="><script>window.config={"autocomplete.min.js":"/lib/autocomplete/autocomplete.min.js",comment:{giscus:{darkTheme:"dark",dataCategory:null,dataCategoryId:null,dataEmitMetadata:"0",dataInputPosition:"bottom",dataLang:"en",dataLoading:"lazy",dataMapping:"pathname",dataReactionsEnabled:"1",dataRepo:null,dataRepoId:null,dataStrict:"0",lightTheme:"light"}},"fuse.min.js":"/lib/fuse/fuse.min.js",lightGallery:{actualSize:!1,exThumbImage:"data-thumbnail",hideBarsDelay:2e3,selector:".lightgallery",speed:400,thumbContHeight:80,thumbWidth:80,thumbnail:!0},search:{distance:null,findAllMatches:null,fuseIndexURL:"/index.json",highlightTag:"em",ignoreFieldNorm:null,ignoreLocation:null,isCaseSensitive:null,location:null,maxResultLength:10,minMatchCharLength:null,noResultsFound:"No results found",snippetLength:50,threshold:null,type:"fuse",useExtendedSearch:null},sharerjs:!0}</script><script src=/lib/lightgallery/lightgallery.min.0c4d9db673dd19489cfa134ab15ef8b9237ae72aaa65d8490d55658442b3a2d3.js integrity="sha256-DE2dtnPdGUic+hNKsV74uSN65yqqZdhJDVVlhEKzotM="></script><script src=/lib/lightgallery/lg-thumbnail.min.72ceb0f87691041e9e0bea2f2468b9aa3ed544e8f7f6dc9f76d8c8f997699e41.js integrity="sha256-cs6w+HaRBB6eC+ovJGi5qj7VROj39tyfdtjI+ZdpnkE="></script><script src=/lib/lightgallery/lg-zoom.min.5b0e82e9a1ae0b52d07a52da1eb4640da77eb3ca7e78c3a428c1f3b712858d3c.js integrity="sha256-Ww6C6aGuC1LQelLaHrRkDad+s8p+eMOkKMHztxKFjTw="></script><script src=/lib/sharer/sharer.min.8fe10eb615eb163a20f795484430a012805ec7c8c11df52df54ddb7a46084254.js integrity="sha256-j+EOthXrFjog95VIRDCgEoBex8jBHfUt9U3bekYIQlQ="></script><script src=/js/theme.min.js defer></script><script src=/js/giscus.min.js defer></script><script type=speculationrules>
+        {
+          "prerender": [
+            {
+              "where": { "href_matches": "/*" },
+              "eagerness": "moderate"
+            }
+          ]
+        }
+    </script></body></html>

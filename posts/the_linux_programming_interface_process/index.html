@@ -1,425 +1,556 @@
-<!doctype html><html lang=zh-cn>
-<head>
-<meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<meta name=robots content="noodp">
-<title>进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:title" content="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】">
-<meta property="og:description" content="本文是在阅读《Linux/UNIX系统编程手册》1相关内容做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多">
-<meta property="og:type" content="article">
-<meta property="og:url" content="https://importmengjie.github.io/posts/the_linux_programming_interface_process/"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta property="article:section" content="posts">
-<meta property="article:published_time" content="2024-07-02T20:18:43+08:00">
-<meta property="article:modified_time" content="2024-07-02T20:18:43+08:00"><meta property="og:site_name" content="ImportMengjie">
-<meta name=twitter:card content="summary_large_image">
-<meta name=twitter:image content="https://importmengjie.github.io/logo.png">
-<meta name=twitter:title content="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】">
-<meta name=twitter:description content="本文是在阅读《Linux/UNIX系统编程手册》1相关内容做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多">
-<meta name=application-name content="ImportMengjie's Blog">
-<meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico>
-<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
-<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://importmengjie.github.io/posts/the_linux_programming_interface_process/><link rel=prev href=https://importmengjie.github.io/posts/voice_player_system_programming/><link rel=next href=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/><link rel=stylesheet href=/css/style.min.cf6878db51c51b2d04ae155284a4403dbee8db33e16c066f954c95279c271fcd.css integrity="sha256-z2h421HFGy0ErhVShKRAPb7o2zPhbAZvlUyVJ5wnH80="><link rel=preload href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css></noscript><link rel=preload href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css as=style onload="this.onload=null,this.rel='stylesheet'">
-<noscript><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_process\/"},"genre":"posts","keywords":"系统编程, 读书笔记, 《Linux\/UNIX系统编程手册》","wordcount":6825,"url":"https:\/\/importmengjie.github.io\/posts\/the_linux_programming_interface_process\/","datePublished":"2024-07-02T20:18:43+08:00","dateModified":"2024-07-02T20:18:43+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie"},"description":""}</script></head>
-<body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'auto'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'auto'==='dark')&&document.body.setAttribute('theme','dark')</script>
-<div id=mask></div><div class=wrapper><header class=desktop id=header-desktop>
-<div class=header-wrapper>
-<div class=header-title>
-<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
-</div>
-<div class=menu>
-<div class=menu-inner><a class=menu-item href=/> 首页 </a><a class=menu-item href=/posts/ title=posts> 文章 </a><a class=menu-item href=/tags/> 标签 </a><a class=menu-item href=/categories/> 分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】 - ImportMengjie's Blog</title><meta name=Description content="ImportMengjie's Blog"><meta property="og:url" content="https://importmengjie.github.io/posts/the_linux_programming_interface_process/">
+<meta property="og:site_name" content="ImportMengjie's Blog"><meta property="og:title" content="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><meta property="og:description" content="本文是在阅读《Linux/UNIX系统编程手册》1相关内容做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-07-02T20:18:43+08:00"><meta property="article:modified_time" content="2024-07-02T20:18:43+08:00"><meta property="article:tag" content="系统编程"><meta property="article:tag" content="读书笔记"><meta property="article:tag" content="《Linux/UNIX系统编程手册》"><meta property="og:image" content="https://importmengjie.github.io/logo.png"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://importmengjie.github.io/logo.png"><meta name=twitter:title content="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><meta name=twitter:description content="本文是在阅读《Linux/UNIX系统编程手册》1相关内容做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多"><meta name=application-name content="ImportMengjie's Blog"><meta name=apple-mobile-web-app-title content="ImportMengjie's Blog"><meta name=theme-color content="#f8f8f8"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=canonical href=https://importmengjie.github.io/posts/the_linux_programming_interface_process/><link rel=prev href=https://importmengjie.github.io/posts/voice_player_system_programming/><link rel=next href=https://importmengjie.github.io/posts/the_linux_programming_interface_signal/><link rel=stylesheet href=/css/main.min.css><link rel=stylesheet href=/css/style.min.css><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https://importmengjie.github.io/posts/the_linux_programming_interface_process/"},"genre":"posts","keywords":["系统编程","读书笔记","《Linux/UNIX系统编程手册》"],"wordcount":6818,"url":"https://importmengjie.github.io/posts/the_linux_programming_interface_process/","datePublished":"2024-07-02T20:18:43+08:00","dateModified":"2024-07-02T20:18:43+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"mengjie","url":"/"},"description":""}</script></head><body data-instant-intensity=viewport><script type=text/javascript>function setTheme(e){document.body.setAttribute("theme",e),document.documentElement.className=e,document.documentElement.style.setProperty("color-scheme",e==="light"?"light":"dark"),e==="light"?document.documentElement.classList.remove("tw-dark"):document.documentElement.classList.add("tw-dark"),window.theme=e,window.isDark=window.theme!=="light"}function saveTheme(e){window.localStorage&&localStorage.setItem("theme",e)}function getMeta(e){const t=document.getElementsByTagName("meta");for(let n=0;n<t.length;n++)if(t[n].getAttribute("name")===e)return t[n];return""}if(window.localStorage&&localStorage.getItem("theme")){let e=localStorage.getItem("theme");e==="light"||e==="dark"?setTheme(e):setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}else"auto"==="light"||"auto"==="dark"?(setTheme("auto"),saveTheme("auto")):(saveTheme("auto"),setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));let metaColors={light:"#f8f8f8",dark:"#161b22"};getMeta("theme-color").content=metaColors[document.body.getAttribute("theme")],window.switchThemeEventSet=new Set</script><div id=back-to-top></div><div id=mask></div><div class=wrapper><header class="desktop print:!tw-hidden" id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title="ImportMengjie's Blog"><img class="tw-inline tw-align-text-bottom tw-mr-1" src=/images/avatar.jpg height=32 width=32>ImportMengjie</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/>首页 </a><a class=menu-item href=/posts/ title=posts>文章 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/categories/>分类 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
 <input type=text placeholder="Search titles or contents..." id=search-input-desktop>
-<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search>
-<i class="fas fa-search fa-fw" aria-hidden=true></i>
-</a>
-<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear>
-<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
-</a>
-<span class="search-button search-loading" id=search-loading-desktop>
-<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
-</span>
-</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
-<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
-</a></div>
-</div>
-</div>
-</header><header class=mobile id=header-mobile>
-<div class=header-container>
-<div class=header-wrapper>
-<div class=header-title>
-<a href=/ title="ImportMengjie's Blog"><img class="lazyload logo" src=/svg/loading.min.svg data-src=/images/avatar.jpg data-srcset="/images/avatar.jpg, /images/avatar.jpg 1.5x, /images/avatar.jpg 2x" data-sizes=auto alt=/images/avatar.jpg title=/images/avatar.jpg>ImportMengjie</a>
-</div>
-<div class=menu-toggle id=menu-toggle-mobile>
-<span></span><span></span><span></span>
-</div>
-</div>
-<div class=menu id=menu-mobile><div class=search-wrapper>
-<div class="search mobile" id=search-mobile>
-<input type=text placeholder="Search titles or contents..." id=search-input-mobile>
-<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search>
-<i class="fas fa-search fa-fw" aria-hidden=true></i>
-</a>
-<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear>
-<i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
-</a>
-<span class="search-button search-loading" id=search-loading-mobile>
-<i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
-</span>
-</div>
-<a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>
-Cancel
-</a>
-</div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
-<i class="fas fa-adjust fa-fw" aria-hidden=true></i>
-</a></div>
-</div>
-</header><div class="search-dropdown desktop">
-<div id=search-dropdown-desktop></div>
-</div>
-<div class="search-dropdown mobile">
-<div id=search-dropdown-mobile></div>
-</div><main class=main>
-<div class=container><div class=toc id=toc-auto>
-<h2 class=toc-title>Contents</h2>
-<div class="toc-content always-active" id=toc-content-auto></div>
-</div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】</h1><div class=post-meta>
-<div class=post-meta-line><span class=post-author><a href=/ title=Author rel=author class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>mengjie</a></span>&nbsp;<span class=post-category>included in <a href=/categories/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/><i class="far fa-folder fa-fw" aria-hidden=true></i>《Linux/UNIX系统编程手册》读书笔记</a></span></div>
-<div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2024-07-02>2024-07-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;6825 words&nbsp;
-<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;14 minutes&nbsp;
-<span id=busuanzi_container_value_page_pv><i class="far fa-eye fa-fw"></i>
-<span id=busuanzi_value_page_pv></span>&nbsp;views</span>
-</div>
-</div><div class="details toc" id=toc-static data-kept>
-<div class="details-summary toc-title">
-<span>Contents</span>
-<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span>
-</div>
-<div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents>
-<ul>
-<li><a href=#创建新进程-fork>创建新进程: fork()</a>
-<ul>
-<li><a href=#fork的内存语义>fork的内存语义</a></li>
-<li><a href=#资源管理与fork2>资源管理与fork</a></li>
-<li><a href=#多线程与fork2>多线程与fork</a></li>
-</ul>
-</li>
-<li><a href=#执行新程序-execve>执行新程序: execve()</a>
-<ul>
-<li><a href=#exec库函数>exec()库函数</a></li>
-<li><a href=#文件描述符与exec>文件描述符与exec()</a></li>
-</ul>
-</li>
-<li><a href=#进程的终止-_exit和exit>进程的终止: _exit()和exit()</a>
-<ul>
-<li><a href=#fork与_exitexit函数>fork()与_exit()/exit()函数</a></li>
-</ul>
-</li>
-<li><a href=#等待子进程wait和waitpid>等待子进程wait()和waitpid()</a>
-<ul>
-<li><a href=#等待返回值>等待返回值</a></li>
-<li><a href=#sigchld信号>SIGCHLD信号</a></li>
-</ul>
-</li>
-<li><a href=#进程组和会话控制终端>进程组和会话、控制终端</a>
-<ul>
-<li><a href=#进程组>进程组</a></li>
-<li><a href=#会话>会话</a></li>
-<li><a href=#关闭终端-sighup信号>关闭终端: SIGHUP信号</a></li>
-</ul>
-</li>
-<li><a href=#作业控制>作业控制</a>
-<ul>
-<li><a href=#在shell中使用作业控制>在shell中使用作业控制</a></li>
-</ul>
-</li>
-<li><a href=#参考>参考</a></li>
-</ul>
-</nav></div>
-</div><div class=content id=content><p>本文是在阅读《Linux/UNIX系统编程手册》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>相关内容做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多。</p>
-<h2 id=创建新进程-fork>创建新进程: fork()</h2>
-<p>fork系统调用创建新进程(child)几乎为调用进程(parent)的翻版。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
-</span><span class=cp></span><span class=n>pid_t</span> <span class=nf>fork</span><span class=p>();</span>
-</code></pre></div><p><strong>程序代码可通过返回值来区分父/子进程。在父进程将返回子进程的PID，父进程可以通过子进程的PID管理子进程</strong>。而子进程将返回0，在子进程中可以通过<code>getpid</code>和<code>getppid</code>分别获取子进程和父进程的PID。但创建失败时则会返回-1，一般的原因是进程数量超过了系统的限制。</p>
-<p><strong>不应该对fork后父子进程执行顺序有任何假设</strong>，如果需要确保一定的顺序则需要进程间同步。在<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e4%bd%bf%e7%94%a8%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%ae%9e%e7%8e%b0kill%e4%bf%a1%e5%8f%b7%e5%90%8c%e6%97%b6%e5%8f%91%e7%bb%99%e5%ad%90%e8%bf%9b%e7%a8%8b%e5%92%8c%e5%85%b6%e4%ba%a7%e7%94%9f%e7%9a%84%e5%ad%90%e8%bf%9b%e7%a8%8b rel>从音频播放c++类的实现学习Linux系统子进程管理</a>中就通过父子进程在fork之后都调用相同作用的系统调用来设置子进程的进程组ID，从而保证在任何调用顺序下，父子进程后续的执行都能确保进程组设置成功。</p>
-<h3 id=fork的内存语义>fork的内存语义</h3>
-<p><strong>执行fork后子进程会和父进程拥有一模一样的内存空间</strong>，现代UNIX实现都是采用写时复制(copy-on-write)技术来节省物理内存消耗，即：父子进程在fork之后共享物理内存，在二者对内存页面有修改是才将要修改的内存页面拷贝，将子进程对应的表项修改，之后父子进程就可以分别修改各自的页拷贝。在书中提到利用这个特性，可以在已知某个func会导致内存泄漏或是过渡内存碎片，可以使用子进程执行该函数，就不会影响主进程的内存占用，最后通过进程间通信来获取结果。</p>
-<p>在fork后父子进程内存是一模一样的，打开的文件fd中存储的系统级打开文件表引用是一样的，故其当前文件的偏移量、打开文件的状态标志等都是共享的，参考<a href=/posts/shell-redirection/#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6%e5%92%8c%e6%89%93%e5%bc%80%e6%96%87%e4%bb%b6%e4%b9%8b%e9%97%b4%e7%9a%84%e5%85%b3%e7%b3%bb rel>从文件描述符和打开文件之间的关系重新理解shell重定向</a>。利用这个特性可以通过<code>pipe</code>等进行父子进程之间通信。</p>
-<h3 id=资源管理与fork2>资源管理与fork<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup></h3>
-<p>fork之后，子进程不会继承如下资源状态：</p>
-<ol>
-<li>父进程的内存锁，mlock(2)、mlockall(2)。</li>
-<li>父进程的文件锁，fcntl(2)。</li>
-<li>父进程的某些定时器，setitimer(2)、alarm(2)、timer_create(2)</li>
-</ol>
-<p>如果在子进程对如上类的资源进行释放操作就会释放一个不拥有的资源，导致未定义行为。考虑在c++中，一般通过使用对象来包装资源，利用对象的生命周期管理资源(RAII)，在构造对象时获取资源，在对象出作用域析构时释放资源。因为释放资源并不是显性调用，在fork之后子进程可能“无意”释放了不拥有的资源，造成未定义行为。</p>
-<h3 id=多线程与fork2>多线程与fork<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup></h3>
-<p>fork之后，对于子进程除了当前的线程之外，其他线程都消失了，会导致一个危险的局面。其他线程可能正持有某个锁，fork之后对于子进程来说其他线程已经没有了再也没有机会解锁，如果试图再对该mutex加锁就会立刻死锁。所以fork()后只能调用可重入函数。对于诸如<code>malloc</code>、<code>printf</code>函数都不可使用，所以对于多线程程序来说调用fork唯一安全的做法就是fork后立即调用exec()执行另一个程序，彻底断绝子进程和父进程的关系。</p>
-<blockquote>
-<p>SUSv3对可重入函数定义: 函数由多条线程调用时，即便交叉执行，其效果也与各线程任意顺序依次调用一致。</p>
-<p>我的理解是“在执行过程中可以被中断，并且在中断后能够安全地再次调用(重入)函数“，更新全局变量(不是sig_atomic_t类型)或静态变量的函数都不是可重入的函数。所以诸如<code>malloc</code>函数由于涉及到全局状态的修改是不可重入函数。</p>
-</blockquote>
-<h2 id=执行新程序-execve>执行新程序: execve()</h2>
-<p>系统调用execve()将新程序加载到某一进程的内存空间，进程的内存空间会被新程序所取代，在执行了各种初始化代码会从新程序的main()函数开始执行。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
-</span><span class=cp></span><span class=kt>int</span> <span class=nf>execve</span><span class=p>(</span><span class=k>const</span> <span class=kt>char</span> <span class=o>*</span><span class=n>pathname</span><span class=p>,</span> <span class=kt>char</span> <span class=o>*</span><span class=k>const</span> <span class=n>argv</span><span class=p>[],</span> <span class=kt>char</span> <span class=o>*</span><span class=k>const</span> <span class=n>envp</span><span class=p>[]);</span>
-</code></pre></div><p>参数pathname可以时绝对路径或者相对于调用进程当前目录的相对路径；参数argv指定了传给新进程的命令行参数，相当于main()函数的第2个参数(argv)，以NULL结束；参数envp指定了新程序的环境列表，对应environ数组，以NULL结束，字符串格式为name=alue；</p>
-<blockquote>
-<p>Linux特有的/proc/PID/exe是符号链接包含对应进程中正在运行的可执行文件的绝对路径名。</p>
-</blockquote>
-<p>通常也不用检查execve()的返回值，因为如果成功则切换到新程序执行不会继续执行，失败的话返回值一定是-1并且代表发生了错误，可以通过errno来判断错误原因，有如下可能：</p>
-<ul>
-<li>EACCES: 参数pathname指向的文件因为权限等原因不可执行。</li>
-<li>ENOENT: pathname所指代的文件并不存在。</li>
-<li>ENOEXEC: pathname所指代的文件不是<strong>ELF文件</strong>格式。</li>
-<li>ETEXTBSY: 存在进程已经以写入方式打开pathname所指代的文件。</li>
-</ul>
-<blockquote>
-<p>ELF(Executable and Linking Format)标准描述了可执行文件的布局，二进制可执行文件都需要符合该标准。同时该标准也允许定义一个解释器来运行程序以字符#!开头。</p>
-</blockquote>
-<h3 id=exec库函数>exec()库函数</h3>
-<p>库函数为执行exec()提供了多种API选择，这些函数都是参数有所区别为了方便使用对execve()调用的封装。</p>
-<p>下表对exec()函数之间的差异总结。简单来说:</p>
-<ul>
-<li>函数名带p，代表可以之之提供程序的文件名，库函数通过环境变量<code>$PATH</code>的目录列表找到对应的可执行文件，与shell对命令的搜索方式一致。</li>
-<li>函数名带l，代表可以使用参数列表来指定argv，并且以NULL指针结尾。带v的则是使用数组的形式传入argv，数组的最后一个元素也需要是NULL。</li>
-<li>函数名带e，带白哦可以通过envp以数组的形式显示指定函数的环境变量。其它不带e的函数则是继承调用者的环境变量。</li>
-</ul>
-<h4 id=exec函数之间的差异总结>exec()函数之间的差异总结</h4>
-<table>
-<thead>
-<tr>
-<th style=text-align:center>函数名</th>
-<th style=text-align:center>程序文件描述</th>
-<th style=text-align:center>参数描述</th>
-<th style=text-align:center>环境变量来源</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style=text-align:center><code>execve()</code></td>
-<td style=text-align:center>路径名</td>
-<td style=text-align:center>数组</td>
-<td style=text-align:center><code>envp</code> 参数</td>
-</tr>
-<tr>
-<td style=text-align:center><code>execle()</code></td>
-<td style=text-align:center>路径名</td>
-<td style=text-align:center>列表</td>
-<td style=text-align:center><code>envp</code> 参数</td>
-</tr>
-<tr>
-<td style=text-align:center><code>execlp()</code></td>
-<td style=text-align:center>文件名+PATH</td>
-<td style=text-align:center>列表</td>
-<td style=text-align:center>调用者的 <code>environ</code></td>
-</tr>
-<tr>
-<td style=text-align:center><code>execvp()</code></td>
-<td style=text-align:center>文件名+PATH</td>
-<td style=text-align:center>数组</td>
-<td style=text-align:center>调用者的 <code>environ</code></td>
-</tr>
-<tr>
-<td style=text-align:center><code>execv()</code></td>
-<td style=text-align:center>路径名</td>
-<td style=text-align:center>数组</td>
-<td style=text-align:center>调用者的 <code>environ</code></td>
-</tr>
-<tr>
-<td style=text-align:center><code>execl()</code></td>
-<td style=text-align:center>路径名</td>
-<td style=text-align:center>列表</td>
-<td style=text-align:center>调用者的 <code>environ</code></td>
-</tr>
-</tbody>
-</table>
-<h3 id=文件描述符与exec>文件描述符与exec()</h3>
-<p><strong>默认情况下exec()的调用程序打开的所有文件描述符在exec()成功后的程序中会保持打开状态</strong>。shell利用这一特性为其所执行的程序处理I/O重定向。例如:</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=nv>$ls</span> /tmp &gt; dir.txt
-</code></pre></div><p>shell运行该命令时会执行如下步骤:</p>
-<ol>
-<li>
-<p>fork()创建子进程。</p>
-</li>
-<li>
-<p>子进程以描述符1(stdout)打开文件dir.txt作为输出，采取如下方式:</p>
-<ul>
-<li>
-<p>使用dump2()强制将标准输出fd=1复制成文件dir.txt的fd的副本。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=n>fd</span> <span class=o>=</span> <span class=n>open</span><span class=p>(</span><span class=s>&#34;dir.txt&#34;</span><span class=p>,</span> <span class=p>...);</span>
-<span class=k>if</span> <span class=p>(</span><span class=n>fd</span> <span class=o>!=</span> <span class=n>STDOUT_FILENO</span><span class=p>)</span> <span class=p>{</span>
-    <span class=n>dup2</span><span class=p>(</span><span class=n>fd</span><span class=p>,</span> <span class=n>STDOUT_FILENO</span><span class=p>);</span>
-    <span class=n>close</span><span class=p>(</span><span class=n>fd</span><span class=p>);</span>
-<span class=p>}</span>
-</code></pre></div></li>
-</ul>
-</li>
-<li>
-<p>子shell调用exec()执行程序ls，ls将其结果输出到df=1标准输出，亦即文件dir.txt中。</p>
-</li>
-</ol>
-<h4 id=执行时关闭close-on-exec标志fd_cloexec>执行时关闭(close-on-exec)标志(FD_CLOEXEC)</h4>
-<p>大部分情况下，出于节省或安全的角度来讲程序在执行exec()之前需要关闭某些特定的文件描述符。当然可以在exec()调用close()实现这一目的，但是有如下局限性：某些fd是由库函数打开，程序主动close()可能会比较困难；假设exec()失败了，之前close()的fd可能还需要。</p>
-<p>由此内核为每个文件描述符提供了执行时关闭的标志。设置这一标志，在程序exec()成功时会自动关闭该文件描述符。可以使用fcntl()和ioctl()等函数对某一个fd设置或清除这一标志位。</p>
-<h2 id=进程的终止-_exit和exit>进程的终止: _exit()和exit()</h2>
-<p>进程一般有两种结束方式，其一为一些信号触发的异常结束，其二就是程序主动调用_exit()系统调用正常结束程序。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
-</span><span class=cp></span><span class=kt>void</span> <span class=nf>_exit</span><span class=p>(</span><span class=kt>int</span> <span class=n>status</span><span class=p>);</span>
-</code></pre></div><p>参数status为进程的退出状态，父进程调用wait()可以获得该状态。<strong>虽然为int类型，但是仅有低8位有效，并且由于shell在程序被信号终止时会将环境变量$?设置为128与信号值的和，所以返回值不能大于128,否则就与信号触发的退出区分不清了</strong>。</p>
-<p>程序一般调用c语言库函数exit()主动退出，该函数会在退出前执行如下动作:</p>
-<ol>
-<li>调用atexit()和on_exit()注册的退出处理程序。</li>
-<li>刷新stdio缓冲区。</li>
-<li>执行exit_()系统调用退出程序。</li>
-</ol>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;stdlib.h&gt;</span><span class=cp>
-</span><span class=cp></span><span class=kt>void</span> <span class=nf>exit</span><span class=p>(</span><span class=kt>int</span> <span class=n>status</span><span class=p>);</span>
-</code></pre></div><p>另外<strong>从main()函数中return n时等同于调用exit(n)。在C99标准中定义了，main()函数不写return等同于exit(0)</strong>。</p>
-<h3 id=fork与_exitexit函数>fork()与_exit()/exit()函数</h3>
-<p>在进程的用户空间中维护stdio缓冲区，因此通过fork()创建子进程时会复制该缓冲区。如果父/子进程都使用exit()退出会导致刷新各自的stdio缓冲区，从而导致重复的输出结果。<strong>故fork()后的子进程应该使用_exit()退出</strong>。</p>
-<p>另外根据前边的介绍，如果父进程是多线程程序fork()后的子进程只会继承调用线程，假使fork()时正好有其它线程加锁操作stdio缓冲区，此时子进程的stdio缓冲区的锁已经被锁定并且不会被解锁，<strong>此时子进程调用exit()会发生死锁</strong>。</p>
-<h2 id=等待子进程wait和waitpid>等待子进程wait()和waitpid()</h2>
-<p>系统调用wait()和waitpid()都是用来等待子进程终止并且获取其退出状态status。wait()等待调用进程的任一子进程终止，waitpid()可以指定等待的子进程pid。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=cp>#include</span> <span class=cpf>&lt;sys/wait.h&gt;</span><span class=cp>
-</span><span class=cp></span><span class=n>pid_t</span> <span class=nf>wait</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>status</span><span class=p>);</span>
-<span class=n>pid_t</span> <span class=nf>waitpid</span><span class=p>(</span><span class=n>pid_t</span> <span class=n>pid</span><span class=p>,</span> <span class=kt>int</span> <span class=o>*</span><span class=n>status</span><span class=p>,</span> <span class=kt>int</span> <span class=n>options</span><span class=p>);</span>
-</code></pre></div><p>正常二者都会返回结束的子进程pid，出错时返回-1，错误原因之一调用进程无被等待的子进程，此时errno设置为ECHILD。</p>
-<p>对于waitpid(),其参数pid表示需要等待的具体子进程，意义如下:</p>
-<ul>
-<li>pid > 0: 等待进程ID为pid的子进程。</li>
-<li>pid == 0: 等待与调用进程在同一进程组的所有子进程。</li>
-<li>pid == -1: 等待任意子进程，wait(&status)与waitpid(-1, &staus, 0)等价</li>
-<li>pid &lt; -1: 等待进程组id==abs(pid)的所有子进程。</li>
-</ul>
-<p>参数options时一个位掩码，可以设置如下标志位</p>
-<ul>
-<li>WUNTRACED: 还返回因信号而停止的子进程信息。</li>
-<li>WCONTINUED: 返回那些因受到SIGCONT信号而恢复执行的子进程信息。</li>
-<li>WNOHANG: 如果指定的子进程未发生状态改变，则立即返回，<strong>不会阻塞</strong>。这时waitpid()返回0。</li>
-</ul>
-<h3 id=等待返回值>等待返回值</h3>
-<p>头文件&lt;sys/wait.h>定义了一组解析等待状态值status的宏。</p>
-<ul>
-<li>WIFEXITED(status): 若子进程是通过_exit()正常结束则返回true，此时WEXITSTATUS(status)返回子进程的退出状态。</li>
-<li>WIFSIGNALED(status): 若子进程是被信号杀死时返回true，此时WTERNSIG(status)返回导致子进程终止的信号编号。若子进程产生coredump，则WCOREDUMP(status)返回true。</li>
-<li>WIFSTOPPED(status): 若子进程因信号而停止，则返回true，此时WSTOPSIG(status)返回导致子进程停止的信号编号。</li>
-<li>WIFCONTINUED(status): 若子进程因SIGCONT而恢复执行，则返回true。</li>
-</ul>
-<h3 id=sigchld信号>SIGCHLD信号</h3>
-<p>子进程终止系统会向父进程发送SIGCHLD信号，该信号的默认处理就是忽略。在设置该信号的处理函数时，可以使用wait获取子进程退出状态，但是需要注意的是: <strong>当调用信号处理程序时，默认会暂时将该信号阻塞起来，且不会对其进行排队处理</strong>。故当SIGCHILD信号处理程序正在执行中时，相继有两个子进程终止产生2个SIGCHLD信号被阻塞，父进程也只能捕获一次。所以SIGCHLD处理程序需要内部循环以WNOHANG标志来非阻塞的调用waitpid()，才可以避免出现僵尸进程，如以下代码。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=k>while</span> <span class=p>(</span><span class=n>waitpid</span><span class=p>(</span><span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>,</span> <span class=n>WNOHANG</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=k>continue</span><span class=p>;</span>
-</code></pre></div><h4 id=忽略sigchld信号>忽略SIGCHLD信号</h4>
-<p>虽然对于SIGCHLD的默认处置就是忽略，但是<strong>显式的将SIGCHLD信号设置未SIG_IGN系统会将其后产生的子进程立即删除，不会转为僵尸进程，同时后续的wait()调用不会返回子进程的任何信息</strong>。在这方面，信号SIGCHLD的处理不同于其它信号。</p>
-<h2 id=进程组和会话控制终端>进程组和会话、控制终端</h2>
-<p>进程组和会话、控制终端是实现命令行的底层概念，用于命令行的输入、输出，shell的作业控制。</p>
-<p>进程组由一个或多个共享同一进程组标识符（PGID）的进程组成，进程组标识符（PGID）等于首次创建进程组的进程pid，其生命周期为创建时刻到最后一个进程退出进程组，在其生命周期不会有和PGID相同的pid分配给新进程。<strong>子进程会继承父进程的进程组</strong>。可以使用killpg()命令将信号发给进程组的每个成员进程，另一篇<a href=/posts/voice_player_system_programming/ rel>从音频播放c++类的实现学习Linux系统子进程管理</a>就是利用这一特性实现杀死子进程和其产生的子进程。</p>
-<p>会话则是一组进程组的集合。进程的会话成员关系是由其会话标识符（SID）确定的，会话标识符也是会话创建进程的pid。</p>
-<blockquote>
-<p>当fork()创建新进程时，内核会保证不会和已有的进程组ID和会话ID相同。从而保证即使进程组或会话的首进程退出，新进程也不会复用首进程的PID。</p>
-</blockquote>
-<p>每个会话可以拥有一个控制终端，终端是用户的交互设备，现代的图形界面都是使用终端模拟器xterm等软件，通过伪终端技术模拟终端设备。</p>
-<p>下图表示了进程组和会话、控制终端之间的关系。</p>
-<p><figure><a class=lightgallery href=/images/voice_player_system_programming/process_group.png title=进程组、会话和控制终端之间的关系进程组 data-thumbnail=/images/voice_player_system_programming/process_group.png data-sub-html="<h2>进程组、会话和控制终端之间的关系进程组</h2><p>进程组、会话和控制终端之间的关系进程组</p>">
-<img class=lazyload src=/svg/loading.min.svg data-src=/images/voice_player_system_programming/process_group.png data-srcset="/images/voice_player_system_programming/process_group.png, /images/voice_player_system_programming/process_group.png 1.5x, /images/voice_player_system_programming/process_group.png 2x" data-sizes=auto alt=/images/voice_player_system_programming/process_group.png>
-</a><figcaption class=image-caption>进程组、会话和控制终端之间的关系进程组</figcaption>
-</figure></p>
-<p>以上图举个实际的栗子: 打开Ubuntu系统的Terminal终端模拟软件，该软件模拟了一个终端设备并且执行/bin/bash进程pid=400。bash进程成为会话SID=400的首进程和终端的控制进程，也是进程组PGID=400的唯一成员。</p>
-<p>用户输入执行<code>find / 2> /dev/null | wc -l &</code>，bash进程会把管道相连的两个进程find和wc放入同一个PGID=658进程组。由于命令以&结尾被放入后台进程组中。</p>
-<p>用户接着输入执行<code>sort &lt; longlist | uniq -c</code>，同样会将两个管道相连的进程放入同一个PGID=660进程组，并且处于前端进程组，可以接受用户的输入。显而易见，同一时间只能有一个进程组成为前端进程组。如果输入ctrl+c终端会将中断信号发送给前端进程组的每个成员，正常情况下两个进程都会结束。</p>
-<p><strong>由于本人不打算开发一个终端软件或者是shell软件所以对以下内容并不准备深入了解细节，只求懂个大概，简单写一写。</strong></p>
-<h3 id=进程组>进程组</h3>
-<p>通过<code>pid_t getpgrp()</code>和<code>int setpgid(pid_t pid, pid_t pgid)</code>获取和设置进程的进程组。参考另一篇<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e4%bd%bf%e7%94%a8%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%ae%9e%e7%8e%b0kill%e4%bf%a1%e5%8f%b7%e5%90%8c%e6%97%b6%e5%8f%91%e7%bb%99%e5%ad%90%e8%bf%9b%e7%a8%8b%e5%92%8c%e5%85%b6%e4%ba%a7%e7%94%9f%e7%9a%84%e5%ad%90%e8%bf%9b%e7%a8%8b rel>使用进程组实现kill信号同时发给子进程和其产生的子进程</a>中的实际应用。</p>
-<h3 id=会话>会话</h3>
-<p>通过<code>pid_t getsid(pid_t pid)</code>和<code>pid_t setsid()</code>来获取进程的sid和设置当前进程为新会话的首进程和<strong>该会话中的新进程组的首进程</strong>。</p>
-<p>注意：已经是进程组的首进程就不能调用setsid()设置自己为新会话的首进程。原因是如果可以的话，调用后进程组中原有的其他成员还属于原来的会话中，就会出现该进程组的成员不属于同一个会话中。</p>
-<h3 id=关闭终端-sighup信号>关闭终端: SIGHUP信号</h3>
-<p>当控制进程(bash)失去与其终端的连接后，内核会向控制进程发送SIGHUP信号；当控制进程结束时，内核会向该控制进程关联的终端前台进程组发送SIGHUP信号。SIGHUP信号默认的行为是终止进程。bash进程设置了SIGHUP信号的处置函数，在退出前将SIGHUP信号发送给由它创建的所有进程组。</p>
-<p>所以我们在ssh断开连接或者关闭终端时，仍在运行的任务会被结束。常用的nohup(1)命令在执行的命令时将SIGHUP信号设置为SIG_IGN，这样在终端退出时执行的命令不会结束。</p>
-<h2 id=作业控制>作业控制</h2>
-<p>作业控制用来支持一个shell用户同时执行多个命令，其中最多一个命令在前台执行，其余命令在后台运行。命令可以被停止和恢复以及在前后台之间移动。</p>
-<h3 id=在shell中使用作业控制>在shell中使用作业控制</h3>
-<p>首先，shell会为每个后台任务赋予一个唯一的作业号从1开始，在将任务放入后台时会将作业号放在[作业号]方括号中打印出来，后边跟着进程的PID或管道的最后一个进程的PID。通过jobs命令可以列出所有后台作业及其状态。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>$ sleep 60<span class=p>&amp;</span>
-<span class=o>[</span>1<span class=o>]</span> <span class=m>24599</span>
-$ sleep <span class=m>600</span>
-^Z
-<span class=o>[</span>2<span class=o>]</span>+  Stopped                 sleep <span class=m>600</span>
-$ <span class=nb>jobs</span>
-<span class=o>[</span>1<span class=o>]</span>-  Running                 sleep <span class=m>60</span> <span class=p>&amp;</span>
-<span class=o>[</span>2<span class=o>]</span>+  Stopped                 sleep <span class=m>600</span>
-</code></pre></div><p>使用%num可以引用作业，num为作业号。省略%num则默认指在前台最新被放入后台的作业。</p>
-<p>产生后台作业的方式有<strong>使用ctrl+z向前台进程组发送SIGSTP(和SIGKILL一样不可修改信号默认处理函数)暂停进程并且放入后台</strong>，或者<strong>在命令执行时加上&符号，该命令会立即在后台执行，不会暂停</strong>。可以使用<code>fg %num</code>命令在前台恢复作业号num的任务，也可以使用<code>bg %num</code>命令发送SIGCONT信号来恢复被暂停的作业。通过<code>kill -STOP %num</code>也可以将后台作业暂停。</p>
-<p>在后台的作业尝试从读取标准输入，就会受到SIGTTIN信号，默认动作就是停止作业。默认情况下，后台作业是可以写入标准输出打印在终端中的。如果终端设置了TOSTOP标志，那么但后台作业尝试输出到终端时会受到SIGTTOU信号，默认动作也时停止作业。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>$ stty tostop
-$ date <span class=p>&amp;</span>
-<span class=o>[</span>4<span class=o>]</span> <span class=m>34046</span>
-$
-<span class=o>[</span>4<span class=o>]</span>+  Stopped                 date
-$ <span class=nb>fg</span>
-date
-Wed Jul <span class=m>10</span> 11:21:32 PM CST <span class=m>2024</span>
-</code></pre></div><p>下图对作业的状态转换进行了总结。</p>
-<p><figure><a class=lightgallery href=/images/the_linux_programming_interface_thread/shell_jobs.png title=作业控制状态转换 data-thumbnail=/images/the_linux_programming_interface_thread/shell_jobs.png data-sub-html="<h2>作业控制状态转换</h2><p>作业控制状态转换</p>">
-<img class=lazyload src=/svg/loading.min.svg data-src=/images/the_linux_programming_interface_thread/shell_jobs.png data-srcset="/images/the_linux_programming_interface_thread/shell_jobs.png, /images/the_linux_programming_interface_thread/shell_jobs.png 1.5x, /images/the_linux_programming_interface_thread/shell_jobs.png 2x" data-sizes=auto alt=/images/the_linux_programming_interface_thread/shell_jobs.png>
-</a><figcaption class=image-caption>作业控制状态转换</figcaption>
-</figure></p>
-<hr>
-<h2 id=参考>参考</h2>
-<section class=footnotes role=doc-endnotes>
-<hr>
-<ol>
-<li id=fn:1 role=doc-endnote>
-<p><a href=https://book.douban.com/subject/25809330/ target=_blank rel="noopener noreffer">《Linux/UNIX系统编程手册》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-<li id=fn:2 role=doc-endnote>
-<p><a href=https://book.douban.com/subject/20471211/ target=_blank rel="noopener noreffer">《Linux多线程服务端编程：使用muduo C++网络库》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-</ol>
-</section>
-</div><div class=post-footer id=post-footer>
-<div class=post-info>
-<div class=post-info-line>
-<div class=post-info-mod>
-<span>Updated on 2024-07-02</span>
-</div></div>
-<div class=post-info-line>
-<div class=post-info-md></div>
-<div class=post-info-share>
-<span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】" data-hashtags=系统编程,读书笔记,《Linux/UNIX系统编程手册》><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-hashtag=系统编程><i class="fab fa-facebook-square fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><i class="fab fa-hacker-news fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><i data-svg-src=https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span>
-</div>
-</div>
-</div>
-<div class=post-info-more>
-<section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/>系统编程</a>,&nbsp;<a href=/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/>读书笔记</a>,&nbsp;<a href=/tags/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C/>《Linux/UNIX系统编程手册》</a></section>
-<section>
-<span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span>
-</section>
-</div>
-<div class=post-nav><a href=/posts/voice_player_system_programming/ class=prev rel=prev title=从音频播放c++类的实现学习Linux系统子进程管理><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>从音频播放c++类的实现学习Linux系统子进程管理</a>
-<a href=/posts/the_linux_programming_interface_signal/ class=next rel=next title="信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】">信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div>
-</div>
-<div id=comments><div id=giscus class=comment></div><noscript>
-Please enable JavaScript to view the comments powered by <a href=https://giscus.app>Giscus</a>.
-</noscript></div></article></div>
-</main><footer class=footer>
-<div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreffer" title="Hugo 0.91.2">Hugo</a> | Theme - <a href=https://github.com/dillonzq/LoveIt target=_blank rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden=true></i> LoveIt</a>
-</div><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2019 - 2024</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=/ target=_blank>mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div>
-<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
-<section>
-<span id=busuanzi_container_value_site_pv><i class="far fa-eye fa-fw"></i>
-<span id=busuanzi_value_site_pv></span>
-</span>
-&nbsp;|&nbsp;
-<span id=busuanzi_container_value_site_uv><i class="fa fa-user"></i>
-<span id=busuanzi_value_site_uv></span>
-</span>
-</section>
-</div>
-</footer></div>
-<div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top">
-<i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
-</a><a href=# id=view-comments class=fixed-button title="View Comments">
-<i class="fas fa-comment fa-fw" aria-hidden=true></i>
-</a>
-</div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{giscus:{category:"Announcements",categoryId:"DIC_kwDOBojUS84CZfEa",darkTheme:"dark",emitMetadata:"0",inputPosition:"bottom",lang:"en",lazyLoading:!1,lightTheme:"light",mapping:"pathname",reactionsEnabled:"1",repo:"ImportMengjie/importmengjie.github.io",repoId:"MDEwOlJlcG9zaXRvcnkxMDk2MzA1Mzk="}},lightgallery:!0,search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.485ce22971162ae594e2f22468d97519fb9c08a7112e3a012e8684cfe098b474.js integrity="sha256-SFziKXEWKuWU4vIkaNl1GfucCKcRLjoBLoaEz+CYtHQ="></script></body>
-</html>
+<button class="search-button search-toggle" id=search-toggle-desktop title=Search>
+<svg class="icon" viewBox="0 0 512 512"><path d="M505 442.7 405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9.0 208 0S0 93.1.0 208s93.1 208 208 208c48.3.0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9.0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7.0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7.0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+</button>
+<button class="search-button search-clear" id=search-clear-desktop title=Clear>
+<svg class="icon" viewBox="0 0 512 512"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3.0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3.0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3.0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3.0 17L312 256l65.6 65.1z"/></svg>
+</button>
+<span class="search-button search-loading tw-animate-spin" id=search-loading-desktop><svg class="icon" viewBox="0 0 512 512"><path d="M304 48c0 26.51-21.49 48-48 48s-48-21.49-48-48 21.49-48 48-48 48 21.49 48 48zm-48 368c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm208-208c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zM96 256c0-26.51-21.49-48-48-48S0 229.49.0 256s21.49 48 48 48 48-21.49 48-48zm12.922 99.078c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.491-48-48-48zm294.156.0c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.49-48-48-48zM108.922 60.922c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.491-48-48-48z"/></svg>
+</span></span><button class="menu-item theme-switch" aria-label="Switch Theme"><svg class="icon" viewBox="0 0 512 512"><path d="M8 256c0 136.966 111.033 248 248 248s248-111.034 248-248S392.966 8 256 8 8 119.033 8 256zm248 184V72c101.705.0 184 82.311 184 184 0 101.705-82.311 184-184 184z"/></svg></button></div></div></div></header><header class="mobile print:!tw-hidden" id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title="ImportMengjie's Blog"><img class="tw-inline tw-align-text-bottom tw-mr-1" src=/images/avatar.jpg height=32 width=32>ImportMengjie</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<button class="search-button search-toggle tw-h-10" id=search-toggle-mobile title=Search>
+<svg class="icon" viewBox="0 0 512 512"><path d="M505 442.7 405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9.0 208 0S0 93.1.0 208s93.1 208 208 208c48.3.0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9.0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7.0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7.0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+</button>
+<button class="search-button search-clear" id=search-clear-mobile title=Clear>
+<svg class="icon" viewBox="0 0 512 512"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3.0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3.0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3.0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3.0 17L312 256l65.6 65.1z"/></svg>
+</button>
+<span class="search-button search-loading tw-animate-spin" id=search-loading-mobile><svg class="icon" viewBox="0 0 512 512"><path d="M304 48c0 26.51-21.49 48-48 48s-48-21.49-48-48 21.49-48 48-48 48 21.49 48 48zm-48 368c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm208-208c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zM96 256c0-26.51-21.49-48-48-48S0 229.49.0 256s21.49 48 48 48 48-21.49 48-48zm12.922 99.078c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.491-48-48-48zm294.156.0c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.49-48-48-48zM108.922 60.922c-26.51.0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.491-48-48-48z"/></svg></span></div><button class=search-cancel id=search-cancel-mobile>
+Cancel</button></div><a class=menu-item href=/ title>首页</a><a class=menu-item href=/posts/ title=posts>文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><button class="menu-item theme-switch tw-w-full" aria-label="Switch Theme"><svg class="icon" viewBox="0 0 512 512"><path d="M8 256c0 136.966 111.033 248 248 248s248-111.034 248-248S392.966 8 256 8 8 119.033 8 256zm248 184V72c101.705.0 184 82.311 184 184 0 101.705-82.311 184-184 184z"/></svg></button></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class="toc print:!tw-hidden" id=toc-auto><h2 class=toc-title>Contents</h2><div class="toc-content always-active" id=toc-content-auto><nav id=TableOfContents><ul><li><a href=#创建新进程-fork>创建新进程: fork()</a><ul><li><a href=#fork的内存语义>fork的内存语义</a></li><li><a href=#资源管理与fork2>资源管理与fork</a></li><li><a href=#多线程与fork2>多线程与fork</a></li></ul></li><li><a href=#执行新程序-execve>执行新程序: execve()</a><ul><li><a href=#exec库函数>exec()库函数</a></li><li><a href=#文件描述符与exec>文件描述符与exec()</a></li></ul></li><li><a href=#进程的终止-_exit和exit>进程的终止: _exit()和exit()</a><ul><li><a href=#fork与_exitexit函数>fork()与_exit()/exit()函数</a></li></ul></li><li><a href=#等待子进程wait和waitpid>等待子进程wait()和waitpid()</a><ul><li><a href=#等待返回值>等待返回值</a></li><li><a href=#sigchld信号>SIGCHLD信号</a></li></ul></li><li><a href=#进程组和会话控制终端>进程组和会话、控制终端</a><ul><li><a href=#进程组>进程组</a></li><li><a href=#会话>会话</a></li><li><a href=#关闭终端-sighup信号>关闭终端: SIGHUP信号</a></li></ul></li><li><a href=#作业控制>作业控制</a><ul><li><a href=#在shell中使用作业控制>在shell中使用作业控制</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav></div></div><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC","true")</script><article class="page single print:!tw-w-full print:!tw-max-w-none print:!tw-m-0 print:!tw-p-0"><h1 class=single-title>进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】</h1><div class=post-meta><div class=post-meta-line><span class=post-author><svg class="icon" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 96c48.6.0 88 39.4 88 88s-39.4 88-88 88-88-39.4-88-88 39.4-88 88-88zm0 344c-58.7.0-111.3-26.6-146.5-68.2 18.8-35.4 55.6-59.8 98.5-59.8 2.4.0 4.8.4 7.1 1.1 13 4.2 26.6 6.9 40.9 6.9s28-2.7 40.9-6.9c2.3-.7 4.7-1.1 7.1-1.1 42.9.0 79.7 24.4 98.5 59.8C359.3 421.4 306.7 448 248 448z"/></svg><a href=/ title=Author rel=author class=author>mengjie</a>
+</span>&nbsp;<span class=post-category>included in </span>&nbsp;<span class=post-category>category <a href=/categories/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/><svg class="icon" viewBox="0 0 512 512"><path d="M464 128H272l-54.63-54.63c-6-6-14.14-9.37-22.63-9.37H48C21.49 64 0 85.49.0 112v288c0 26.51 21.49 48 48 48h416c26.51.0 48-21.49 48-48V176c0-26.51-21.49-48-48-48zm0 272H48V112h140.12l54.63 54.63c6 6 14.14 9.37 22.63 9.37H464v224z"/></svg>《Linux/UNIX系统编程手册》读书笔记</a></span></div><div class=post-meta-line><svg class="icon" viewBox="0 0 448 512"><path d="M148 288h-40c-6.6.0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6.0 12 5.4 12 12v40c0 6.6-5.4 12-12 12zm108-12v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm96 0v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm-96 96v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm-96 0v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm192 0v-40c0-6.6-5.4-12-12-12h-40c-6.6.0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6.0 12-5.4 12-12zm96-260v352c0 26.5-21.5 48-48 48H48c-26.5.0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h48V12c0-6.6 5.4-12 12-12h40c6.6.0 12 5.4 12 12v52h128V12c0-6.6 5.4-12 12-12h40c6.6.0 12 5.4 12 12v52h48c26.5.0 48 21.5 48 48zm-48 346V160H48v298c0 3.3 2.7 6 6 6h340c3.3.0 6-2.7 6-6z"/></svg>&nbsp;<time datetime=2024-07-02>2024-07-02</time>&nbsp;<svg class="icon" viewBox="0 0 576 512"><path d="M402.3 344.9l32-32c5-5 13.7-1.5 13.7 5.7V464c0 26.5-21.5 48-48 48H48c-26.5.0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h273.5c7.1.0 10.7 8.6 5.7 13.7l-32 32c-1.5 1.5-3.5 2.3-5.7 2.3H48v352h352V350.5c0-2.1.8-4.1 2.3-5.6zm156.6-201.8L296.3 405.7l-90.4 10c-26.2 2.9-48.5-19.2-45.6-45.6l10-90.4L432.9 17.1c22.9-22.9 59.9-22.9 82.7.0l43.2 43.2c22.9 22.9 22.9 60 .1 82.8zM460.1 174 402 115.9 216.2 301.8l-7.3 65.3 65.3-7.3L460.1 174zm64.8-79.7-43.2-43.2c-4.1-4.1-10.8-4.1-14.8.0L436 82l58.1 58.1 30.9-30.9c4-4.2 4-10.8-.1-14.9z"/></svg>&nbsp;<time datetime=2024-07-02>2024-07-02</time>&nbsp;<svg class="icon" viewBox="0 0 512 512"><path d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3.0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9.0l60.1 60.1c18.8 18.7 18.8 49.1.0 67.9zM284.2 99.8 21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3.0-17l-111-111c-4.8-4.7-12.4-4.7-17.1.0zM124.1 339.9c-5.5-5.5-5.5-14.3.0-19.8l154-154c5.5-5.5 14.3-5.5 19.8.0s5.5 14.3.0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8.0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"/></svg>&nbsp;6818 words&nbsp;<svg class="icon" viewBox="0 0 512 512"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 448c-110.5.0-2e2-89.5-2e2-2e2S145.5 56 256 56s2e2 89.5 2e2 2e2-89.5 2e2-2e2 2e2zm61.8-104.4-84.9-61.7c-3.1-2.3-4.9-5.9-4.9-9.7V116c0-6.6 5.4-12 12-12h32c6.6.0 12 5.4 12 12v141.7l66.8 48.6c5.4 3.9 6.5 11.4 2.6 16.8L334.6 349c-3.9 5.3-11.4 6.5-16.8 2.6z"/></svg>&nbsp;14 minutes&nbsp;</div></div><div class="details toc print:!tw-block" id=toc-static kept><div class="details-summary toc-title"><span>Contents</span>
+<span class=details-icon><svg class="icon" viewBox="0 0 256 512"><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9.0l-22.6-22.6c-9.4-9.4-9.4-24.6.0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6.0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9.0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#创建新进程-fork>创建新进程: fork()</a><ul><li><a href=#fork的内存语义>fork的内存语义</a></li><li><a href=#资源管理与fork2>资源管理与fork</a></li><li><a href=#多线程与fork2>多线程与fork</a></li></ul></li><li><a href=#执行新程序-execve>执行新程序: execve()</a><ul><li><a href=#exec库函数>exec()库函数</a></li><li><a href=#文件描述符与exec>文件描述符与exec()</a></li></ul></li><li><a href=#进程的终止-_exit和exit>进程的终止: _exit()和exit()</a><ul><li><a href=#fork与_exitexit函数>fork()与_exit()/exit()函数</a></li></ul></li><li><a href=#等待子进程wait和waitpid>等待子进程wait()和waitpid()</a><ul><li><a href=#等待返回值>等待返回值</a></li><li><a href=#sigchld信号>SIGCHLD信号</a></li></ul></li><li><a href=#进程组和会话控制终端>进程组和会话、控制终端</a><ul><li><a href=#进程组>进程组</a></li><li><a href=#会话>会话</a></li><li><a href=#关闭终端-sighup信号>关闭终端: SIGHUP信号</a></li></ul></li><li><a href=#作业控制>作业控制</a><ul><li><a href=#在shell中使用作业控制>在shell中使用作业控制</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav></div></div><div class=content id=content><p>本文是在阅读《Linux/UNIX系统编程手册》<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>相关内容做的笔记。一些在Linux系统基本的概念在之前只是泛泛了解，此次系统的学习收获颇多。</p><h2 id=创建新进程-fork class=headerLink><a href=#%e5%88%9b%e5%bb%ba%e6%96%b0%e8%bf%9b%e7%a8%8b-fork class=header-mark aria-label="Header mark for '创建新进程: fork()'"></a>创建新进程: fork()</h2><p>fork系统调用创建新进程(child)几乎为调用进程(parent)的翻版。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-1 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp></span><span class=kt>pid_t</span> <span class=nf>fork</span><span class=p>();</span></span></span></code></pre></div><p><strong>程序代码可通过返回值来区分父/子进程。在父进程将返回子进程的PID，父进程可以通过子进程的PID管理子进程</strong>。而子进程将返回0，在子进程中可以通过<code>getpid</code>和<code>getppid</code>分别获取子进程和父进程的PID。但创建失败时则会返回-1，一般的原因是进程数量超过了系统的限制。</p><p><strong>不应该对fork后父子进程执行顺序有任何假设</strong>，如果需要确保一定的顺序则需要进程间同步。在<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e4%bd%bf%e7%94%a8%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%ae%9e%e7%8e%b0kill%e4%bf%a1%e5%8f%b7%e5%90%8c%e6%97%b6%e5%8f%91%e7%bb%99%e5%ad%90%e8%bf%9b%e7%a8%8b%e5%92%8c%e5%85%b6%e4%ba%a7%e7%94%9f%e7%9a%84%e5%ad%90%e8%bf%9b%e7%a8%8b rel>从音频播放c++类的实现学习Linux系统子进程管理</a>中就通过父子进程在fork之后都调用相同作用的系统调用来设置子进程的进程组ID，从而保证在任何调用顺序下，父子进程后续的执行都能确保进程组设置成功。</p><h3 id=fork的内存语义 class=headerLink><a href=#fork%e7%9a%84%e5%86%85%e5%ad%98%e8%af%ad%e4%b9%89 class=header-mark aria-label="Header mark for 'fork的内存语义'"></a>fork的内存语义</h3><p><strong>执行fork后子进程会和父进程拥有一模一样的内存空间</strong>，现代UNIX实现都是采用写时复制(copy-on-write)技术来节省物理内存消耗，即：父子进程在fork之后共享物理内存，在二者对内存页面有修改是才将要修改的内存页面拷贝，将子进程对应的表项修改，之后父子进程就可以分别修改各自的页拷贝。在书中提到利用这个特性，可以在已知某个func会导致内存泄漏或是过渡内存碎片，可以使用子进程执行该函数，就不会影响主进程的内存占用，最后通过进程间通信来获取结果。</p><p>在fork后父子进程内存是一模一样的，打开的文件fd中存储的系统级打开文件表引用是一样的，故其当前文件的偏移量、打开文件的状态标志等都是共享的，参考<a href=/posts/shell-redirection/#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6%e5%92%8c%e6%89%93%e5%bc%80%e6%96%87%e4%bb%b6%e4%b9%8b%e9%97%b4%e7%9a%84%e5%85%b3%e7%b3%bb rel>从文件描述符和打开文件之间的关系重新理解shell重定向</a>。利用这个特性可以通过<code>pipe</code>等进行父子进程之间通信。</p><h3 id=资源管理与fork2 class=headerLink><a href=#%e8%b5%84%e6%ba%90%e7%ae%a1%e7%90%86%e4%b8%8efork2 class=header-mark aria-label='Header mark for &#39;资源管理与fork<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>&#39;'></a>资源管理与fork<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup></h3><p>fork之后，子进程不会继承如下资源状态：</p><ol><li>父进程的内存锁，mlock(2)、mlockall(2)。</li><li>父进程的文件锁，fcntl(2)。</li><li>父进程的某些定时器，setitimer(2)、alarm(2)、timer_create(2)</li></ol><p>如果在子进程对如上类的资源进行释放操作就会释放一个不拥有的资源，导致未定义行为。考虑在c++中，一般通过使用对象来包装资源，利用对象的生命周期管理资源(RAII)，在构造对象时获取资源，在对象出作用域析构时释放资源。因为释放资源并不是显性调用，在fork之后子进程可能“无意”释放了不拥有的资源，造成未定义行为。</p><h3 id=多线程与fork2 class=headerLink><a href=#%e5%a4%9a%e7%ba%bf%e7%a8%8b%e4%b8%8efork2 class=header-mark aria-label='Header mark for &#39;多线程与fork<sup id="fnref1:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>&#39;'></a>多线程与fork<sup id=fnref1:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup></h3><p>fork之后，对于子进程除了当前的线程之外，其他线程都消失了，会导致一个危险的局面。其他线程可能正持有某个锁，fork之后对于子进程来说其他线程已经没有了再也没有机会解锁，如果试图再对该mutex加锁就会立刻死锁。所以fork()后只能调用可重入函数。对于诸如<code>malloc</code>、<code>printf</code>函数都不可使用，所以对于多线程程序来说调用fork唯一安全的做法就是fork后立即调用exec()执行另一个程序，彻底断绝子进程和父进程的关系。</p><blockquote><p>SUSv3对可重入函数定义: 函数由多条线程调用时，即便交叉执行，其效果也与各线程任意顺序依次调用一致。</p><p>我的理解是“在执行过程中可以被中断，并且在中断后能够安全地再次调用(重入)函数“，更新全局变量(不是sig_atomic_t类型)或静态变量的函数都不是可重入的函数。所以诸如<code>malloc</code>函数由于涉及到全局状态的修改是不可重入函数。</p></blockquote><h2 id=执行新程序-execve class=headerLink><a href=#%e6%89%a7%e8%a1%8c%e6%96%b0%e7%a8%8b%e5%ba%8f-execve class=header-mark aria-label="Header mark for '执行新程序: execve()'"></a>执行新程序: execve()</h2><p>系统调用execve()将新程序加载到某一进程的内存空间，进程的内存空间会被新程序所取代，在执行了各种初始化代码会从新程序的main()函数开始执行。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-2 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp></span><span class=kt>int</span> <span class=nf>execve</span><span class=p>(</span><span class=k>const</span> <span class=kt>char</span> <span class=o>*</span><span class=n>pathname</span><span class=p>,</span> <span class=kt>char</span> <span class=o>*</span><span class=k>const</span> <span class=n>argv</span><span class=p>[],</span> <span class=kt>char</span> <span class=o>*</span><span class=k>const</span> <span class=n>envp</span><span class=p>[]);</span></span></span></code></pre></div><p>参数pathname可以时绝对路径或者相对于调用进程当前目录的相对路径；参数argv指定了传给新进程的命令行参数，相当于main()函数的第2个参数(argv)，以NULL结束；参数envp指定了新程序的环境列表，对应environ数组，以NULL结束，字符串格式为name=alue；</p><blockquote><p>Linux特有的/proc/PID/exe是符号链接包含对应进程中正在运行的可执行文件的绝对路径名。</p></blockquote><p>通常也不用检查execve()的返回值，因为如果成功则切换到新程序执行不会继续执行，失败的话返回值一定是-1并且代表发生了错误，可以通过errno来判断错误原因，有如下可能：</p><ul><li>EACCES: 参数pathname指向的文件因为权限等原因不可执行。</li><li>ENOENT: pathname所指代的文件并不存在。</li><li>ENOEXEC: pathname所指代的文件不是<strong>ELF文件</strong>格式。</li><li>ETEXTBSY: 存在进程已经以写入方式打开pathname所指代的文件。</li></ul><blockquote><p>ELF(Executable and Linking Format)标准描述了可执行文件的布局，二进制可执行文件都需要符合该标准。同时该标准也允许定义一个解释器来运行程序以字符#!开头。</p></blockquote><h3 id=exec库函数 class=headerLink><a href=#exec%e5%ba%93%e5%87%bd%e6%95%b0 class=header-mark aria-label="Header mark for 'exec()库函数'"></a>exec()库函数</h3><p>库函数为执行exec()提供了多种API选择，这些函数都是参数有所区别为了方便使用对execve()调用的封装。</p><p>下表对exec()函数之间的差异总结。简单来说:</p><ul><li>函数名带p，代表可以之之提供程序的文件名，库函数通过环境变量<code>$PATH</code>的目录列表找到对应的可执行文件，与shell对命令的搜索方式一致。</li><li>函数名带l，代表可以使用参数列表来指定argv，并且以NULL指针结尾。带v的则是使用数组的形式传入argv，数组的最后一个元素也需要是NULL。</li><li>函数名带e，带白哦可以通过envp以数组的形式显示指定函数的环境变量。其它不带e的函数则是继承调用者的环境变量。</li></ul><h4 id=exec函数之间的差异总结 class=headerLink><a href=#exec%e5%87%bd%e6%95%b0%e4%b9%8b%e9%97%b4%e7%9a%84%e5%b7%ae%e5%bc%82%e6%80%bb%e7%bb%93 class=header-mark aria-label="Header mark for 'exec()函数之间的差异总结'"></a>exec()函数之间的差异总结</h4><table><thead><tr><th style=text-align:center>函数名</th><th style=text-align:center>程序文件描述</th><th style=text-align:center>参数描述</th><th style=text-align:center>环境变量来源</th></tr></thead><tbody><tr><td style=text-align:center><code>execve()</code></td><td style=text-align:center>路径名</td><td style=text-align:center>数组</td><td style=text-align:center><code>envp</code> 参数</td></tr><tr><td style=text-align:center><code>execle()</code></td><td style=text-align:center>路径名</td><td style=text-align:center>列表</td><td style=text-align:center><code>envp</code> 参数</td></tr><tr><td style=text-align:center><code>execlp()</code></td><td style=text-align:center>文件名+PATH</td><td style=text-align:center>列表</td><td style=text-align:center>调用者的 <code>environ</code></td></tr><tr><td style=text-align:center><code>execvp()</code></td><td style=text-align:center>文件名+PATH</td><td style=text-align:center>数组</td><td style=text-align:center>调用者的 <code>environ</code></td></tr><tr><td style=text-align:center><code>execv()</code></td><td style=text-align:center>路径名</td><td style=text-align:center>数组</td><td style=text-align:center>调用者的 <code>environ</code></td></tr><tr><td style=text-align:center><code>execl()</code></td><td style=text-align:center>路径名</td><td style=text-align:center>列表</td><td style=text-align:center>调用者的 <code>environ</code></td></tr></tbody></table><h3 id=文件描述符与exec class=headerLink><a href=#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6%e4%b8%8eexec class=header-mark aria-label="Header mark for '文件描述符与exec()'"></a>文件描述符与exec()</h3><p><strong>默认情况下exec()的调用程序打开的所有文件描述符在exec()成功后的程序中会保持打开状态</strong>。shell利用这一特性为其所执行的程序处理I/O重定向。例如:</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">shell</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-3 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=nv>$ls</span> /tmp &gt; dir.txt</span></span></code></pre></div><p>shell运行该命令时会执行如下步骤:</p><ol><li><p>fork()创建子进程。</p></li><li><p>子进程以描述符1(stdout)打开文件dir.txt作为输出，采取如下方式:</p><ul><li><p>使用dump2()强制将标准输出fd=1复制成文件dir.txt的fd的副本。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-4 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=n>fd</span> <span class=o>=</span> <span class=nf>open</span><span class=p>(</span><span class=s>&#34;dir.txt&#34;</span><span class=p>,</span> <span class=p>...);</span>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=p>(</span><span class=n>fd</span> <span class=o>!=</span> <span class=n>STDOUT_FILENO</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nf>dup2</span><span class=p>(</span><span class=n>fd</span><span class=p>,</span> <span class=n>STDOUT_FILENO</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=nf>close</span><span class=p>(</span><span class=n>fd</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></div></li></ul></li><li><p>子shell调用exec()执行程序ls，ls将其结果输出到df=1标准输出，亦即文件dir.txt中。</p></li></ol><h4 id=执行时关闭close-on-exec标志fd_cloexec class=headerLink><a href=#%e6%89%a7%e8%a1%8c%e6%97%b6%e5%85%b3%e9%97%adclose-on-exec%e6%a0%87%e5%bf%97fd_cloexec class=header-mark aria-label="Header mark for '执行时关闭(close-on-exec)标志(FD_CLOEXEC)'"></a>执行时关闭(close-on-exec)标志(FD_CLOEXEC)</h4><p>大部分情况下，出于节省或安全的角度来讲程序在执行exec()之前需要关闭某些特定的文件描述符。当然可以在exec()调用close()实现这一目的，但是有如下局限性：某些fd是由库函数打开，程序主动close()可能会比较困难；假设exec()失败了，之前close()的fd可能还需要。</p><p>由此内核为每个文件描述符提供了执行时关闭的标志。设置这一标志，在程序exec()成功时会自动关闭该文件描述符。可以使用fcntl()和ioctl()等函数对某一个fd设置或清除这一标志位。</p><h2 id=进程的终止-_exit和exit class=headerLink><a href=#%e8%bf%9b%e7%a8%8b%e7%9a%84%e7%bb%88%e6%ad%a2-_exit%e5%92%8cexit class=header-mark aria-label="Header mark for '进程的终止: _exit()和exit()'"></a>进程的终止: _exit()和exit()</h2><p>进程一般有两种结束方式，其一为一些信号触发的异常结束，其二就是程序主动调用_exit()系统调用正常结束程序。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-5 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;unistd.h&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp></span><span class=kt>void</span> <span class=nf>_exit</span><span class=p>(</span><span class=kt>int</span> <span class=n>status</span><span class=p>);</span></span></span></code></pre></div><p>参数status为进程的退出状态，父进程调用wait()可以获得该状态。<strong>虽然为int类型，但是仅有低8位有效，并且由于shell在程序被信号终止时会将环境变量$?设置为128与信号值的和，所以返回值不能大于128,否则就与信号触发的退出区分不清了</strong>。</p><p>程序一般调用c语言库函数exit()主动退出，该函数会在退出前执行如下动作:</p><ol><li>调用atexit()和on_exit()注册的退出处理程序。</li><li>刷新stdio缓冲区。</li><li>执行exit_()系统调用退出程序。</li></ol><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-6 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;stdlib.h&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp></span><span class=kt>void</span> <span class=nf>exit</span><span class=p>(</span><span class=kt>int</span> <span class=n>status</span><span class=p>);</span></span></span></code></pre></div><p>另外<strong>从main()函数中return n时等同于调用exit(n)。在C99标准中定义了，main()函数不写return等同于exit(0)</strong>。</p><h3 id=fork与_exitexit函数 class=headerLink><a href=#fork%e4%b8%8e_exitexit%e5%87%bd%e6%95%b0 class=header-mark aria-label="Header mark for 'fork()与_exit()/exit()函数'"></a>fork()与_exit()/exit()函数</h3><p>在进程的用户空间中维护stdio缓冲区，因此通过fork()创建子进程时会复制该缓冲区。如果父/子进程都使用exit()退出会导致刷新各自的stdio缓冲区，从而导致重复的输出结果。<strong>故fork()后的子进程应该使用_exit()退出</strong>。</p><p>另外根据前边的介绍，如果父进程是多线程程序fork()后的子进程只会继承调用线程，假使fork()时正好有其它线程加锁操作stdio缓冲区，此时子进程的stdio缓冲区的锁已经被锁定并且不会被解锁，<strong>此时子进程调用exit()会发生死锁</strong>。</p><h2 id=等待子进程wait和waitpid class=headerLink><a href=#%e7%ad%89%e5%be%85%e5%ad%90%e8%bf%9b%e7%a8%8bwait%e5%92%8cwaitpid class=header-mark aria-label="Header mark for '等待子进程wait()和waitpid()'"></a>等待子进程wait()和waitpid()</h2><p>系统调用wait()和waitpid()都是用来等待子进程终止并且获取其退出状态status。wait()等待调用进程的任一子进程终止，waitpid()可以指定等待的子进程pid。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-7 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;sys/wait.h&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp></span><span class=kt>pid_t</span> <span class=nf>wait</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>status</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=kt>pid_t</span> <span class=nf>waitpid</span><span class=p>(</span><span class=kt>pid_t</span> <span class=n>pid</span><span class=p>,</span> <span class=kt>int</span> <span class=o>*</span><span class=n>status</span><span class=p>,</span> <span class=kt>int</span> <span class=n>options</span><span class=p>);</span></span></span></code></pre></div><p>正常二者都会返回结束的子进程pid，出错时返回-1，错误原因之一调用进程无被等待的子进程，此时errno设置为ECHILD。</p><p>对于waitpid(),其参数pid表示需要等待的具体子进程，意义如下:</p><ul><li>pid > 0: 等待进程ID为pid的子进程。</li><li>pid == 0: 等待与调用进程在同一进程组的所有子进程。</li><li>pid == -1: 等待任意子进程，wait(&amp;status)与waitpid(-1, &amp;staus, 0)等价</li><li>pid &lt; -1: 等待进程组id==abs(pid)的所有子进程。</li></ul><p>参数options时一个位掩码，可以设置如下标志位</p><ul><li>WUNTRACED: 还返回因信号而停止的子进程信息。</li><li>WCONTINUED: 返回那些因受到SIGCONT信号而恢复执行的子进程信息。</li><li>WNOHANG: 如果指定的子进程未发生状态改变，则立即返回，<strong>不会阻塞</strong>。这时waitpid()返回0。</li></ul><h3 id=等待返回值 class=headerLink><a href=#%e7%ad%89%e5%be%85%e8%bf%94%e5%9b%9e%e5%80%bc class=header-mark aria-label="Header mark for '等待返回值'"></a>等待返回值</h3><p>头文件&lt;sys/wait.h>定义了一组解析等待状态值status的宏。</p><ul><li>WIFEXITED(status): 若子进程是通过_exit()正常结束则返回true，此时WEXITSTATUS(status)返回子进程的退出状态。</li><li>WIFSIGNALED(status): 若子进程是被信号杀死时返回true，此时WTERNSIG(status)返回导致子进程终止的信号编号。若子进程产生coredump，则WCOREDUMP(status)返回true。</li><li>WIFSTOPPED(status): 若子进程因信号而停止，则返回true，此时WSTOPSIG(status)返回导致子进程停止的信号编号。</li><li>WIFCONTINUED(status): 若子进程因SIGCONT而恢复执行，则返回true。</li></ul><h3 id=sigchld信号 class=headerLink><a href=#sigchld%e4%bf%a1%e5%8f%b7 class=header-mark aria-label="Header mark for 'SIGCHLD信号'"></a>SIGCHLD信号</h3><p>子进程终止系统会向父进程发送SIGCHLD信号，该信号的默认处理就是忽略。在设置该信号的处理函数时，可以使用wait获取子进程退出状态，但是需要注意的是: <strong>当调用信号处理程序时，默认会暂时将该信号阻塞起来，且不会对其进行排队处理</strong>。故当SIGCHILD信号处理程序正在执行中时，相继有两个子进程终止产生2个SIGCHLD信号被阻塞，父进程也只能捕获一次。所以SIGCHLD处理程序需要内部循环以WNOHANG标志来非阻塞的调用waitpid()，才可以避免出现僵尸进程，如以下代码。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">c</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-8 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl><span class=k>while</span> <span class=p>(</span><span class=nf>waitpid</span><span class=p>(</span><span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>,</span> <span class=n>WNOHANG</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=k>continue</span><span class=p>;</span></span></span></code></pre></div><h4 id=忽略sigchld信号 class=headerLink><a href=#%e5%bf%bd%e7%95%a5sigchld%e4%bf%a1%e5%8f%b7 class=header-mark aria-label="Header mark for '忽略SIGCHLD信号'"></a>忽略SIGCHLD信号</h4><p>虽然对于SIGCHLD的默认处置就是忽略，但是<strong>显式的将SIGCHLD信号设置未SIG_IGN系统会将其后产生的子进程立即删除，不会转为僵尸进程，同时后续的wait()调用不会返回子进程的任何信息</strong>。在这方面，信号SIGCHLD的处理不同于其它信号。</p><h2 id=进程组和会话控制终端 class=headerLink><a href=#%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%92%8c%e4%bc%9a%e8%af%9d%e6%8e%a7%e5%88%b6%e7%bb%88%e7%ab%af class=header-mark aria-label="Header mark for '进程组和会话、控制终端'"></a>进程组和会话、控制终端</h2><p>进程组和会话、控制终端是实现命令行的底层概念，用于命令行的输入、输出，shell的作业控制。</p><p>进程组由一个或多个共享同一进程组标识符（PGID）的进程组成，进程组标识符（PGID）等于首次创建进程组的进程pid，其生命周期为创建时刻到最后一个进程退出进程组，在其生命周期不会有和PGID相同的pid分配给新进程。<strong>子进程会继承父进程的进程组</strong>。可以使用killpg()命令将信号发给进程组的每个成员进程，另一篇<a href=/posts/voice_player_system_programming/ rel>从音频播放c++类的实现学习Linux系统子进程管理</a>就是利用这一特性实现杀死子进程和其产生的子进程。</p><p>会话则是一组进程组的集合。进程的会话成员关系是由其会话标识符（SID）确定的，会话标识符也是会话创建进程的pid。</p><blockquote><p>当fork()创建新进程时，内核会保证不会和已有的进程组ID和会话ID相同。从而保证即使进程组或会话的首进程退出，新进程也不会复用首进程的PID。</p></blockquote><p>每个会话可以拥有一个控制终端，终端是用户的交互设备，现代的图形界面都是使用终端模拟器xterm等软件，通过伪终端技术模拟终端设备。</p><p>下图表示了进程组和会话、控制终端之间的关系。</p><p><figure><a class=lightgallery href=/images/voice_player_system_programming/process_group.png title=进程组、会话和控制终端之间的关系进程组 data-thumbnail=/images/voice_player_system_programming/process_group.png data-sub-html="<h2>进程组、会话和控制终端之间的关系进程组</h2><p>进程组、会话和控制终端之间的关系进程组</p>"><img loading=lazy src=/images/voice_player_system_programming/process_group.png alt=进程组、会话和控制终端之间的关系进程组></a><figcaption class=image-caption>进程组、会话和控制终端之间的关系进程组</figcaption></figure></p><p>以上图举个实际的栗子: 打开Ubuntu系统的Terminal终端模拟软件，该软件模拟了一个终端设备并且执行/bin/bash进程pid=400。bash进程成为会话SID=400的首进程和终端的控制进程，也是进程组PGID=400的唯一成员。</p><p>用户输入执行<code>find / 2> /dev/null | wc -l &</code>，bash进程会把管道相连的两个进程find和wc放入同一个PGID=658进程组。由于命令以&结尾被放入后台进程组中。</p><p>用户接着输入执行<code>sort &lt; longlist | uniq -c</code>，同样会将两个管道相连的进程放入同一个PGID=660进程组，并且处于前端进程组，可以接受用户的输入。显而易见，同一时间只能有一个进程组成为前端进程组。如果输入ctrl+c终端会将中断信号发送给前端进程组的每个成员，正常情况下两个进程都会结束。</p><p><strong>由于本人不打算开发一个终端软件或者是shell软件所以对以下内容并不准备深入了解细节，只求懂个大概，简单写一写。</strong></p><h3 id=进程组 class=headerLink><a href=#%e8%bf%9b%e7%a8%8b%e7%bb%84 class=header-mark aria-label="Header mark for '进程组'"></a>进程组</h3><p>通过<code>pid_t getpgrp()</code>和<code>int setpgid(pid_t pid, pid_t pgid)</code>获取和设置进程的进程组。参考另一篇<a href=/posts/voice_player_system_programming/#%e6%89%93%e6%96%ad%e6%92%ad%e6%94%be%e7%9a%84%e9%9f%b3%e9%a2%91%e4%bd%bf%e7%94%a8%e8%bf%9b%e7%a8%8b%e7%bb%84%e5%ae%9e%e7%8e%b0kill%e4%bf%a1%e5%8f%b7%e5%90%8c%e6%97%b6%e5%8f%91%e7%bb%99%e5%ad%90%e8%bf%9b%e7%a8%8b%e5%92%8c%e5%85%b6%e4%ba%a7%e7%94%9f%e7%9a%84%e5%ad%90%e8%bf%9b%e7%a8%8b rel>使用进程组实现kill信号同时发给子进程和其产生的子进程</a>中的实际应用。</p><h3 id=会话 class=headerLink><a href=#%e4%bc%9a%e8%af%9d class=header-mark aria-label="Header mark for '会话'"></a>会话</h3><p>通过<code>pid_t getsid(pid_t pid)</code>和<code>pid_t setsid()</code>来获取进程的sid和设置当前进程为新会话的首进程和<strong>该会话中的新进程组的首进程</strong>。</p><p>注意：已经是进程组的首进程就不能调用setsid()设置自己为新会话的首进程。原因是如果可以的话，调用后进程组中原有的其他成员还属于原来的会话中，就会出现该进程组的成员不属于同一个会话中。</p><h3 id=关闭终端-sighup信号 class=headerLink><a href=#%e5%85%b3%e9%97%ad%e7%bb%88%e7%ab%af-sighup%e4%bf%a1%e5%8f%b7 class=header-mark aria-label="Header mark for '关闭终端: SIGHUP信号'"></a>关闭终端: SIGHUP信号</h3><p>当控制进程(bash)失去与其终端的连接后，内核会向控制进程发送SIGHUP信号；当控制进程结束时，内核会向该控制进程关联的终端前台进程组发送SIGHUP信号。SIGHUP信号默认的行为是终止进程。bash进程设置了SIGHUP信号的处置函数，在退出前将SIGHUP信号发送给由它创建的所有进程组。</p><p>所以我们在ssh断开连接或者关闭终端时，仍在运行的任务会被结束。常用的nohup(1)命令在执行的命令时将SIGHUP信号设置为SIG_IGN，这样在终端退出时执行的命令不会结束。</p><h2 id=作业控制 class=headerLink><a href=#%e4%bd%9c%e4%b8%9a%e6%8e%a7%e5%88%b6 class=header-mark aria-label="Header mark for '作业控制'"></a>作业控制</h2><p>作业控制用来支持一个shell用户同时执行多个命令，其中最多一个命令在前台执行，其余命令在后台运行。命令可以被停止和恢复以及在前后台之间移动。</p><h3 id=在shell中使用作业控制 class=headerLink><a href=#%e5%9c%a8shell%e4%b8%ad%e4%bd%bf%e7%94%a8%e4%bd%9c%e4%b8%9a%e6%8e%a7%e5%88%b6 class=header-mark aria-label="Header mark for '在shell中使用作业控制'"></a>在shell中使用作业控制</h3><p>首先，shell会为每个后台任务赋予一个唯一的作业号从1开始，在将任务放入后台时会将作业号放在[作业号]方括号中打印出来，后边跟着进程的PID或管道的最后一个进程的PID。通过jobs命令可以列出所有后台作业及其状态。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">shell</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-9 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl>$ sleep 60<span class=p>&amp;</span>
+</span></span><span class=line><span class=cl><span class=o>[</span>1<span class=o>]</span> <span class=m>24599</span>
+</span></span><span class=line><span class=cl>$ sleep <span class=m>600</span>
+</span></span><span class=line><span class=cl>^Z
+</span></span><span class=line><span class=cl><span class=o>[</span>2<span class=o>]</span>+  Stopped                 sleep <span class=m>600</span>
+</span></span><span class=line><span class=cl>$ <span class=nb>jobs</span>
+</span></span><span class=line><span class=cl><span class=o>[</span>1<span class=o>]</span>-  Running                 sleep <span class=m>60</span> <span class=p>&amp;</span>
+</span></span><span class=line><span class=cl><span class=o>[</span>2<span class=o>]</span>+  Stopped                 sleep <span class=m>600</span></span></span></code></pre></div><p>使用%num可以引用作业，num为作业号。省略%num则默认指在前台最新被放入后台的作业。</p><p>产生后台作业的方式有<strong>使用ctrl+z向前台进程组发送SIGSTP(和SIGKILL一样不可修改信号默认处理函数)暂停进程并且放入后台</strong>，或者<strong>在命令执行时加上&符号，该命令会立即在后台执行，不会暂停</strong>。可以使用<code>fg %num</code>命令在前台恢复作业号num的任务，也可以使用<code>bg %num</code>命令发送SIGCONT信号来恢复被暂停的作业。通过<code>kill -STOP %num</code>也可以将后台作业暂停。</p><p>在后台的作业尝试从读取标准输入，就会受到SIGTTIN信号，默认动作就是停止作业。默认情况下，后台作业是可以写入标准输出打印在终端中的。如果终端设置了TOSTOP标志，那么但后台作业尝试输出到终端时会受到SIGTTOU信号，默认动作也时停止作业。</p><div class="code-block highlight is-open show-line-numbers tw-group tw-my-2"><div class="code-block-title
+tw-flex
+tw-flex-row
+tw-justify-between
+tw-w-full tw-bg-bgColor-secondary"><button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-rotate-90
+tw-transition-[transform]
+tw-duration-500
+tw-ease-in-out
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 320 512"><path d="M285.476 272.971 91.132 467.314c-9.373 9.373-24.569 9.373-33.941.0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941.0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg></button><div class="code-block-title-bar tw-w-full"><p class="tw-select-none !tw-my-1">shell</p></div><div class=tw-flex><button class="line-number-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.show-line-numbers]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle line numbers"><svg class="icon" viewBox="0 0 512 512"><path d="M61.77 401l17.5-20.15a19.92 19.92.0 005.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 00-8 8v16a8 8 0 008 8h22.83a157.41 157.41.0 00-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33.0 15.94 2.44 15.94 9.09.0 4.72-4.2 8.22-14.36 8.22a41.54 41.54.0 01-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16.0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zm0-160H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16V80a16 16 0 00-16-16zm0 320H176a16 16 0 00-16 16v32a16 16 0 0016 16h320a16 16 0 0016-16v-32a16 16 0 00-16-16zM16 160h64a8 8 0 008-8v-16a8 8 0 00-8-8H64V40a8 8 0 00-8-8H32a8 8 0 00-7.14 4.42l-8 16A8 8 0 0024 64h8v64H16a8 8 0 00-8 8v16a8 8 0 008 8zm-3.91 160H80a8 8 0 008-8v-16a8 8 0 00-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44.0-29.06-25-39.56-44.47-39.56-21.36.0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44.0 019.46-3.84c3.33.0 9.28 1.56 9.28 8.75C51 248.19.0 257.31.0 304.59v4C0 316 5.08 320 12.09 320z"/></svg></button>
+<button class="wrap-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+group-[.is-wrap]:tw-text-fgColor-link
+print:!tw-hidden" title="Toggle code wrap"><svg class="icon" viewBox="0 0 448 512"><path d="M16 132h416c8.837.0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163.0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837.0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837.0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg></button>
+<button class="copy-code-button
+tw-select-none
+tw-mx-2
+tw-hidden
+group-[.is-open]:tw-block
+hover:tw-text-fgColor-link
+print:!tw-hidden" title="Copy code">
+<span class="copy-icon tw-block"><svg class="icon" viewBox="0 0 448 512"><path d="M433.941 65.941l-51.882-51.882A48 48 0 00348.118.0H176c-26.51.0-48 21.49-48 48v48H48c-26.51.0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51.0 48-21.49 48-48v-48h80c26.51.0 48-21.49 48-48V99.882a48 48 0 00-14.059-33.941zM266 464H54a6 6 0 01-6-6V150a6 6 0 016-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 01-6 6zm128-96H182a6 6 0 01-6-6V54a6 6 0 016-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 01-6 6zm6-256h-64V48h9.632c1.591.0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 011.757 4.243V112z"/></svg></span>
+<span class="check-icon tw-hidden"><svg class="icon" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206.0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204.0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204.0l36.203 36.204c9.997 9.997 9.997 26.206.0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></svg></span>
+</button>
+<button class="tw-select-none
+tw-mx-2
+tw-block
+group-[.is-open]:tw-hidden
+print:!tw-hidden" disabled aria-hidden=true><svg class="icon" viewBox="0 0 512 512"><path d="M328 256c0 39.8-32.2 72-72 72s-72-32.2-72-72 32.2-72 72-72 72 32.2 72 72zm104-72c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-352 0c-39.8.0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72z"/></svg></button></div></div><pre style=counter-reset:codeblock class="tw-block tw-m-0 tw-p-0"><code id=codeblock-id-10 class="chroma
+!tw-block
+tw-p-0
+tw-m-0
+tw-transition-[max-height]
+tw-duration-500
+tw-ease-in-out
+group-[.is-closed]:!tw-max-h-0
+group-[.is-wrap]:tw-text-wrap
+tw-overflow-y-hidden
+tw-overflow-x-auto
+tw-scrollbar-thin"><span class=line><span class=cl>$ stty tostop
+</span></span><span class=line><span class=cl>$ date <span class=p>&amp;</span>
+</span></span><span class=line><span class=cl><span class=o>[</span>4<span class=o>]</span> <span class=m>34046</span>
+</span></span><span class=line><span class=cl>$
+</span></span><span class=line><span class=cl><span class=o>[</span>4<span class=o>]</span>+  Stopped                 date
+</span></span><span class=line><span class=cl>$ <span class=nb>fg</span>
+</span></span><span class=line><span class=cl>date
+</span></span><span class=line><span class=cl>Wed Jul <span class=m>10</span> 11:21:32 PM CST <span class=m>2024</span></span></span></code></pre></div><p>下图对作业的状态转换进行了总结。</p><p><figure><a class=lightgallery href=/images/the_linux_programming_interface_thread/shell_jobs.png title=作业控制状态转换 data-thumbnail=/images/the_linux_programming_interface_thread/shell_jobs.png data-sub-html="<h2>作业控制状态转换</h2><p>作业控制状态转换</p>"><img loading=lazy src=/images/the_linux_programming_interface_thread/shell_jobs.png alt=作业控制状态转换></a><figcaption class=image-caption>作业控制状态转换</figcaption></figure></p><hr><h2 id=参考 class=headerLink><a href=#%e5%8f%82%e8%80%83 class=header-mark aria-label="Header mark for '参考'"></a>参考</h2><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p><a href=https://book.douban.com/subject/25809330/ target=_blank rel="noopener noreferrer">《Linux/UNIX系统编程手册》</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2><p><a href=https://book.douban.com/subject/20471211/ target=_blank rel="noopener noreferrer">《Linux多线程服务端编程：使用muduo C++网络库》</a>&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a>&#160;<a href=#fnref1:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2024-07-02</span></div><div class=post-info-license></div></div><div class="post-info-line print:!tw-hidden"><div class=post-info-md></div><div class=post-info-share><button title="Share on Twitter" data-sharer=twitter data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】" data-hashtags=系统编程,读书笔记,《Linux/UNIX系统编程手册》><svg class="icon" viewBox="0 0 512 512"><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645.0 138.72-105.583 298.558-298.558 298.558-59.452.0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055.0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421.0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391.0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04.0-57.828 46.782-104.934 104.934-104.934 30.213.0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg></button><button title="Share on Facebook" data-sharer=facebook data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-hashtag=系统编程><svg class="icon" viewBox="0 0 512 512"><path d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14.0 55.52 4.84 55.52 4.84v61h-31.28c-30.8.0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"/></svg></button><button title="Share on Hacker News" data-sharer=hackernews data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><svg class="icon" viewBox="0 0 448 512"><path d="M0 32v448h448V32H0zm21.2 197.2H21c.1-.1.2-.3.3-.4.0.1.0.3-.1.4zm218 53.9V384h-31.4V281.3L128 128h37.3c52.5 98.3 49.2 101.2 59.3 125.6 12.3-27 5.8-24.4 60.6-125.6H320l-80.8 155.1z"/></svg></button><button title="Share on Line" data-sharer=line data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><svg class="icon" role="img" viewBox="0 0 24 24"><title>LINE</title><path d="M19.365 9.863c.349.0.63.285.63.631.0.345-.281.63-.63.63H17.61v1.125h1.755c.349.0.63.283.63.63.0.344-.281.629-.63.629h-2.386c-.345.0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346.0.627.285.627.63.0.349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211.0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346.0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195.0.375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345.0.63.285.63.63v4.771zm-5.741.0c0 .344-.282.629-.631.629-.345.0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346.0.628.285.628.63v4.771zm-2.466.629H4.917c-.345.0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348.0.63.285.63.63v4.141h1.756c.348.0.629.283.629.63.0.344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943.0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg></button><button title="Share on 微博" data-sharer=weibo data-url=https://importmengjie.github.io/posts/the_linux_programming_interface_process/ data-title="进程、进程组和会话、作业控制 - 《Linux/UNIX系统编程手册》读书笔记【1】"><svg class="icon" viewBox="0 0 512 512"><path d="M407 177.6c7.6-24-13.4-46.8-37.4-41.7-22 4.8-28.8-28.1-7.1-32.8 50.1-10.9 92.3 37.1 76.5 84.8-6.8 21.2-38.8 10.8-32-10.3zM214.8 446.7C108.5 446.7.0 395.3.0 310.4c0-44.3 28-95.4 76.3-143.7C176 67 279.5 65.8 249.9 161c-4 13.1 12.3 5.7 12.3 6 79.5-33.6 140.5-16.8 114 51.4-3.7 9.4 1.1 10.9 8.3 13.1 135.7 42.3 34.8 215.2-169.7 215.2zm143.7-146.3c-5.4-55.7-78.5-94-163.4-85.7-84.8 8.6-148.8 60.3-143.4 116s78.5 94 163.4 85.7c84.8-8.6 148.8-60.3 143.4-116zM347.9 35.1c-25.9 5.6-16.8 43.7 8.3 38.3 72.3-15.2 134.8 52.8 111.7 124-7.4 24.2 29.1 37 37.4 12 31.9-99.8-55.1-195.9-157.4-174.3zm-78.5 311c-17.1 38.8-66.8 60-109.1 46.3-40.8-13.1-58-53.4-40.3-89.7 17.7-35.4 63.1-55.4 103.4-45.1 42 10.8 63.1 50.2 46 88.5zm-86.3-30c-12.9-5.4-30 .3-38 12.9-8.3 12.9-4.3 28 8.6 34 13.1 6 30.8.3 39.1-12.9 8-13.1 3.7-28.3-9.7-34zm32.6-13.4c-5.1-1.7-11.4.6-14.3 5.4-2.9 5.1-1.4 10.6 3.7 12.9 5.1 2 11.7-.3 14.6-5.4 2.8-5.2 1.1-10.9-4-12.9z"/></svg></button></div></div></div><div class=post-info-more><section class=post-tags><svg class="icon" viewBox="0 0 640 512"><path d="M497.941 225.941 286.059 14.059A48 48 0 00252.118.0H48C21.49.0.0 21.49.0 48v204.118a48 48 0 0014.059 33.941l211.882 211.882c18.744 18.745 49.136 18.746 67.882.0l204.118-204.118c18.745-18.745 18.745-49.137.0-67.882zM112 160c-26.51.0-48-21.49-48-48s21.49-48 48-48 48 21.49 48 48-21.49 48-48 48zm513.941 133.823L421.823 497.941c-18.745 18.745-49.137 18.745-67.882.0l-.36-.36L527.64 323.522c16.999-16.999 26.36-39.6 26.36-63.64s-9.362-46.641-26.36-63.64L331.397.0h48.721a48 48 0 0133.941 14.059l211.882 211.882c18.745 18.745 18.745 49.137.0 67.882z"/></svg>&nbsp;<a href=/tags/%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/>系统编程</a>,&nbsp;<a href=/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/>读书笔记</a>,&nbsp;<a href=/tags/linux/unix%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E6%89%8B%E5%86%8C/>《Linux/UNIX系统编程手册》</a></section><section class=print:!tw-hidden><span><button class="tw-text-fgColor-link-muted hover:tw-text-fgColor-link-muted-hover" onclick=window.history.back()>Back</button></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class="post-nav print:tw-hidden"><a href=/posts/voice_player_system_programming/ class=prev rel=prev title=从音频播放c++类的实现学习Linux系统子进程管理><svg class="icon" viewBox="0 0 256 512"><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9.0l22.6 22.6c9.4 9.4 9.4 24.6.0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6.0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9.0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>从音频播放c++类的实现学习Linux系统子进程管理</a>
+<a href=/posts/the_linux_programming_interface_signal/ class=next rel=next title="信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】">信号的基本概念和信号处置函数 - 《Linux/UNIX系统编程手册》读书笔记【2】<svg class="icon" viewBox="0 0 256 512"><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9.0l-22.6-22.6c-9.4-9.4-9.4-24.6.0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6.0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9.0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg></a></div></div><div id=comments class="print:!tw-hidden tw-pt-32 tw-pb-8"><div id=giscus></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://giscus.app/>giscus</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line>Powered by <a href=https://gohugo.io/ target=_blank rel="noopener noreferrer" title="Hugo 0.133.0">Hugo</a>&nbsp;|&nbsp;Theme - <a href=https://github.com/HEIGE-PCloud/DoIt target=_blank rel="noopener noreferrer" title="DoIt 0.4.0"><svg class="icon" viewBox="0 0 576 512"><path d="M402.3 344.9l32-32c5-5 13.7-1.5 13.7 5.7V464c0 26.5-21.5 48-48 48H48c-26.5.0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h273.5c7.1.0 10.7 8.6 5.7 13.7l-32 32c-1.5 1.5-3.5 2.3-5.7 2.3H48v352h352V350.5c0-2.1.8-4.1 2.3-5.6zm156.6-201.8L296.3 405.7l-90.4 10c-26.2 2.9-48.5-19.2-45.6-45.6l10-90.4L432.9 17.1c22.9-22.9 59.9-22.9 82.7.0l43.2 43.2c22.9 22.9 22.9 60 .1 82.8zM460.1 174 402 115.9 216.2 301.8l-7.3 65.3 65.3-7.3L460.1 174zm64.8-79.7-43.2-43.2c-4.1-4.1-10.8-4.1-14.8.0L436 82l58.1 58.1 30.9-30.9c4-4.2 4-10.8-.1-14.9z"/></svg> DoIt</a></div><div class=footer-line><svg class="icon" viewBox="0 0 512 512"><path d="M256 8C119.033 8 8 119.033 8 256s111.033 248 248 248 248-111.033 248-248S392.967 8 256 8zm0 448c-110.532.0-2e2-89.451-2e2-2e2.0-110.531 89.451-2e2 2e2-2e2 110.532.0 2e2 89.451 2e2 2e2.0 110.532-89.451 2e2-2e2 2e2zm107.351-101.064c-9.614 9.712-45.53 41.396-104.065 41.396-82.43.0-140.484-61.425-140.484-141.567.0-79.152 60.275-139.401 139.762-139.401 55.531.0 88.738 26.62 97.593 34.779a11.965 11.965.0 011.936 15.322l-18.155 28.113c-3.841 5.95-11.966 7.282-17.499 2.921-8.595-6.776-31.814-22.538-61.708-22.538-48.303.0-77.916 35.33-77.916 80.082.0 41.589 26.888 83.692 78.277 83.692 32.657.0 56.843-19.039 65.726-27.225 5.27-4.857 13.596-4.039 17.82 1.738l19.865 27.17a11.947 11.947.0 01-1.152 15.518z"/></svg>2019 - 2024<span class=author>&nbsp;<a href=/ target=_blank rel="noopener noreferrer">mengjie</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div><div class=footer-line></div><div class=footer-line></div></div></footer></div><div id=fixed-buttons class=print:!tw-hidden><a href=#back-to-top id=back-to-top-button class="fixed-button tw-transition-opacity tw-opacity-0" title="Back to Top"><svg class="icon" viewBox="0 0 448 512"><path d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6.0-33.9L207 39c9.4-9.4 24.6-9.4 33.9.0l194.3 194.3c9.4 9.4 9.4 24.6.0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3.0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"/></svg>
+</a><a href=#comments id=view-comments class=fixed-button title="View Comments"><svg class="icon" viewBox="0 0 512 512"><path d="M256 32C114.6 32 0 125.1.0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3.0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4.0 256-93.1 256-208S397.4 32 256 32z"/></svg></a></div><link rel=stylesheet href=/lib/lightgallery/lightgallery.min.b38ee65d6456beb2d034bf554505f4ca47e421548b7cd26e8a7805fd2673b6c3.css integrity="sha256-s47mXWRWvrLQNL9VRQX0ykfkIVSLfNJuingF/SZztsM="><script>window.config={"autocomplete.min.js":"/lib/autocomplete/autocomplete.min.js",comment:{giscus:{darkTheme:"dark",dataCategory:null,dataCategoryId:null,dataEmitMetadata:"0",dataInputPosition:"bottom",dataLang:"en",dataLoading:"lazy",dataMapping:"pathname",dataReactionsEnabled:"1",dataRepo:null,dataRepoId:null,dataStrict:"0",lightTheme:"light"}},"fuse.min.js":"/lib/fuse/fuse.min.js",lightGallery:{actualSize:!1,exThumbImage:"data-thumbnail",hideBarsDelay:2e3,selector:".lightgallery",speed:400,thumbContHeight:80,thumbWidth:80,thumbnail:!0},search:{distance:null,findAllMatches:null,fuseIndexURL:"/index.json",highlightTag:"em",ignoreFieldNorm:null,ignoreLocation:null,isCaseSensitive:null,location:null,maxResultLength:10,minMatchCharLength:null,noResultsFound:"No results found",snippetLength:50,threshold:null,type:"fuse",useExtendedSearch:null},sharerjs:!0}</script><script src=/lib/lightgallery/lightgallery.min.0c4d9db673dd19489cfa134ab15ef8b9237ae72aaa65d8490d55658442b3a2d3.js integrity="sha256-DE2dtnPdGUic+hNKsV74uSN65yqqZdhJDVVlhEKzotM="></script><script src=/lib/lightgallery/lg-thumbnail.min.72ceb0f87691041e9e0bea2f2468b9aa3ed544e8f7f6dc9f76d8c8f997699e41.js integrity="sha256-cs6w+HaRBB6eC+ovJGi5qj7VROj39tyfdtjI+ZdpnkE="></script><script src=/lib/lightgallery/lg-zoom.min.5b0e82e9a1ae0b52d07a52da1eb4640da77eb3ca7e78c3a428c1f3b712858d3c.js integrity="sha256-Ww6C6aGuC1LQelLaHrRkDad+s8p+eMOkKMHztxKFjTw="></script><script src=/lib/sharer/sharer.min.8fe10eb615eb163a20f795484430a012805ec7c8c11df52df54ddb7a46084254.js integrity="sha256-j+EOthXrFjog95VIRDCgEoBex8jBHfUt9U3bekYIQlQ="></script><script src=/js/theme.min.js defer></script><script src=/js/giscus.min.js defer></script><script type=speculationrules>
+        {
+          "prerender": [
+            {
+              "where": { "href_matches": "/*" },
+              "eagerness": "moderate"
+            }
+          ]
+        }
+    </script></body></html>
