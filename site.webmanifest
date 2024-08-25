@@ -1,6 +1,8 @@
 {
-    "name": "",
-    "short_name": "",
+    "name": "ImportMengjie",
+    "short_name": "Mengjie",
+    "start_url": "/",
+    "description": "Less is more",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
